@@ -548,7 +548,7 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
         (SvTYPE(SvRV(perl_result)) == SVt_PVMG ||
          SvTYPE(SvRV(perl_result)) == SVt_PVAV))
     {
-        if (sv_isa(perl_result, "XML::LibXML::NodeList")) {
+        if (sv_derived_from(perl_result, "XML::LibXML::NodeList")) {
             ret = xmlXPathNewNodeSet(NULL);
             ret->boolval = 1; /* free children */
             array_result = (AV*)SvRV(perl_result);
@@ -568,7 +568,7 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
             }
             goto FINISH;
         } 
-        else if (sv_isa(perl_result, "XML::LibXML::Node")) {
+        else if (sv_derived_from(perl_result, "XML::LibXML::Node")) {
             ret =  (xmlXPathObjectPtr)xmlXPathNewNodeSet(NULL);
             ret->boolval = 1; /* free children */
             tmp_node1 = (xmlNodePtr)x_PmmSvNode(perl_result);
@@ -577,17 +577,17 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
             ret->user = (void*)tmp_node;
             goto FINISH;
         }
-        else if (sv_isa(perl_result, "XML::LibXML::Boolean")) {
+        else if (sv_derived_from(perl_result, "XML::LibXML::Boolean")) {
             tmp_int = SvIV(SvRV(perl_result));
             ret = (xmlXPathObjectPtr)xmlXPathNewBoolean(tmp_int);
             goto FINISH;
         }
-        else if (sv_isa(perl_result, "XML::LibXML::Literal")) {
+        else if (sv_derived_from(perl_result, "XML::LibXML::Literal")) {
             tmp_string = SvPV(SvRV(perl_result), len);
             ret = (xmlXPathObjectPtr)xmlXPathNewCString(tmp_string);
             goto FINISH;
         }
-        else if (sv_isa(perl_result, "XML::LibXML::Number")) {
+        else if (sv_derived_from(perl_result, "XML::LibXML::Number")) {
             tmp_double = SvNV(SvRV(perl_result));
             ret = (xmlXPathObjectPtr)xmlXPathNewFloat(tmp_double);
             goto FINISH;
@@ -702,7 +702,6 @@ _parse_stylesheet(self, sv_doc)
             XSRETURN_UNDEF;
         }
 
-        xmlInitParser();
         xmlRegisterInputCallbacks((xmlInputMatchCallback) LibXSLT_input_match,
                               (xmlInputOpenCallback) LibXSLT_input_open,
                               (xmlInputReadCallback) LibXSLT_input_read,
@@ -720,7 +719,8 @@ _parse_stylesheet(self, sv_doc)
         }
         RETVAL = xsltParseStylesheetDoc(doc_copy);
 
-        xmlCleanupParser();
+        xmlCleanupInputCallbacks();
+        xmlRegisterDefaultInputCallbacks();
 
         if (RETVAL == NULL) {
             XSRETURN_UNDEF;
@@ -735,7 +735,6 @@ _parse_stylesheet_file(self, filename)
     PREINIT:
         char * CLASS = "XML::LibXSLT::Stylesheet";
     CODE:
-        xmlInitParser();
         xmlRegisterInputCallbacks((xmlInputMatchCallback) LibXSLT_input_match,
                               (xmlInputOpenCallback) LibXSLT_input_open,
                               (xmlInputReadCallback) LibXSLT_input_read,
@@ -749,7 +748,8 @@ _parse_stylesheet_file(self, filename)
         }
         RETVAL = xsltParseStylesheetFile(filename);
 
-        xmlCleanupParser();
+        xmlCleanupInputCallbacks();
+        xmlRegisterDefaultInputCallbacks();
 
         if (RETVAL == NULL) {
             XSRETURN_UNDEF;
@@ -802,13 +802,15 @@ transform(self, sv_doc, ...)
         else {
             xsltSetGenericDebugFunc(NULL, NULL);
         }
-        xmlInitParser();
         xmlRegisterInputCallbacks((xmlInputMatchCallback) LibXSLT_input_match,
                               (xmlInputOpenCallback) LibXSLT_input_open,
                               (xmlInputReadCallback) LibXSLT_input_read,
                               (xmlInputCloseCallback) LibXSLT_input_close);
         real_dom = xsltApplyStylesheet(self, doc, xslt_params);
-        xmlCleanupParser();
+
+        xmlCleanupInputCallbacks();
+        xmlRegisterDefaultInputCallbacks();
+
         if (real_dom == NULL) {
             if (SvTRUE(ERRSV)) {
                 croak("Exception occurred while applying stylesheet: %s", SvPV(ERRSV, len));
