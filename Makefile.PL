@@ -20,7 +20,8 @@ my $DEBUG = delete $config{DEBUG};
 eval {
     print "running xslt-config... ";
     my $ver = backtick('xslt-config --version');
-    die "VERSION" unless $ver >= 0.7;
+    my ($major, $minor) = $ver =~ /(\d+)\.(\d+)/g;
+    die "VERSION" unless $minor >= 7;
     $config{LIBS} ||= backtick('xslt-config --libs');
     $config{INC} ||= backtick('xslt-config --cflags');
     print "ok\n";
