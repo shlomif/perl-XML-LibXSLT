@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan tests => 25 }
+BEGIN { plan tests => 29 }
 
 use XML::LibXSLT;
 use XML::LibXML;
@@ -82,27 +82,27 @@ push @style_docs, "text/xml", <<'EOF';
 EOF
 
 # Default HTML (broken for now!)
-# push @style_docs, "text/html", <<'EOF';
-# <?xml version="1.0"?>
-# <xsl:stylesheet
-#     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-#     version="1.0"
-# >
-# 
-# <xsl:template match="/">
-# <html>
-#   <body>
-#     <xsl:apply-templates/>
-#   </body>
-# </html>
-# </xsl:template>
-# 
-# <xsl:template match="*|@*">
-#   <xsl:copy-of select="."/>
-# </xsl:template>
-# 
-# </xsl:stylesheet>
-# EOF
+push @style_docs, "text/html", <<'EOF';
+<?xml version="1.0"?>
+<xsl:stylesheet
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    version="1.0"
+>
+
+<xsl:template match="/">
+<html>
+  <body>
+    <xsl:apply-templates/>
+  </body>
+</html>
+</xsl:template>
+
+<xsl:template match="*|@*">
+  <xsl:copy-of select="."/>
+</xsl:template>
+
+</xsl:stylesheet>
+EOF
 
 # Text, other
 push @style_docs, "text/rtf", <<'EOF';
