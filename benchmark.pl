@@ -28,7 +28,7 @@ $options{c} ||= 'testcases/default.conf';
 
 my $basedir = dirname($options{c});
 
-$options{d} ||= ['LibXSLT'];
+$options{d} ||= ['LibXSLT', 'Sablotron'];
 
 $options{n} ||= 1;
 
