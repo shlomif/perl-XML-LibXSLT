@@ -209,7 +209,8 @@ usage: $0 [options]
         
         -d <Driver> test <Driver>. Use multiple -d options to test
                     more than one driver.
-                    
+         
+        -v          be verbose.
 EOT
     exit(0);
 }
