@@ -121,7 +121,9 @@ int input_match(char const * filename)
                 croak("Big trouble!");
             }
 
-            results = SvIV(POPs);
+            if (SvTRUE(POPs)) {
+                results = 1;
+            }
 
             PUTBACK;
             FREETMPS;
@@ -284,6 +286,54 @@ void input_close(void * context)
 }
 
 void
+error_handler(void * ctxt, const char * msg, ...)
+{
+    dSP;
+    
+    SV * self = (SV *)ctxt;
+    SV * tbuff;
+    SV ** func;
+    va_list args;
+    char buffer[50000];
+    int cnt;
+    
+    buffer[0] = 0;
+    
+    va_start(args, msg);
+    vsprintf(&buffer[strlen(buffer)], msg, args);
+    va_end(args);
+    
+    func = hv_fetch((HV *)SvRV(self), "_error_handler", 14, 0);
+    
+    if (!func || !SvTRUE(*func)) {
+        return;
+    }
+    
+    tbuff = newSVpv((char*)buffer, 0);
+    
+    ENTER;
+    SAVETMPS;
+    
+    PUSHMARK(SP);
+    EXTEND(SP, 1);
+    PUSHs(tbuff);
+    PUTBACK;
+    
+    cnt = perl_call_sv(*func, G_SCALAR);
+    
+    SPAGAIN;
+    
+    if (cnt != 1) {
+        croak("error handler call failed");
+    }
+    
+    PUTBACK;
+    
+    FREETMPS;
+    LEAVE;
+}
+
+void
 setup_parser(SV * self)
 {
     HV * real_obj;
@@ -324,6 +374,7 @@ setup_parser(SV * self)
             );
     }
     
+    /* input callbacks */
     value = hv_fetch(real_obj, "input_callbacks", 14, 0);
     if (value && SvTRUE(*value)) {
         /* warn("setting input callback\n"); */
@@ -334,6 +385,12 @@ setup_parser(SV * self)
                 (xmlInputReadCallback)input_read,
                 (xmlInputCloseCallback)input_close
             );
+    }
+    
+    /* error handler */
+    value = hv_fetch(real_obj, "error_handler", 13, 0);
+    if (value && SvTRUE(*value)) {
+        xmlSetGenericErrorFunc((void*)self, (xmlGenericErrorFunc)error_handler);
     }
     
     /* lose blanks */
@@ -441,65 +498,9 @@ parse_stream(SV * self, SV * ioref)
     return doc;
 }
 
-void
-error_handler(void * ctxt, const char * msg, ...)
-{
-    dSP;
-    
-    SV * self = (SV *)ctxt;
-    SV * tbuff;
-    SV ** func;
-    va_list args;
-    char buffer[50000];
-    int cnt;
-    
-    buffer[0] = 0;
-    
-    va_start(args, msg);
-    vsprintf(&buffer[strlen(buffer)], msg, args);
-    va_end(args);
-    
-    func = hv_fetch((HV *)SvRV(self), "_error_handler", 14, 0);
-    
-    if (!func || !SvTRUE(*func)) {
-        return;
-    }
-    
-    tbuff = newSVpv((char*)buffer, 0);
-    
-    ENTER;
-    SAVETMPS;
-    
-    PUSHMARK(SP);
-    EXTEND(SP, 1);
-    PUSHs(tbuff);
-    PUTBACK;
-    
-    cnt = perl_call_sv(*func, G_SCALAR);
-    
-    SPAGAIN;
-    
-    if (cnt != 1) {
-        croak("error handler call failed");
-    }
-    
-    PUTBACK;
-    
-    FREETMPS;
-    LEAVE;
-}
-
 MODULE = XML::LibXML         PACKAGE = XML::LibXML
 
 PROTOTYPES: DISABLE
-
-void
-set_error_handler(self, func)
-        SV * self
-        SV * func
-    CODE:
-        hv_store((HV *)SvRV(self), "_error_handler", 14, func, 0);
-        xmlSetGenericErrorFunc((void*)self, (xmlGenericErrorFunc)error_handler);
 
 xmlDocPtr
 parse_string(self, string)
