@@ -48,8 +48,6 @@ OPT
 
 }
 
-my $LINK = "$Config{ld} -o conftest $Config{ccflags} -I$Config{incpath} %s $Config{lddlflags} $Config{ldflags} conftest.c $Config{libs} %s %s";
-
 if ($config{LIBS} !~ /\-lxslt/) {
     $config{LIBS} .= ' -lxslt -lxml2 -lz -lm';
 }
@@ -79,6 +77,26 @@ WriteMakefile(
 #  - these should really be in MakeMaker... But &shrug;
 ###################################################################
 
+use Config;
+use Symbol;
+use File::Spec;
+
+use vars qw/$LINK $DEVNULL $CC $is_Win32/;
+
+BEGIN {
+  $is_Win32 = ($^O =~ /Win32/);
+  if ($is_Win32) {
+      $CC = "$Config{cc} -c $Config{ccflags} -I$Config{incpath} %s conftest.c ";
+      $LINK = "LINK $Config{ccdlflags} $Config{ldflags} conftest.obj $Config{libs} %s %s ";
+      $DEVNULL = 'DEVNULL';
+  }
+  else {
+      $LINK = "$Config{cc} $Config{ccdlflags} -o conftest $Config{ccflags} -I$Config{incpath} $Config{ldflags} %s %s conftest.c $Config{libs} %s";
+      $DEVNULL = eval { File::Spec->devnull };
+      if ($@) { $DEVNULL = '/dev/null' }
+  }
+}
+
 sub rm_f {
     my @files = @_;
     my @realfiles;
@@ -102,8 +120,8 @@ sub xsystem {
     }
     open(OLDOUT, ">&STDOUT");
     open(OLDERR, ">&STDERR");
-    open(STDOUT, ">" . File::Spec->devnull);
-    open(STDERR, ">" . File::Spec->devnull);
+    open(STDOUT, ">$DEVNULL");
+    open(STDERR, ">$DEVNULL");
     my $retval = system($command);
     open(STDOUT, ">&OLDOUT");
     open(STDERR, ">&OLDERR");
@@ -126,8 +144,8 @@ sub backtick {
     }
     open(OLDOUT, ">&STDOUT");
     open(OLDERR, ">&STDERR");
-    open(STDOUT, ">" . File::Spec->devnull);
-    open(STDERR, ">" . File::Spec->devnull);
+    open(STDOUT, ">$DEVNULL");
+    open(STDERR, ">$DEVNULL");
     my $results = `$command`;
     my $retval = $?;
     open(STDOUT, ">&OLDOUT");
@@ -145,48 +163,65 @@ sub try_link0 {
     open($cfile, ">conftest.c") || die "Cannot write to file conftest.c";
     print $cfile $src;
     close($cfile);
-    xsystem(sprintf($LINK, $config{INC}, $config{LIBS}, $opt));
+    if ($is_Win32) {
+        xsystem(sprintf($CC, $config{INC}));
+        xsystem(sprintf($LINK, $config{LIBS}, $opt));
+    }
+    else {
+        xsystem(sprintf($LINK, $config{INC}, $config{LIBS}, $opt));      
+    }
 }
 
 sub try_link {
     my $result = eval {
         try_link0(@_);
     };
-    my $err = $@;
+    warn $@ if $DEBUG && $@;
     rm_f("conftest*");
-    if ($err) {
-        die $err;
-    }
     return $result;
 }
 
 sub have_library {
     my ($lib, $func) = (@_, "main");
     printf("checking for %s() in -l%s... ", $func, $lib);
-    
+
     my $result;
     if ($func) {
-        my $libs = "-l$lib";
-        eval {
-        $result = try_link(<<"SRC", $libs);
+        my $libs = $is_Win32 ? " $lib.lib  " : "-l$lib";
+        if ($is_Win32) {
+            $result = try_link(<<"SRC", $libs);
+#include <windows.h>
+#include <winsock.h>
 int main() { return 0; }
 int t() { ${func}(); return 0; }
 SRC
-        };
-        if ($@) {
-            warn $@ if $DEBUG;
+            unless ($result) {
+                $result = try_link(<<"SRC", $libs);
+#include <windows.h>
+#include <winsock.h>
+int main() { return 0; }
+int t() { void ((*p)()); p = (void ((*)()))${func}; return 0; }
+SRC
+            }
+        }
+        else {
+
+            $result = try_link(<<"SRC", $libs);
+int main() { return 0; }
+int t() { ${func}(); return 0; }
+SRC
         }
     }
-    
+
     unless ($result) {
         print "no\n";
         return 0;
     }
-    
+
     if ($func ne "main") {
         $config{DEFINE} .= uc(" -Dhave_$func");
     }
-    
+
     print "yes\n";
     return 1;
 }

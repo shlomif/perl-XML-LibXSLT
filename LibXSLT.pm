@@ -9,7 +9,7 @@ use XML::LibXML;
 
 require Exporter;
 
-$VERSION = "1.05";
+$VERSION = "1.06";
 
 require DynaLoader;
 
@@ -22,6 +22,24 @@ sub new {
     my %options = @_;
     my $self = bless \%options, $class;
     return $self;
+}
+
+sub xpath_to_string {
+    my %params = @_;
+    foreach my $key (keys %params) {
+        if ($params{$key} =~ /\'/) {
+            $params{$key} = join('', 
+                "concat(", 
+                        join(', ', 
+                                map { "'$_', \"'\"" } 
+                                split /\'/, $params{$key}), 
+                                ")");
+        }
+        else {
+            $params{$key} = "'$params{$key}'";
+        }
+    }
+    return %params;
 }
 
 1;
@@ -140,6 +158,25 @@ Returns the output encoding of the results. Defaults to "UTF-8".
 =head2 media_type
 
 Returns the output media_type of the results. Defaults to "text/html".
+
+=head1 Parameters
+
+LibXSLT expects parameters in XPath format. That is, if you wish to pass
+a string to the XSLT engine, you actually have to pass it as a quoted
+string:
+
+  $stylesheet->transform($doc, param => "'string'");
+
+Note the quotes within quotes there!
+
+Obviously this isn't much fun, so you can make it easy on yourself:
+
+  $stylesheet->transform($doc, XML::LibXSLT::xpath_to_string(
+        param => "string"
+        ));
+
+The utility function does the right thing with respect to strings in XPath,
+including when you have quotes already embedded within your string.
 
 =head1 BENCHMARK
 
