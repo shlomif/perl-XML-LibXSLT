@@ -99,17 +99,19 @@ for my $driver (@{$options{d}}) {
 
                 $ms = int((tv_interval( $t0 ) * 10000) / $iter);
 
-                $kb_in += (stat($cmp->{input}))[7];
+                $kb_in = (stat($cmp->{input}))[7];
                 $kb_in += (stat($cmp->{stylesheet}))[7];
                 $kb_in /= 1024;
+                $kb_in *= $iter;
 
                 $kb_out = (stat($cmp->{output}))[7];
                 $kb_out /= 1024;
+                $kb_out *= $iter;
 
                 die "failed - no output\n" unless $kb_out > 0;
 
                 $kb_sec = ($kb_in + $kb_out) /
-                            ( $ms / 1000 );
+                            ( $ms / 500 );
 
                 if ($cmp->{reference}) {
                     $ref_size = (stat($cmp->{reference}))[7];
@@ -207,14 +209,14 @@ EOT
 
 sub print_header {
     print STDOUT <<'EOF';
-Test Component   Iter    ms   KB In  KB Out  KB Ref    KB/s   Result
+Test Component   Iter    ms   KB In  KB Out      KB/s     Result
 ==========================================================================
 EOF
 }
 
 sub print_output {
-    printf STDOUT "%-15.15s %5.0d %5.0d %7.2f %7.2f %7.2f %7.2f   %-15.15s\n",
-            $component, $iter, $ms, $kb_in, $kb_out, $ref_size, $kb_sec, $result;
+    printf STDOUT "%-15.15s %5.0d %5.0d %7.0f %7.0f %9.2f   %-15.15s\n",
+            $component, $iter, $ms, $kb_in, $kb_out, $kb_sec, $result;
 }
 
 format STDOUT =
