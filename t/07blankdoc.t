@@ -6,10 +6,10 @@ my $parser = XML::LibXML->new();
 my $xslt = XML::LibXSLT->new();
 ok($parser); ok($xslt);
 
-# local $XML::LibXML::match_cb = \&match_cb;
-# local $XML::LibXML::open_cb = \&open_cb;
-# local $XML::LibXML::close_cb = \&close_cb;
-# local $XML::LibXML::read_cb = \&read_cb;
+local $XML::LibXML::match_cb = \&match_cb;
+local $XML::LibXML::open_cb = \&open_cb;
+local $XML::LibXML::close_cb = \&close_cb;
+local $XML::LibXML::read_cb = \&read_cb;
 
 my $source = $parser->parse_string(<<'EOT','/foo');
 <?xml version="1.0" encoding="ISO-8859-1"?>
