@@ -74,7 +74,7 @@ iowrite_fh(void * context, const char * buffer, int len)
     FREETMPS;
     LEAVE;
     
-    return 0;
+    return len;
 }
 
 int
