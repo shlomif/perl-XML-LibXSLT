@@ -170,6 +170,32 @@ seriously deep recursion, this is the way to set it. Default value is
 Sets a callback to be used for debug messages. If you don't set this,
 debug messages will be ignored.
 
+=head2 register_function
+
+  XML::LibXSLT->register_function($uri, $name, $subref);
+
+Registers an XSLT extension function mapped to the given URI. For example:
+
+  XML::LibXSLT->register_function("urn:foo", "bar",
+    sub { scalar localtime });
+
+Will register a C<bar> function in the C<urn:foo> namespace (which you
+have to define in your XSLT using C<xmlns:...>) that will return the
+current date and time as a string:
+
+  <xsl:stylesheet version="1.0"
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns:foo="urn:foo">
+  <xsl:template match="/">
+    The time is: <xsl:value-of select="foo:bar()"/>
+  </xsl:template>
+  </xsl:stylesheet>
+
+If you pass parameters to your extension function they are all down
+converted into strings at runtime - there is no internal access to
+nodelists. The return from your function is also just a plain string,
+there is no support for returning a nodelist.
+
 =head1 API
 
 The following methods are available on the new XML::LibXSLT object:
