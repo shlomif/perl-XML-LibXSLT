@@ -10,6 +10,7 @@ extern "C" {
 #include <libxml/xmlmemory.h>
 #include <libxml/debugXML.h>
 #include <libxml/HTMLtree.h>
+#include <libxml/tree.h>
 #include <libxslt/xslt.h>
 #include <libxslt/xsltInternals.h>
 #include <libxslt/transform.h>
@@ -270,6 +271,13 @@ transform(self, doc, ...)
         if (RETVAL == NULL) {
             XSRETURN_UNDEF;
         }
+        if (RETVAL->type == XML_HTML_DOCUMENT_NODE) {
+            if (self->method != NULL) {
+                xmlFree(self->method);
+            }
+            self->method = xmlMalloc(5);
+            strcpy(self->method, "html");
+        }
     OUTPUT:
         RETVAL
 
@@ -300,6 +308,13 @@ transform_file(self, filename, ...)
         RETVAL = xsltApplyStylesheet(self, xmlParseFile(filename), xslt_params);
         if (RETVAL == NULL) {
             XSRETURN_UNDEF;
+        }
+        if (RETVAL->type == XML_HTML_DOCUMENT_NODE) {
+            if (self->method != NULL) {
+                xmlFree(self->method);
+            }
+            self->method = xmlMalloc(5);
+            strcpy(self->method, "html");
         }
     OUTPUT:
         RETVAL
