@@ -53,6 +53,32 @@ my $output = $stylesheet->output_string($results);
 # warn "output: $output\n";
 ok($output);
 
+$xslt->callbacks(\&match_cb, \&broken_open_cb, \&read_cb, \&close_cb);
+
+# check transform throws exception
+eval {
+    $stylesheet->transform($doc);
+};
+if ($@) {
+    ok(1, 1, "Threw: $@");
+}
+else {
+    ok(0, 1, "No error");
+}
+
+$xslt->callbacks(\&match_cb, \&dying_open_cb, \&read_cb, \&close_cb);
+
+# check transform throws exception
+eval {
+    $stylesheet->transform($doc);
+};
+if ($@) {
+    ok(1, 1, "Threw: $@");
+}
+else {
+    ok(0, 1, "No error");
+}
+
 sub match_cb {
     my $uri = shift;
 #    warn("match: $uri\n");
@@ -68,6 +94,18 @@ sub open_cb {
 #    warn("open $uri\n");
     ok($uri, "foo.xml");
     return "<foo>Text here</foo>";
+}
+
+sub broken_open_cb {
+    my $uri = shift;
+    ok($uri, "foo.xml");
+    return ""; # sending blank breaks things
+}
+
+sub dying_open_cb {
+    my $uri = shift;
+    ok($uri, "foo.xml");
+    die "Test a die from open_cb";
 }
 
 sub close_cb {

@@ -1,5 +1,8 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.53
+    - Fixed ordering of params to perl extension funcs
+
 1.52
     - Perl extension functions (whee!)
 
