@@ -61,6 +61,8 @@ libxml2 not found
 Try setting LIBS and INC values on the command line
 Or get libxml2 from 
   http://www.libxml.org/
+If you install via RPMs, make sure you also install the -devel
+RPMs, as this is where the headers (.h files) are.
 DEATH
 }
 
