@@ -244,9 +244,11 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
                     SV * element;
                     len = nodelist->nodeNr;
                     for( i ; i < len; i++){
+                        SV *tmp = NULL;
                         tnode = nodelist->nodeTab[i];
                         if( tnode != NULL	&& tnode->doc != NULL) {
-                            owner = SvPROXYNODE(x_PmmNodeToSv((xmlNodePtr)(tnode->doc), NULL));
+                            tmp = x_PmmNodeToSv((xmlNodePtr)(tnode->doc), NULL);
+                            owner = SvPROXYNODE(tmp);
                         }
                         if (tnode->type == XML_NAMESPACE_DECL) {
                             element = sv_newmortal();
@@ -261,6 +263,8 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
                             xmlNodePtr tnode_cpy = xmlCopyNode(tnode, 1);
                             element = x_PmmNodeToSv(tnode_cpy, owner);
                         }
+                        if (tmp)
+                            SvREFCNT_dec(tmp);
                         XPUSHs( sv_2mortal(element) );
                     }
                 }
@@ -324,6 +328,14 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
             }
             goto FINISH;
         } 
+        else if (sv_isa(perl_result, "XML::LibXML::Node")) {
+            ret =  (xmlXPathObjectPtr)xmlXPathNewNodeSet(NULL);  
+            tmp_node1 = (xmlNodePtr)x_PmmSvNode(perl_result);
+            tmp_node = xmlDocCopyNode(tmp_node1, ctxt->context->doc, 1);
+            xmlXPathNodeSetAdd(ret->nodesetval,tmp_node);
+            xmlFreeNode(tmp_node);
+            goto FINISH;
+        }
         else if (sv_isa(perl_result, "XML::LibXML::Boolean")) {
             tmp_int = SvIV(SvRV(perl_result));
             ret = (xmlXPathObjectPtr)xmlXPathNewBoolean(tmp_int);
