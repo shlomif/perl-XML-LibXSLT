@@ -67,7 +67,7 @@ LibXSLT_iowrite_scalar(void * context, const char * buffer, int len)
     
     scalar = (SV *)context;
 
-    sv_catpvn(scalar, (char*)buffer, len);
+    sv_catpvn(scalar, (const char*)buffer, len);
     
     return len;
 }
@@ -190,84 +190,6 @@ LibXSLT_debug_handler(void * ctxt, const char * msg, ...)
 }
 
 static void
-__LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
-    SV *key;
-    STRLEN len;
-    char *strkey;
-    const char *function, *uri;
-    SV **perl_function;
-    AV *arguments;
-    int cnt = 0;
-    dSP;
-    
-    function = ctxt->context->function;
-    uri = ctxt->context->functionURI;
-    
-    key = newSVpvn("",0);
-    sv_catpv(key, "{");
-    sv_catpv(key, uri);
-    sv_catpv(key, "}");
-    sv_catpv(key, function);
-    strkey = SvPV(key, len);
-    /* warn("Trying to get function '%s' in %d\n", strkey, LibXSLT_HV_allCallbacks); */
-    perl_function = hv_fetch(LibXSLT_HV_allCallbacks, strkey, len, 0);
-    SvREFCNT_dec(key);
-    
-    arguments = newAV();
-    av_unshift(arguments, nargs);
-    for (cnt = nargs; cnt > 0; cnt--) {
-        SV *arg = newSVpv((char*)xmlXPathPopString(ctxt), 0);
-        av_store(arguments, cnt - 1, arg);
-    }
-    
-    if (perl_function && *perl_function && SvTRUE(*perl_function)) {
-        ENTER;
-        SAVETMPS;
-        
-        PUSHMARK(SP);
-        for (cnt = 0; cnt < nargs; cnt++) {
-            SV *tmp = av_shift(arguments);
-            if (tmp) XPUSHs(tmp);
-        }
-        PUTBACK;
-        
-        SvREFCNT_dec(arguments);
-        cnt = 0;
-        
-        cnt = perl_call_sv(*perl_function, G_SCALAR | G_EVAL);
-        
-        SPAGAIN;
-        
-        /* Check the eval first */
-        if (SvTRUE(ERRSV))
-        {
-            STRLEN n_a;
-            warn("Uh oh - %s\n", SvPV(ERRSV, n_a)) ;
-            POPs ;
-        }
-        else {
-            char *res;
-            if (cnt != 1) {
-                croak("debug handler call failed");
-            }
-            res = POPp;
-            /* warn("func returned: %s\n", res); */
-            xmlXPathReturnString(ctxt, xmlMemStrdup(res));
-        }
-        
-        PUTBACK;
-        
-        FREETMPS;
-        LEAVE;
-    }
-    else {
-        SvREFCNT_dec(arguments);
-        xmlXPathReturnEmptyString(ctxt);
-    }
-}
-
-/* ido - perl external functions */
-static void
 LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
     xmlXPathObjectPtr obj,ret;
     xmlNodeSetPtr nodelist = NULL;
@@ -296,9 +218,9 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
     
     key = newSVpvn("",0);
     sv_catpv(key, "{");
-    sv_catpv(key, uri);
+    sv_catpv(key, (const char*)uri);
     sv_catpv(key, "}");
-    sv_catpv(key, function);
+    sv_catpv(key, (const char*)function);
     strkey = SvPV(key, len);
     perl_function = hv_fetch(LibXSLT_HV_allCallbacks, strkey, len, 0);
     SvREFCNT_dec(key);
@@ -365,7 +287,7 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
         xmlXPathFreeObject(obj);
     }
 
-    // call perl dispatcher
+    /* call perl dispatcher */
     PUTBACK;
 
     perl_dispatch = sv_2mortal(newSVpv("XML::LibXSLT::perl_dispatcher",0));
@@ -387,7 +309,7 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
         goto FINISH;
     }
 
-    // convert perl result structures to LibXML structures
+    /* convert perl result structures to LibXML structures */
     if (sv_isobject(perl_result) && 
         (SvTYPE(SvRV(perl_result)) == SVt_PVMG ||
          SvTYPE(SvRV(perl_result)) == SVt_PVAV))
@@ -396,7 +318,7 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
             ret =  (xmlXPathObjectPtr)xmlXPathNewNodeSet(NULL);  
             array_result = (AV*)SvRV(perl_result);
             while (av_len(array_result) >= 0) {
-                    // memory leak ??
+                    /* memory leak ?? */
                     tmp_node1 = (xmlNodePtr)x_PmmSvNode(av_shift(array_result));
                     tmp_node = xmlDocCopyNode(tmp_node1, ctxt->context->doc, 1);
                     xmlXPathNodeSetAdd(ret->nodesetval,tmp_node);
@@ -409,7 +331,7 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
             goto FINISH;
         }
         if (sv_isa(perl_result, "XML::LibXML::Literal")) {
-            tmp_string = SvPV_nolen(SvRV(perl_result));
+            tmp_string = SvPV(SvRV(perl_result), len);
             ret = (xmlXPathObjectPtr)xmlXPathNewCString(tmp_string);
             goto FINISH;
         }
@@ -471,9 +393,9 @@ register_function(self, uri, name, callback)
                         LibXSLT_generic_function);
         key = newSVpvn("",0);
         sv_catpv(key, "{");
-        sv_catpv(key, uri);
+        sv_catpv(key, (const char*)uri);
         sv_catpv(key, "}");
-        sv_catpv(key, name);
+        sv_catpv(key, (const char*)name);
         strkey = SvPV(key, len);
         /* warn("Trying to store function '%s' in %d\n", strkey, LibXSLT_HV_allCallbacks); */
         hv_store(LibXSLT_HV_allCallbacks, strkey, len, SvREFCNT_inc(callback), 0);
