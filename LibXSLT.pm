@@ -3,7 +3,7 @@
 package XML::LibXSLT;
 
 use strict;
-use vars qw($VERSION @ISA);
+use vars qw($VERSION @ISA $USE_LIBXML_DATA_TYPES);
 
 use XML::LibXML 1.49;
 use XML::LibXML::Literal;
@@ -20,6 +20,8 @@ require DynaLoader;
 @ISA = qw(DynaLoader);
 
 bootstrap XML::LibXSLT $VERSION;
+
+$USE_LIBXML_DATA_TYPES = 0;
 
 sub new {
     my $class = shift;
@@ -41,7 +43,8 @@ sub perl_dispatcher {
             $type eq 'XML::LibXML::Number' or
             $type eq 'XML::LibXML::Boolean')
         {
-            unshift(@perlParams, $type->new(shift(@params)));
+            my $val = shift(@params);
+            unshift(@perlParams, $USE_LIBXML_DATA_TYPES ? $type->new($val) : $val);
         }
         elsif ($type eq 'XML::LibXML::NodeList') {
             my $node_count = shift(@params);
@@ -207,10 +210,14 @@ current date and time as a string:
   </xsl:stylesheet>
 
 Parameters can be in whatever format you like. If you pass in a nodelist
-it will be a XML::LibXML::NodeList object in your perl code, and a
-number will be a XML::LibXML::Number object and so on. Return values can
+it will be a XML::LibXML::NodeList object in your perl code, but ordinary
+values (strings, numbers and booleans) will be ordinary perl scalars. If
+you wish them to be C<XML::LibXML::Literal>, C<XML::LibXML::Number> and
+C<XML::LibXML::Number> values respectively then set the variable
+C<$XML::LibXSLT::USE_LIBXML_DATA_TYPES> to a true value. Return values can
 be a nodelist or a plain value - the code will just do the right thing.
-But only a single return value is supported.
+But only a single return value is supported (a list is not converted to
+a nodelist).
 
 =head1 API
 
