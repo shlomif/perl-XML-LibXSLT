@@ -109,6 +109,30 @@ Outputs the result to the filehandle given in C<$fh>.
 
 Outputs the result to the file named in C<$filename>.
 
+=head1 BENCHMARK
+
+Included in the distribution is a simple benchmark script, which has two
+drivers - one for LibXSLT and one for Sablotron. The benchmark requires
+the testcases files from the XSLTMark distribution which you can find
+at http://www.datapower.com/XSLTMark/
+
+Put the testcases directory in the directory created by this distribution,
+and then run:
+
+  perl benchmark.pl -h
+
+to get a list of options.
+
+The benchmark requires XML::XPath at the moment, but I hope to factor that
+out of the equation fairly soon. It also requires Time::HiRes, which I
+could be persuaded to factor out, replacing it with Benchmark.pm, but I
+haven't done so yet.
+
+I would love to get drivers for XML::XSLT and XML::Transformiix, if you
+would like to contribute them. Also if you get this running on Win32, I'd
+love to get a driver for MSXSLT via OLE, to see what we can do against
+those Redmond boys!
+
 =head1 AUTHOR
 
 Matt Sergeant, matt@sergeant.org
