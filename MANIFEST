@@ -8,6 +8,7 @@ typemap
 t/01basic.t
 t/02dromeds.t
 t/03input.t
+t/04params.t
 XML-LibXML/Changes
 XML-LibXML/LibXML.pm
 XML-LibXML/LibXML.xs

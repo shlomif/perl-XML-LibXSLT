@@ -117,7 +117,7 @@ new XML::LibXML::Document.
 
   my $results = $stylesheet->transform_file($filename);
 
-=head2 add_param(param)
+=head2 add_param(paramname, paramvalue)
 
 Add a string as a parameter passed to the stylesheet (for xsl:param).
 
