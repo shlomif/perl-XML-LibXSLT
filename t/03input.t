@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan tests => 9 }
+BEGIN { plan tests => 12 }
 use XML::LibXSLT;
 use XML::LibXML;
 
@@ -21,8 +21,6 @@ local $XML::LibXML::open_cb = \&open_cb;
 local $XML::LibXML::close_cb = \&close_cb;
 local $XML::LibXML::read_cb = \&read_cb;
 
-$xslt->callbacks(\&match_cb, \&open_cb, \&read_cb, \&close_cb);
-
 my $stylesheet = $xslt->parse_stylesheet($parser->parse_string(<<'EOT'));
 <xsl:stylesheet version="1.0"
       xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
@@ -33,7 +31,7 @@ my $stylesheet = $xslt->parse_stylesheet($parser->parse_string(<<'EOT'));
 <head><title>Know Your Dromedaries</title></head>
 <body>
   <h1><xsl:apply-templates/></h1>
-  <p>foo: <xsl:copy-of select="document('foo.xml')" /></p>
+  <p>foo: <xsl:apply-templates select="document('foo.xml')/*" /></p>
 </body>
 </html>
 </xsl:template>
@@ -53,20 +51,7 @@ my $output = $stylesheet->output_string($results);
 # warn "output: $output\n";
 ok($output);
 
-$xslt->callbacks(\&match_cb, \&broken_open_cb, \&read_cb, \&close_cb);
-
-# check transform throws exception
-eval {
-    $stylesheet->transform($doc);
-};
-if ($@) {
-    ok(1, 1, "Threw: $@");
-}
-else {
-    ok(0, 1, "No error");
-}
-
-$xslt->callbacks(\&match_cb, \&dying_open_cb, \&read_cb, \&close_cb);
+$XML::LibXML::open_cb = \&dying_open_cb;
 
 # check transform throws exception
 eval {
@@ -94,12 +79,6 @@ sub open_cb {
 #    warn("open $uri\n");
     ok($uri, "foo.xml");
     return "<foo>Text here</foo>";
-}
-
-sub broken_open_cb {
-    my $uri = shift;
-    ok($uri, "foo.xml");
-    return ""; # sending blank breaks things
 }
 
 sub dying_open_cb {

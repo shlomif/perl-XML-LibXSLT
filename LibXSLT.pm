@@ -75,46 +75,23 @@ sub xpath_to_string {
 }
 
 sub callbacks {
-    my $self = shift;
-    if (@_) {
-        my ($match, $open, $read, $close) = @_;
-
-        $self->{XML_LIBXSLT_MATCH} = $match ;
-        $self->{XML_LIBXSLT_OPEN} = $open ;
-        $self->{XML_LIBXSLT_READ} = $read ;
-        $self->{XML_LIBXSLT_CLOSE} = $close ;
-    }
-    else {
-        return
-            $self->{XML_LIBXSLT_MATCH},
-            $self->{XML_LIBXSLT_OPEN},
-            $self->{XML_LIBXSLT_READ},
-            $self->{XML_LIBXSLT_CLOSE};
-    }
+    die "callbacks() never worked and has been removed."
 }
 
 sub match_callback {
-    my $self = shift;
-    $self->{XML_LIBXSLT_MATCH} = shift if scalar @_;
-    return $self->{XML_LIBXSLT_MATCH};
+    die "match_callback never worked and has been removed.\nPlease set \$XML::LibXML::match_cb instead";
 }
 
 sub open_callback {
-    my $self = shift;
-    $self->{XML_LIBXSLT_OPEN} = shift if scalar @_;
-    return $self->{XML_LIBXSLT_OPEN};
+    die "open_callback never worked and has been removed.\nPlease set \$XML::LibXML::open_cb instead";
 }
 
 sub read_callback {
-    my $self = shift;
-    $self->{XML_LIBXSLT_READ} = shift if scalar @_;
-    return $self->{XML_LIBXSLT_READ};
+    die "read_callback never worked and has been removed.\nPlease set \$XML::LibXML::read_cb instead";
 }
 
 sub close_callback {
-    my $self = shift;
-    $self->{XML_LIBXSLT_CLOSE} = shift if scalar @_;
-    return $self->{XML_LIBXSLT_CLOSE};
+    die "close_callback never worked and has been removed.\nPlease set \$XML::LibXML::close_cb instead";
 }
 
 sub parse_stylesheet {

@@ -566,6 +566,7 @@ transform(self, sv_doc, ...)
         const char *xslt_params[255];
         xmlDocPtr real_dom;
         xmlDocPtr doc;
+        STRLEN len;
     CODE:
         if (sv_doc == NULL) {
             XSRETURN_UNDEF;
@@ -598,7 +599,10 @@ transform(self, sv_doc, ...)
         }
         real_dom = xsltApplyStylesheet(self, doc, xslt_params);
         if (real_dom == NULL) {
-            XSRETURN_UNDEF;
+            if (SvTRUE(ERRSV)) {
+                croak("Exception occurred while applying stylesheet: %s", SvPV(ERRSV, len));
+            }
+            croak("Error applying stylesheet: %s", "(get error out of libxslt)");
         }
         if (real_dom->type == XML_HTML_DOCUMENT_NODE) {
             if (self->method != NULL) {
@@ -620,6 +624,7 @@ transform_file(self, filename, ...)
         # note really only 254 entries here - last one is NULL
         const char *xslt_params[255];
         xmlDocPtr real_dom;
+        STRLEN len;
     CODE:
         xslt_params[0] = 0;
         if (items > 256) {
@@ -644,7 +649,10 @@ transform_file(self, filename, ...)
         }
         real_dom = xsltApplyStylesheet(self, xmlParseFile(filename), xslt_params);
         if (real_dom == NULL) {
-            XSRETURN_UNDEF;
+            if (SvTRUE(ERRSV)) {
+                croak("Error applying stylesheet: %s", SvPV(ERRSV, len));
+            }
+            croak("Error applying stylesheet: %s", "(get error out of libxslt)");
         }
         if (real_dom->type == XML_HTML_DOCUMENT_NODE) {
             if (self->method != NULL) {
