@@ -4,7 +4,7 @@ package XML::LibXSLT;
 use strict;
 use vars qw($VERSION @ISA $USE_LIBXML_DATA_TYPES);
 
-use XML::LibXML 1.49;
+use XML::LibXML 1.57;
 use XML::LibXML::Literal;
 use XML::LibXML::Boolean;
 use XML::LibXML::Number;
@@ -12,7 +12,7 @@ use XML::LibXML::NodeList;
 
 require Exporter;
 
-$VERSION = "1.53";
+$VERSION = "1.57";
 
 require DynaLoader;
 

@@ -1,5 +1,13 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.57
+    - (revision bumped to match XML::LibXML)
+    - Some minor fixes to perl extension functions support
+    - Fixed callbacks support
+    - Enable xinclude in XSLT files
+    - Fixed some memory leaks
+    - Fixed some segfaults
+
 1.53
     - Fixed ordering of params to perl extension funcs
     - Implemented nodelist and other data type passing to
