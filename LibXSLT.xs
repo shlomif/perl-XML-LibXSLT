@@ -16,6 +16,10 @@ extern "C" {
 #include <libxslt/transform.h>
 #include <libxslt/xsltutils.h>
 #include <libxslt/imports.h>
+#ifdef HAVE_EXSLT
+#include <libexslt/exslt.h>
+#include <libexslt/exsltconfig.h>
+#endif
 #ifdef __cplusplus
 }
 #endif
@@ -398,6 +402,9 @@ BOOT:
     LibXSLT_open_cb = NULL;
     LibXSLT_read_cb = NULL;
     LibXSLT_close_cb = NULL;
+#ifdef HAVE_EXSLT
+    exsltRegisterAll();
+#endif
 
 void
 END()

@@ -62,6 +62,7 @@ DEATH
 
 if (have_library("exslt")) {
     $config{LIBS} =~ s/-lxslt/-lxslt -lexslt/;
+    $config{DEFINE} .= " -DHAVE_EXSLT"
 }
 
 WriteMakefile(
