@@ -197,7 +197,7 @@ BOOT:
     xsltMaxDepth = 250;
     LibXSLT_debug_cb = NULL;
     xsltSetGenericErrorFunc(PerlIO_stderr(), (xmlGenericErrorFunc)LibXSLT_error_handler);
-    xsltSetGenericDebugFunc(PerlIO_stderr(), (xmlGenericErrorFunc)LibXSLT_debug_handler);
+    xsltSetGenericDebugFunc(NULL, NULL);
 
 void
 END()
@@ -220,7 +220,14 @@ debug_callback(self, ...)
         SV * self
     CODE:
         if (items > 1) {
-            SET_CB(LibXSLT_debug_cb, ST(1));
+            SV * debug_cb = ST(1);
+            if (debug_cb && SvTRUE(debug_cb)) {
+                SET_CB(LibXSLT_debug_cb, ST(1));
+                xsltSetGenericDebugFunc(PerlIO_stderr(), (xmlGenericErrorFunc)LibXSLT_debug_handler);
+            }
+            else {
+                xsltSetGenericDebugFunc(NULL, NULL);
+            }
         }
         else {
             RETVAL = LibXSLT_debug_cb ? sv_2mortal(LibXSLT_debug_cb) : &PL_sv_undef;
