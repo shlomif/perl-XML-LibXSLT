@@ -5,7 +5,7 @@ package XML::LibXSLT;
 use strict;
 use vars qw($VERSION @ISA);
 
-use XML::LibXML;
+use XML::LibXML 1.30;
 
 require Exporter;
 
