@@ -14,7 +14,7 @@ extern "C" {
 }
 #endif
 
-SV * debug_cb;
+#define PREFIX LibXSLT
 
 #define SET_CB(cb, fld) \
     RETVAL = cb ? newSVsv(cb) : &PL_sv_undef;\
@@ -27,16 +27,18 @@ SV * debug_cb;
         cb = newSVsv(fld);\
     }
 
+SV * PREFIX_debug_cb;
+
 void
-free_all_callbacks(void)
+PREFIX_free_all_callbacks(void)
 {
-    if (debug_cb) {
-        SvREFCNT_dec(debug_cb);
+    if (PREFIX_debug_cb) {
+        SvREFCNT_dec(PREFIX_debug_cb);
     }
 }
 
 int
-iowrite_scalar(void * context, const char * buffer, int len)
+PREFIX_iowrite_scalar(void * context, const char * buffer, int len)
 {
     SV * scalar;
     
@@ -44,17 +46,17 @@ iowrite_scalar(void * context, const char * buffer, int len)
 
     sv_catpvn(scalar, (char*)buffer, len);
     
-    return 0;
+    return len;
 }
 
 int
-ioclose_scalar(void * context)
+PREFIX_ioclose_scalar(void * context)
 {
     return 0;
 }
 
 int
-iowrite_fh(void * context, const char * buffer, int len)
+PREFIX_iowrite_fh(void * context, const char * buffer, int len)
 {
     dSP;
     
@@ -99,13 +101,13 @@ iowrite_fh(void * context, const char * buffer, int len)
 }
 
 int
-ioclose_fh(void * context)
+PREFIX_ioclose_fh(void * context)
 {
     return 0; /* we let Perl close the FH */
 }
 
 void
-error_handler(void * ctxt, const char * msg, ...)
+PREFIX_error_handler(void * ctxt, const char * msg, ...)
 {
     va_list args;
     char buffer[50000];
@@ -120,7 +122,7 @@ error_handler(void * ctxt, const char * msg, ...)
 }
 
 void
-debug_handler(void * ctxt, const char * msg, ...)
+PREFIX_debug_handler(void * ctxt, const char * msg, ...)
 {
     dSP;
     
@@ -133,7 +135,7 @@ debug_handler(void * ctxt, const char * msg, ...)
     vsprintf(&buffer[strlen(buffer)], msg, args);
     va_end(args);
 
-    if (debug_cb && SvTRUE(debug_cb)) {
+    if (PREFIX_debug_cb && SvTRUE(PREFIX_debug_cb)) {
         int cnt = 0;
         SV * tbuff = newSVpv((char*)buffer, 0);
     
@@ -145,7 +147,7 @@ debug_handler(void * ctxt, const char * msg, ...)
         PUSHs(tbuff);
         PUTBACK;
 
-        cnt = perl_call_sv(debug_cb, G_SCALAR);
+        cnt = perl_call_sv(PREFIX_debug_cb, G_SCALAR);
 
         SPAGAIN;
 
@@ -168,13 +170,13 @@ MODULE = XML::LibXSLT         PACKAGE = XML::LibXSLT
 
 BOOT:
     xsltMaxDepth = 250;
-    xsltSetGenericErrorFunc(PerlIO_stderr(), (xmlGenericErrorFunc)error_handler);
-    xsltSetGenericDebugFunc(PerlIO_stderr(), (xmlGenericErrorFunc)debug_handler);
+    xsltSetGenericErrorFunc(PerlIO_stderr(), (xmlGenericErrorFunc)PREFIX_error_handler);
+    xsltSetGenericDebugFunc(PerlIO_stderr(), (xmlGenericErrorFunc)PREFIX_debug_handler);
 
 void
 END()
     CODE:
-        free_all_callbacks();
+        PREFIX_free_all_callbacks();
 
 int
 max_depth(self, ...)
@@ -192,10 +194,10 @@ debug_callback(self, ...)
         SV * self
     CODE:
         if (items > 1) {
-            SET_CB(debug_cb, ST(1));
+            SET_CB(PREFIX_debug_cb, ST(1));
         }
         else {
-            RETVAL = debug_cb ? sv_2mortal(debug_cb) : &PL_sv_undef;
+            RETVAL = PREFIX_debug_cb ? sv_2mortal(PREFIX_debug_cb) : &PL_sv_undef;
         }
     OUTPUT:
         RETVAL
@@ -290,8 +292,8 @@ output_string(self, doc)
         SV * results = newSVpv("", 0);
     CODE:
         output = xmlOutputBufferCreateIO( 
-            (xmlOutputWriteCallback) iowrite_scalar,
-            (xmlOutputCloseCallback) ioclose_scalar,
+            (xmlOutputWriteCallback) PREFIX_iowrite_scalar,
+            (xmlOutputCloseCallback) PREFIX_ioclose_scalar,
             (void*)results,
             NULL
             );
@@ -312,8 +314,8 @@ output_fh(self, doc, fh)
         xmlOutputBufferPtr output;
     CODE:
         output = xmlOutputBufferCreateIO( 
-            (xmlOutputWriteCallback) iowrite_fh,
-            (xmlOutputCloseCallback) ioclose_fh,
+            (xmlOutputWriteCallback) PREFIX_iowrite_fh,
+            (xmlOutputCloseCallback) PREFIX_ioclose_fh,
             (void*)fh,
             NULL
             );
