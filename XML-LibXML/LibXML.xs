@@ -25,12 +25,54 @@ extern "C" {
 #ifdef VMS
 extern int xmlDoValidityCheckingDefaultVal;
 #define xmlDoValidityCheckingDefaultValue xmlDoValidityCheckingDefaultVal
+extern int xmlSubstituteEntitiesDefaultVal;
+#define xmlSubstituteEntitiesDefaultValue xmlSubstituteEntitiesDefaultVal
 #else
 extern int xmlDoValidityCheckingDefaultValue;
+extern int xmlSubstituteEntitiesDefaultValue;
 #endif
 extern int xmlGetWarningsDefaultValue;
+extern int xmlKeepBlanksDefaultValue;
+extern int xmlLoadExtDtdDefaultValue;
+extern int xmlPedanticParserDefaultValue;
 
-SV * global_ctxt;
+#define SET_CB(cb, fld) \
+    RETVAL = cb ? newSVsv(cb) : &PL_sv_undef;\
+    if (cb) {\
+        if (cb != fld) {\
+            sv_setsv(cb, fld);\
+        }\
+    }\
+    else {\
+        cb = newSVsv(fld);\
+    }
+
+SV * match_cb;
+SV * read_cb;
+SV * open_cb;
+SV * close_cb;
+SV * error;
+
+void
+free_all_callbacks(void)
+{
+    if (match_cb) {
+        SvREFCNT_dec(match_cb);
+    }
+    
+    if (read_cb) {
+        SvREFCNT_dec(read_cb);
+    }
+    
+    if (open_cb) {
+        SvREFCNT_dec(open_cb);
+    }
+    
+    if (close_cb) {
+        SvREFCNT_dec(close_cb);
+    }
+
+}
 
 xmlParserInputPtr load_external_entity(
         const char * URL, 
@@ -66,7 +108,7 @@ xmlParserInputPtr load_external_entity(
         SPAGAIN;
         
         if (!count) {
-            croak("Big trouble!");
+            croak("external entity handler did not return a value");
         }
         
         results = POPs;
@@ -84,54 +126,47 @@ xmlParserInputPtr load_external_entity(
         
         return xmlNewIOInputStream(ctxt, input_buf, XML_CHAR_ENCODING_NONE);
     }
-    return NULL;
+    else {
+        if (URL == NULL) {
+            return NULL;
+        }
+        return xmlNewInputFromFile(ctxt, URL);
+    }
+    
 }
 
 int input_match(char const * filename)
 {
-    HV * real_obj;
-    SV ** value;
-    HV * callback_vector;
     int results = 0;
     
-    real_obj = (HV *)SvRV(global_ctxt);
+    if (match_cb && SvTRUE(match_cb)) {
+        int count;
 
-    value = hv_fetch(real_obj, "input_callbacks", 14, 0);
-    if (value && SvTRUE(*value)) {
-        callback_vector = (HV *)SvRV(*value);
-        value = hv_fetch(callback_vector, "match", 5, 0);
-        if (value && SvTRUE(*value)) {
-            int count;
-            
-            dSP;
+        dSP;
 
-            ENTER;
-            SAVETMPS;
+        ENTER;
+        SAVETMPS;
 
-            PUSHMARK(SP);
-            EXTEND(SP, 1);
-            PUSHs(sv_2mortal(newSVpv((char*)filename, 0)));
-            PUTBACK;
+        PUSHMARK(SP);
+        EXTEND(SP, 1);
+        PUSHs(sv_2mortal(newSVpv((char*)filename, 0)));
+        PUTBACK;
 
-            count = perl_call_sv(*value, G_SCALAR);
+        count = perl_call_sv(match_cb, G_SCALAR);
 
-            SPAGAIN;
+        SPAGAIN;
 
-            if (!count) {
-                croak("Big trouble!");
-            }
-
-            if (SvTRUE(POPs)) {
-                results = 1;
-            }
-
-            PUTBACK;
-            FREETMPS;
-            LEAVE;
+        if (count != 1) {
+            croak("match callback must return a single value");
         }
-        else {
-            croak("match function must be defined!");
+
+        if (SvTRUE(POPs)) {
+            results = 1;
         }
+
+        PUTBACK;
+        FREETMPS;
+        LEAVE;
     }
     
     return results;
@@ -139,47 +174,36 @@ int input_match(char const * filename)
 
 void * input_open(char const * filename)
 {
-    HV * real_obj;
-    SV ** value;
-    HV * callback_vector;
     SV * results;
     
-    real_obj = (HV *)SvRV(global_ctxt);
+    if (open_cb && SvTRUE(open_cb)) {
+        int count;
 
-    value = hv_fetch(real_obj, "input_callbacks", 14, 0);
-    if (value && SvTRUE(*value)) {
-        callback_vector = (HV *)SvRV(*value);
-        value = hv_fetch(callback_vector, "open", 4, 0);
-        if (value && SvTRUE(*value)) {
-            int count;
-            
-            dSP;
+        dSP;
 
-            ENTER;
-            SAVETMPS;
+        ENTER;
+        SAVETMPS;
 
-            PUSHMARK(SP);
-            EXTEND(SP, 1);
-            PUSHs(sv_2mortal(newSVpv((char*)filename, 0)));
-            PUTBACK;
+        PUSHMARK(SP);
+        EXTEND(SP, 1);
+        PUSHs(sv_2mortal(newSVpv((char*)filename, 0)));
+        PUTBACK;
 
-            count = perl_call_sv(*value, G_SCALAR);
+        count = perl_call_sv(open_cb, G_SCALAR);
 
-            SPAGAIN;
+        SPAGAIN;
 
-            if (!count) {
-                croak("Big trouble!");
-            }
-
-            results = POPs;
-
-            PUTBACK;
-            FREETMPS;
-            LEAVE;
+        if (count != 1) {
+            croak("open callback must return a single value");
         }
-        else {
-            croak("open function must be defined!");
-        }
+
+        results = POPs;
+        
+        SvREFCNT_inc(results);
+        
+        PUTBACK;
+        FREETMPS;
+        LEAVE;
     }
     
     return (void *)results;
@@ -187,115 +211,85 @@ void * input_open(char const * filename)
 
 int input_read(void * context, char * buffer, int len)
 {
-    HV * real_obj;
-    SV ** value;
-    HV * callback_vector;
-    SV * results = newSVpvn("", 0);
+    SV * results;
     int res_len = 0;
     
-    SV * ctxt;
+    SV * ctxt = (SV *)context;
     
-    ctxt = (SV*)context;
-    
-    real_obj = (HV *)SvRV(global_ctxt);
+    if (read_cb && SvTRUE(read_cb)) {
+        int count;
 
-    value = hv_fetch(real_obj, "input_callbacks", 14, 0);
-    if (value && SvTRUE(*value)) {
-        callback_vector = (HV *)SvRV(*value);
-        value = hv_fetch(callback_vector, "read", 4, 0);
-        if (value && SvTRUE(*value)) {
-            int count;
-            
-            dSP;
+        dSP;
 
-            ENTER;
-            SAVETMPS;
+        ENTER;
+        SAVETMPS;
 
-            PUSHMARK(SP);
-            EXTEND(SP, 2);
-            PUSHs(ctxt);
-            PUSHs(sv_2mortal(newSViv(len)));
-            PUTBACK;
+        PUSHMARK(SP);
+        EXTEND(SP, 2);
+        PUSHs(ctxt);
+        PUSHs(sv_2mortal(newSViv(len)));
+        PUTBACK;
 
-            count = perl_call_sv(*value, G_SCALAR);
+        count = perl_call_sv(read_cb, G_SCALAR);
 
-            SPAGAIN;
+        SPAGAIN;
 
-            if (!count) {
-                croak("Big trouble!");
-            }
-
-            results = POPs;
-
-            PUTBACK;
-            FREETMPS;
-            LEAVE;
+        if (count != 1) {
+            croak("read callback must return a single value");
         }
-        else {
-            croak("read function must be defined!");
-        }
+
+        results = POPs;
+
+        PUTBACK;
+        FREETMPS;
+        LEAVE;
     }
     
-    buffer = SvPV(results, res_len);
+    if (results != NULL) {
+        buffer = SvPV(results, res_len);
+    }
     
     return res_len;
 }
 
 void input_close(void * context)
 {
-    HV * real_obj;
-    SV ** value;
-    HV * callback_vector;
-    SV * ctxt = (SV*)context;
+    SV * ctxt = (SV *)context;
     
-    real_obj = (HV *)SvRV(global_ctxt);
+    if (close_cb && SvTRUE(close_cb)) {
+        int count;
 
-    value = hv_fetch(real_obj, "input_callbacks", 14, 0);
-    if (value && SvTRUE(*value)) {
-        callback_vector = (HV *)SvRV(*value);
-        value = hv_fetch(callback_vector, "close", 4, 0);
-        if (value && SvTRUE(*value)) {
-            int count;
-            
-            dSP;
+        dSP;
 
-            ENTER;
-            SAVETMPS;
+        ENTER;
+        SAVETMPS;
 
-            PUSHMARK(SP);
-            EXTEND(SP, 1);
-            PUSHs(ctxt);
-            PUTBACK;
+        PUSHMARK(SP);
+        EXTEND(SP, 1);
+        PUSHs(ctxt);
+        PUTBACK;
 
-            count = perl_call_sv(*value, G_SCALAR);
+        count = perl_call_sv(close_cb, G_SCALAR);
 
-            SPAGAIN;
+        SPAGAIN;
 
-            if (!count) {
-                croak("Big trouble!");
-            }
-
-            PUTBACK;
-            FREETMPS;
-            LEAVE;
+        SvREFCNT_dec(ctxt);
+        
+        if (!count) {
+            croak("close callback failed");
         }
-        else {
-            croak("close function must be defined!");
-        }
+
+        PUTBACK;
+        FREETMPS;
+        LEAVE;
     }
 }
 
 void
 error_handler(void * ctxt, const char * msg, ...)
 {
-    dSP;
-    
-    SV * self = (SV *)ctxt;
-    SV * tbuff;
-    SV ** func;
     va_list args;
     char buffer[50000];
-    int cnt;
     
     buffer[0] = 0;
     
@@ -303,106 +297,50 @@ error_handler(void * ctxt, const char * msg, ...)
     vsprintf(&buffer[strlen(buffer)], msg, args);
     va_end(args);
     
-    func = hv_fetch((HV *)SvRV(self), "_error_handler", 14, 0);
-    
-    if (!func || !SvTRUE(*func)) {
-        return;
-    }
-    
-    tbuff = newSVpv((char*)buffer, 0);
-    
-    ENTER;
-    SAVETMPS;
-    
-    PUSHMARK(SP);
-    EXTEND(SP, 1);
-    PUSHs(tbuff);
-    PUTBACK;
-    
-    cnt = perl_call_sv(*func, G_SCALAR);
-    
-    SPAGAIN;
-    
-    if (cnt != 1) {
-        croak("error handler call failed");
-    }
-    
-    PUTBACK;
-    
-    FREETMPS;
-    LEAVE;
+    sv_catpv(error, buffer);
+/*    croak(buffer); */
 }
 
 void
-setup_parser(SV * self)
+validity_error(void * ctxt, const char * msg, ...)
 {
-    HV * real_obj;
-    SV ** value;
+    va_list args;
+    char buffer[50000];
     
-    real_obj = (HV *)SvRV(self);
+    buffer[0] = 0;
     
-    xmlInitParser();
+    va_start(args, msg);
+    vsprintf(&buffer[strlen(buffer)], msg, args);
+    va_end(args);
     
-    /* entity expansion */
-    value = hv_fetch(real_obj, "no_entities", 11, 0);
-    if (value && SvTRUE(*value)) {
-        /* warn("no entities\n"); */
-        xmlSubstituteEntitiesDefault(0);
-    }
-    else {
-        /* warn("entities\n"); */
-        xmlSubstituteEntitiesDefault(1);
-    }
+    sv_catpv(error, buffer);
+/*    croak(buffer); */
+}
+
+void
+validity_warning(void * ctxt, const char * msg, ...)
+{
+    va_list args;
+    char buffer[50000];
     
-    /* validation ? */
-    value = hv_fetch(real_obj, "validate", 8, 0);
-    if (value && SvTRUE(*value)) {
-        /* warn("validate\n"); */
-        xmlDoValidityCheckingDefaultValue = 1;
-    }
-    else {
-        /* warn("don't validate\n"); */
-        xmlDoValidityCheckingDefaultValue = 0;
-    }
+    buffer[0] = 0;
     
-    /* entity loader */
-    value = hv_fetch(real_obj, "ext_ent_handler", 15, 0);
-    if (value && SvTRUE(*value)) {
-        /* warn("setting external entity loader\n"); */
-        xmlSetExternalEntityLoader( 
-            (xmlExternalEntityLoader) load_external_entity 
-            );
-    }
+    va_start(args, msg);
+    vsprintf(&buffer[strlen(buffer)], msg, args);
+    va_end(args);
     
-    /* input callbacks */
-    value = hv_fetch(real_obj, "input_callbacks", 14, 0);
-    if (value && SvTRUE(*value)) {
-        /* warn("setting input callback\n"); */
-        global_ctxt = self;
-        xmlRegisterInputCallbacks(
-                (xmlInputMatchCallback)input_match,
-                (xmlInputOpenCallback)input_open,
-                (xmlInputReadCallback)input_read,
-                (xmlInputCloseCallback)input_close
-            );
+    warn(buffer);
+}
+
+xmlParserCtxtPtr
+get_context(SV * self)
+{
+    SV ** ctxt_sv;
+    ctxt_sv = hv_fetch((HV *)SvRV(self), "_context", 8, 0);
+    if (!ctxt_sv) {
+        croak("cannot fetch context!");
     }
-    
-    /* error handler */
-    value = hv_fetch(real_obj, "error_handler", 13, 0);
-    if (value && SvTRUE(*value)) {
-        xmlSetGenericErrorFunc((void*)self, (xmlGenericErrorFunc)error_handler);
-    }
-    
-    /* lose blanks */
-    value = hv_fetch(real_obj, "lose_blanks", 11, 0);
-    if (value && SvTRUE(*value)) {
-        /* warn("setting keepBlanksDefault(0)\n"); */
-        xmlKeepBlanksDefault(0);
-    }
-    else {
-        /* warn("setting keepBlanksDefault(1)\n"); */
-        xmlKeepBlanksDefault(1);
-    }
+    return (xmlParserCtxtPtr)SvIV((SV*)SvRV(*ctxt_sv));
 }
 
 xmlDocPtr
@@ -425,11 +363,8 @@ parse_stream(SV * self, SV * ioref)
     tbuff = newSV(0);
     tsize = newSViv(BUFSIZE);
     
-    setup_parser(self);
+    ctxt = get_context(self);
     
-    ctxt = xmlCreatePushParserCtxt(NULL, NULL, "", 0, NULL);
-    ctxt->_private = (void*)self;
-
     while (!done) {
         int cnt;
         SV * read_results;
@@ -488,12 +423,9 @@ parse_stream(SV * self, SV * ioref)
     LEAVE;
     
     if (!well_formed) {
-        xmlFreeParserCtxt(ctxt);
         xmlFreeDoc(doc);
         return NULL;
     }
-    
-    xmlFreeParserCtxt(ctxt);
     
     return doc;
 }
@@ -502,8 +434,161 @@ MODULE = XML::LibXML         PACKAGE = XML::LibXML
 
 PROTOTYPES: DISABLE
 
+BOOT:
+    xmlInitParser();
+    xmlRegisterInputCallbacks(
+            (xmlInputMatchCallback)input_match,
+            (xmlInputOpenCallback)input_open,
+            (xmlInputReadCallback)input_read,
+            (xmlInputCloseCallback)input_close
+        );
+    xmlSubstituteEntitiesDefaultValue = 1;
+    xmlKeepBlanksDefaultValue = 1;
+    xmlSetExternalEntityLoader((xmlExternalEntityLoader)load_external_entity);
+    xmlSetGenericErrorFunc(PerlIO_stderr(), (xmlGenericErrorFunc)error_handler);
+    error = newSVpv("", 0);
+
+void
+END()
+    CODE:
+        free_all_callbacks();
+        xmlCleanupParser();
+        SvREFCNT_dec(error);
+
+SV *
+match_callback(self, ...)
+        SV * self
+    CODE:
+        if (items > 1) {
+            SET_CB(match_cb, ST(1));
+        }
+        else {
+            RETVAL = match_cb ? sv_2mortal(match_cb) : &PL_sv_undef;
+        }
+    OUTPUT:
+        RETVAL
+
+SV *
+open_callback(self, ...)
+        SV * self
+    CODE:
+        if (items > 1) {
+            SET_CB(open_cb, ST(1));
+        }
+        else {
+            RETVAL = open_cb ? sv_2mortal(open_cb) : &PL_sv_undef;
+        }
+    OUTPUT:
+        RETVAL
+
+SV *
+read_callback(self, ...)
+        SV * self
+    CODE:
+        if (items > 1) {
+            SET_CB(read_cb, ST(1));
+        }
+        else {
+            RETVAL = read_cb ? sv_2mortal(read_cb) : &PL_sv_undef;
+        }
+    OUTPUT:
+        RETVAL
+
+SV *
+close_callback(self, ...)
+        SV * self
+    CODE:
+        if (items > 1) {
+            SET_CB(close_cb, ST(1));
+        }
+        else {
+            RETVAL = close_cb ? sv_2mortal(close_cb) : &PL_sv_undef;
+        }
+    OUTPUT:
+        RETVAL
+
+int
+validation(self, ...)
+        SV * self
+    CODE:
+        RETVAL = xmlDoValidityCheckingDefaultValue;
+        if (items > 1) {
+            xmlDoValidityCheckingDefaultValue = SvTRUE(ST(1)) ? 1 : 0;
+        }
+    OUTPUT:
+        RETVAL
+
+int
+expand_entities(self, ...)
+        SV * self
+    CODE:
+        RETVAL = xmlSubstituteEntitiesDefaultValue;
+        if (items > 1) {
+            xmlSubstituteEntitiesDefaultValue = SvTRUE(ST(1)) ? 1 : 0;
+        }
+    OUTPUT:
+        RETVAL
+
+int
+keep_blanks(self, ...)
+        SV * self
+    CODE:
+        RETVAL = xmlKeepBlanksDefaultValue;
+        if (items > 1) {
+            xmlKeepBlanksDefaultValue = SvTRUE(ST(1)) ? 1 : 0;
+        }
+    OUTPUT:
+        RETVAL
+
+int
+pedantic_parser(self, ...)
+        SV * self
+    CODE:
+        RETVAL = xmlPedanticParserDefaultValue;
+        if (items > 1) {
+            xmlPedanticParserDefaultValue = SvTRUE(ST(1)) ? 1 : 0;
+        }
+    OUTPUT:
+        RETVAL
+
+int
+load_ext_dtd(self, ...)
+        SV * self
+    CODE:
+        RETVAL = xmlLoadExtDtdDefaultValue;
+        if (items > 1) {
+            xmlLoadExtDtdDefaultValue = SvTRUE(ST(1)) ? 1 : 0;
+        }
+    OUTPUT:
+        RETVAL
+
+void
+_prepare(self)
+        SV * self
+    PREINIT:
+        xmlParserCtxtPtr ctxt;
+        SV * ctxt_sv;
+    CODE:
+        sv_setpvn(error, "", 0);
+        ctxt = xmlCreatePushParserCtxt(NULL, NULL, "", 0, NULL);
+        ctxt_sv = NEWSV(0, 0);
+        sv_setref_pv(ctxt_sv, "XML::LibXML::Context", (void*)ctxt);
+        hv_store((HV *)SvRV(self), "_context", 8, ctxt_sv, 0);
+
+void
+_release(self)
+        SV * self
+    PREINIT:
+        xmlParserCtxtPtr ctxt;
+    CODE:
+        ctxt = (xmlParserCtxtPtr)SvIV(
+                (SV*)SvRV(
+                        hv_delete((HV *)SvRV(self), "_context", 8, 0)
+                        )
+                    );
+
 xmlDocPtr
-parse_string(self, string)
+_parse_string(self, string)
         SV * self
         SV * string
     PREINIT:
@@ -514,85 +599,71 @@ parse_string(self, string)
         int well_formed;
     CODE:
         ptr = SvPV(string, len);
-        setup_parser(self);
-        ctxt = xmlCreatePushParserCtxt(NULL, NULL, "", 0, NULL);
-        ctxt->_private = (void*)self;
-        if(xmlParseChunk(ctxt, ptr, len, 0)) {
-            croak("parse failed");
-        }
+        ctxt = get_context(self);
+        xmlParseChunk(ctxt, ptr, len, 0);
         xmlParseChunk(ctxt, ptr, 0, 1);
         well_formed = ctxt->wellFormed;
         RETVAL = ctxt->myDoc;
-        xmlFreeParserCtxt(ctxt);
         if (!well_formed) {
             xmlFreeDoc(RETVAL);
-            croak("Not well formed!");
+            croak(SvPV(error, len));
         }
     OUTPUT:
         RETVAL
 
 xmlDocPtr
-parse_fh(self, fh)
+_parse_fh(self, fh)
         SV * self
         SV * fh
     PREINIT:
         char * CLASS = "XML::LibXML::Document";
     CODE:
         RETVAL = parse_stream(self, fh);
+        if (RETVAL == NULL) {
+            XSRETURN_UNDEF;
+        }
     OUTPUT:
         RETVAL
         
 xmlDocPtr
-parse_file(self, filename)
+_parse_file(self, filename)
         SV * self
         const char * filename
     PREINIT:
         xmlParserCtxtPtr ctxt;
         char * CLASS = "XML::LibXML::Document";
-        FILE *f;
+        PerlIO *f;
         int ret;
         int res;
+        STRLEN len;
         char chars[BUFSIZE];
     CODE:
         if ((filename[0] == '-') && (filename[1] == 0)) {
-	    f = stdin;
+	    f = PerlIO_stdin();
 	} else {
-	    f = fopen(filename, "r");
+	    f = PerlIO_open(filename, "r");
 	}
 	if (f != NULL) {
-            setup_parser(self);
-            ctxt = xmlCreatePushParserCtxt(NULL, NULL, "", 0, NULL);
-            ctxt->_private = (void*)self;
-	    res = fread(chars, 1, 4, f);
+            ctxt = get_context(self);
+	    res = PerlIO_read(f, chars, 4);
 	    if (res > 0) {
-                if (xmlParseChunk(ctxt, chars, res, 0)) {
-                    xmlFreeParserCtxt(ctxt);
-                    croak("parse failed");
-                }
-		while ((res = fread(chars, 1, BUFSIZE, f)) > 0) {
-		    if (xmlParseChunk(ctxt, chars, res, 0)) {
-                        xmlFreeParserCtxt(ctxt);
-                        croak("parse failed");
-                    }
+                xmlParseChunk(ctxt, chars, res, 0);
+		while ((res = PerlIO_read(f, chars, BUFSIZE)) > 0) {
+		    xmlParseChunk(ctxt, chars, res, 0);
 		}
-                if (xmlParseChunk(ctxt, chars, 0, 1)) {
-                    xmlFreeParserCtxt(ctxt);
-                    croak("parse failed");
-                }
+                xmlParseChunk(ctxt, chars, 0, 1);
 		RETVAL = ctxt->myDoc;
 		ret = ctxt->wellFormed;
 		if (!ret) {
-                    xmlFreeParserCtxt(ctxt);
+                    PerlIO_close(f);
 		    xmlFreeDoc(RETVAL);
-                    fclose(f);
-		    XSRETURN_UNDEF;
+		    croak(SvPV(error, len));
 		}
 	    }
-            fclose(f);
-            xmlFreeParserCtxt(ctxt);
+            PerlIO_close(f);
 	}
         else {
-            XSRETURN_UNDEF;
+            croak("cannot open file %s", filename);
         }
     OUTPUT:
         RETVAL
@@ -611,7 +682,6 @@ DESTROY(self)
             XSRETURN_UNDEF;
         }
         xmlFreeDoc(self);
-        xmlCleanupParser();
 
 SV *
 toString(self)
@@ -630,18 +700,29 @@ toString(self)
     OUTPUT:
         RETVAL
 
-# todo: add optional DTD file
-SV *
-is_valid(self)
+int
+is_valid(self, ...)
         xmlDocPtr self
     PREINIT:
         xmlValidCtxt cvp;
+        xmlDtdPtr dtd;
+        SV * dtd_sv;
     CODE:
-        if (!xmlValidateDocument(&cvp, self)) {
-            XSRETURN_UNDEF;
+        if (items > 1) {
+            dtd_sv = ST(1);
+            if ( sv_isobject(dtd_sv) && (SvTYPE(SvRV(dtd_sv)) == SVt_PVMG) ) {
+                dtd = (xmlDtdPtr)SvIV((SV*)SvRV( dtd_sv ));
+            }
+            else {
+                croak("is_valid: argument must be a DTD object");
+            }
+            cvp.userData = (void*)PerlIO_stderr();
+            cvp.error = (xmlValidityErrorFunc)validity_error;
+            cvp.warning = (xmlValidityWarningFunc)validity_warning;
+            RETVAL = xmlValidateDtd(&cvp, self, dtd);
         }
         else {
-            RETVAL = newSViv(1);
+            RETVAL = xmlValidateDocument(&cvp, self);
         }
     OUTPUT:
         RETVAL
@@ -652,3 +733,23 @@ process_xinclude(self)
     CODE:
         xmlXIncludeProcess(self);
 
+
+MODULE = XML::LibXML         PACKAGE = XML::LibXML::Context
+
+void
+DESTROY(self)
+        xmlParserCtxtPtr self
+    CODE:
+        xmlFreeParserCtxt(self);
+
+MODULE = XML::LibXML         PACKAGE = XML::LibXML::Dtd
+
+xmlDtdPtr
+new(CLASS, external, system)
+        char * CLASS
+        char * external
+        char * system
+    CODE:
+        RETVAL = xmlParseDTD(external, system);
+    OUTPUT:
+        RETVAL

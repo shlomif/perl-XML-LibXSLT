@@ -56,28 +56,30 @@ tests showing this to be more than twice as fast as Sablotron.
 
 =head1 OPTIONS
 
-When calling C<new()>, the following options are available (passed in
-as a hash of key/value pairs):
+XML::LibXSLT has some global options. Note that these are probably not
+thread or even fork safe - so only set them once per process. Each one
+of these options can be called either as class methods, or as instance
+methods. However either way you call them, it still sets global options.
 
-=over
+Each of the option methods returns its previous value, and can be called
+without a parameter to retrieve the current value.
 
-=item error_handler
+=head2 max_depth
 
-A subroutine reference or function name that is called whenever an XSLT
-processsing error occurs. Note that this is not the same as an XML
-parsing error - for that see L<XML::LibXSLT>.
+  XML::LibXSLT->max_depth(1000);
 
-=item debug_handler
+This option sets the maximum recursion depth for a stylesheet. See the
+very end of section 5.4 of the XSLT specification for more details on
+recursion and detecting it. If your stylesheet or XML file requires
+seriously deep recursion, this is the way to set it. Default value is
+250.
 
-This is identical to error_handler above, except for libxslt debug 
-messages.
+=head2 debug_callback
 
-=item max_depth
+  XML::LibXSLT->debug_callback($subref);
 
-Maximum recurse depth. If your stylesheet recurses, XML::LibXSLT will by
-default stop at 250 recursions. Set this if you want that value increased.
-
-=back
+Sets a callback to be used for debug messages. If you don't set this,
+debug messages will be ignored.
 
 =head1 API
 
@@ -87,12 +89,13 @@ The following methods are available on the new XML::LibXSLT object:
 
 C<$doc> here is an XML::LibXML::Document object (see L<XML::LibXML>)
 representing an XSLT file. This method will return a 
-XML::LibXSLT::Stylesheet object, or undef on failure.
+XML::LibXSLT::Stylesheet object, or undef on failure. If the XSLT is
+invalid, an exception will be thrown, so wrap the call to 
+parse_stylesheet in an eval{} block to trap this.
 
 =head2 parse_file($filename)
 
-Parses the file given in $filename, returning a XML::LibXSLT::Stylesheet
-object, or undef on failure.
+Exactly the same as the above, but parses the given filename directly.
 
 =head1 XML::LibXSLT::Stylesheet
 
@@ -103,16 +106,22 @@ stylesheet object which you call the transform() method passing in a
 document to transform. This allows you to have multiple transformations
 happen with one stylesheet without requiring a reparse.
 
-=head2 add_param($param)
+=head2 transform(doc)
 
-Add a string as a parameter passed to the stylesheet (for xsl:param).
-
-=head2 transform($doc)
+  my $results = $stylesheet->transform($doc);
 
 Transforms the passed in XML::LibXML::Document object, and returns a
 new XML::LibXML::Document.
 
-=head2 output_string($result)
+=head2 transform_file(filename)
+
+  my $results = $stylesheet->transform_file($filename);
+
+=head2 add_param(param)
+
+Add a string as a parameter passed to the stylesheet (for xsl:param).
+
+=head2 output_string(result)
 
 Returns a scalar that is the XSLT rendering of the XML::LibXML::Document
 object using the desired output format (specified in the xsl:output tag
@@ -120,11 +129,11 @@ in the stylesheet). Note that you can also call $result->toString, but
 that will *always* output the document in XML format, and in UTF8, which
 may not be what you asked for in the xsl:output tag.
 
-=head2 output_fh($result, $fh)
+=head2 output_fh(result, fh)
 
 Outputs the result to the filehandle given in C<$fh>.
 
-=head2 output_file($result, $filename)
+=head2 output_file(result, filename)
 
 Outputs the result to the file named in C<$filename>.
 

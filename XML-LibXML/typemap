@@ -2,6 +2,7 @@ TYPEMAP
 const char *        T_PV
 xmlDocPtr           O_OBJECT
 xmlParserCtxtPtr    O_OBJECT
+xmlDtdPtr           O_OBJECT
 
 INPUT
 O_OBJECT
