@@ -22,6 +22,7 @@ my @getopt_args = (
         't', # only 1 iteration per test
         'v', # verbose
         'h', # help
+        'x', # XSLTMark emulation
         );
 
 my %options;
@@ -108,11 +109,18 @@ for my $driver (@{$options{d}}) {
 
                 $pkg->can('run_transform')->($cmp->{output}, $iter);
 
-                $ms = int((tv_interval( $t0 ) * 10000) / $iter);
+                $ms = int((tv_interval( $t0 ) * 1000));
 
                 $kb_in = (stat($cmp->{input}))[7];
-                $kb_in += (stat($cmp->{stylesheet}))[7];
-                $kb_in /= 1024;
+
+                if ($options{x}) {
+                    $kb_in /= 1000;
+                }
+                else {
+                    $kb_in += (stat($cmp->{stylesheet}))[7];
+                    $kb_in /= 1024;
+                }
+                
                 $kb_in *= $iter;
 
                 $kb_out = (stat($cmp->{output}))[7];
@@ -223,7 +231,14 @@ usage: $0 [options]
         -d <Driver> test <Driver>. Use multiple -d options to test
                     more than one driver. Defaults are set in this
                     script (the \@default_drivers variable).
-         
+        
+        -x          XSLTMark emulation. Infuriatingly XSLTMark thinks
+                    there are 1000 bytes in a Kilobyte. Someone please
+                    tell them some basic computer science...
+                    
+                    Without this option, this benchmark also includes
+                    the size of the stylesheet in the KB In figure.
+                    
         -v          be verbose.
 
 Copyright 2001 AxKit.com Ltd. This is free software, you may use it and
