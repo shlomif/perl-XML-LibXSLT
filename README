@@ -1,20 +1,8 @@
-NAME
-    XML::LibXSLT - Perl extension for blah blah blah
+This module is a fast XSLT library, based on the Gnome libxslt engine
+that you can find at http://www.xmlsoft.org/XSLT/
 
-SYNOPSIS
-      use XML::LibXSLT;
-      blah blah blah
+Performance is currently about twice that of XML::Sablotron (based on 
+XSLTMark tests converted to Perl).
 
-DESCRIPTION
-    Stub documentation for XML::LibXSLT was created by h2xs. It looks like
-    the author of the extension was negligent enough to leave the stub
-    unedited.
-
-    Blah blah blah.
-
-AUTHOR
-    A. U. Thor, a.u.thor@a.galaxy.far.far.away
-
-SEE ALSO
-    perl(1).
-
+The engine is also quite complete in its implementation, supporting things
+like xsl:import, and keys().

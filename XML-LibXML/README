@@ -1,20 +1,6 @@
-NAME
-    XML::LibXSLT - Perl extension for blah blah blah
+This module is a minimal interface to the Gnome libxml2 library which you
+can find at http://www.xmlsoft.org/
 
-SYNOPSIS
-      use XML::LibXSLT;
-      blah blah blah
-
-DESCRIPTION
-    Stub documentation for XML::LibXSLT was created by h2xs. It looks like
-    the author of the extension was negligent enough to leave the stub
-    unedited.
-
-    Blah blah blah.
-
-AUTHOR
-    A. U. Thor, a.u.thor@a.galaxy.far.far.away
-
-SEE ALSO
-    perl(1).
-
+Currently this is just a helper module for XML::LibXSLT (and as such is
+included with the XML::LibXSLT distribution), but libxml2 has a full DOM
+API, and so I hope to be able to offer full access to that API one day.
