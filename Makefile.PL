@@ -69,6 +69,16 @@ WriteMakefile(
     %config,
 );
 
+sub MY::test {
+    package MY;
+    my $class = shift;
+    my $text = $class->SUPER::test(@_);
+    # I have no idea why this fixes test segfaults on 5.005.
+    # please email me if you *do* know why!
+    $text =~ s/PERL_DL_NONLAZY=1/PERL_DL_NONLAZY=0/g;
+    return $text;
+}
+
 ###################################################################
 # Functions
 #  - these should really be in MakeMaker... But &shrug;
