@@ -120,7 +120,7 @@ LibXSLT_error_handler(void * ctxt, const char * msg, ...)
     va_start(args, msg);
     vsprintf(&buffer[strlen(buffer)], msg, args);
     va_end(args);
-    
+
     croak(buffer);
 }
 
@@ -381,3 +381,32 @@ output_file(self, doc, filename)
         char * filename
     CODE:
         xsltSaveResultToFilename(filename, doc, self, 0);
+
+char *
+media_type(self)
+        xsltStylesheetPtr self
+    CODE:
+        RETVAL = (char *)self->mediaType;
+        if (RETVAL == NULL) {
+            /* this below is rather simplistic, but should work for most cases */
+            RETVAL = "text/html";
+            if (strcmp(self->method, "xml") == 0) {
+                RETVAL = "text/xml";
+            }
+            else if (strcmp(self->method, "text") == 0) {
+                RETVAL = "text/plain";
+            }
+        }
+    OUTPUT:
+        RETVAL
+
+char *
+output_encoding(self)
+        xsltStylesheetPtr self
+    CODE:
+        RETVAL = (char *)self->encoding;
+        if (RETVAL == NULL) {
+            RETVAL = "UTF-8";
+        }
+    OUTPUT:
+        RETVAL
