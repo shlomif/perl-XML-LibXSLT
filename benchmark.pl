@@ -63,7 +63,7 @@ while(my $line = <CONFIG>) {
 for my $driver (@{$options{d}}) {
     my $pkg = "Driver::${driver}";
     
-    $pkg->can('init')->(); # can pass options here - undefined yet
+    $pkg->can('init')->(verbose => $options{v});
     
     $pkg->can('chdir')->($basedir);
     
@@ -75,6 +75,7 @@ for my $driver (@{$options{d}}) {
 
     COMPONENT:
     for my $cmp (@config) {
+        warn "Running test: $cmp->{component}\n" if $options{v};
         for (1..$options{n}) {
             $component = $cmp->{component};
             $iter = $ms = $kb_in = $kb_out = $kb_sec = $ref_size = 0;
@@ -154,7 +155,7 @@ for my $driver (@{$options{d}}) {
                             }
                         };
                         if ($@) {
-                            warn $@;
+                            warn $@ if $options{v};
                         }
                     }
                 }
