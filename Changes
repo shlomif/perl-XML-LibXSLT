@@ -1,5 +1,13 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.07
+    - Fixes to work with XML::LibXML 0.94
+
+1.06
+    - Support text/html defaulting for media_type when document element
+      is <html>.
+    - Support building on Win32
+
 1.05
     - More tests and fixes for media_type
 

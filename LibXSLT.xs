@@ -31,6 +31,26 @@ extern "C" {
         cb = newSVsv(fld);\
     }
 
+typedef struct _ProxyObject ProxyObject;
+
+struct _ProxyObject {
+    void * object;
+    SV * extra;
+};
+
+ProxyObject *
+make_proxy_node (xmlDocPtr node)
+{
+    ProxyObject * proxy;
+    
+    proxy = (ProxyObject*)New(0, proxy, 1, ProxyObject);
+    if (proxy != NULL) {
+        proxy->object = (void*)node;
+        proxy->extra = NULL;
+    }
+    return proxy;
+}
+
 static SV * LibXSLT_debug_cb = NULL;
 
 void
@@ -240,7 +260,7 @@ parse_stylesheet_file(self, filename)
 
 MODULE = XML::LibXSLT         PACKAGE = XML::LibXSLT::Stylesheet
 
-xmlDocPtr
+ProxyObject *
 transform(self, doc, ...)
         xsltStylesheetPtr self
         xmlDocPtr doc
@@ -248,6 +268,7 @@ transform(self, doc, ...)
         char * CLASS = "XML::LibXML::Document";
         # note really only 254 entries here - last one is NULL
         const char *xslt_params[255];
+        xmlDocPtr real_dom;
     CODE:
         if (doc == NULL) {
             XSRETURN_UNDEF;
@@ -267,21 +288,22 @@ transform(self, doc, ...)
             # set last entry to NULL
             xslt_params[i - 2] = 0;
         }
-        RETVAL = xsltApplyStylesheet(self, doc, xslt_params);
-        if (RETVAL == NULL) {
+        real_dom = xsltApplyStylesheet(self, doc, xslt_params);
+        if (real_dom == NULL) {
             XSRETURN_UNDEF;
         }
-        if (RETVAL->type == XML_HTML_DOCUMENT_NODE) {
+        if (real_dom->type == XML_HTML_DOCUMENT_NODE) {
             if (self->method != NULL) {
                 xmlFree(self->method);
             }
             self->method = xmlMalloc(5);
             strcpy(self->method, "html");
         }
+        RETVAL = make_proxy_node(real_dom);
     OUTPUT:
         RETVAL
 
-xmlDocPtr
+ProxyObject *
 transform_file(self, filename, ...)
         xsltStylesheetPtr self
         char * filename
@@ -289,6 +311,7 @@ transform_file(self, filename, ...)
         char * CLASS = "XML::LibXML::Document";
         # note really only 254 entries here - last one is NULL
         const char *xslt_params[255];
+        xmlDocPtr real_dom;
     CODE:
         xslt_params[0] = 0;
         if (items > 256) {
@@ -305,17 +328,18 @@ transform_file(self, filename, ...)
             # set last entry to NULL
             xslt_params[i - 2] = 0;
         }
-        RETVAL = xsltApplyStylesheet(self, xmlParseFile(filename), xslt_params);
-        if (RETVAL == NULL) {
+        real_dom = xsltApplyStylesheet(self, xmlParseFile(filename), xslt_params);
+        if (real_dom == NULL) {
             XSRETURN_UNDEF;
         }
-        if (RETVAL->type == XML_HTML_DOCUMENT_NODE) {
+        if (real_dom->type == XML_HTML_DOCUMENT_NODE) {
             if (self->method != NULL) {
                 xmlFree(self->method);
             }
             self->method = xmlMalloc(5);
             strcpy(self->method, "html");
         }
+        RETVAL = make_proxy_node(real_dom);
     OUTPUT:
         RETVAL
 

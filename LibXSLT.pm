@@ -9,7 +9,7 @@ use XML::LibXML;
 
 require Exporter;
 
-$VERSION = "1.06";
+$VERSION = "1.07";
 
 require DynaLoader;
 
