@@ -31,12 +31,9 @@ sub load_input {
 }
 
 sub run_transform {
-    my ($output, $iterations) = @_;
+    my ($output) = @_;
     my $results;
-    for (my $i = 0; $i < $iterations; $i++) {
-#        print STDERR ".";
-        $results = $stylesheet->transform($input);
-    }
+    $results = $stylesheet->transform($input);
     $stylesheet->output_file($results, $output);
 #    print STDERR "\n";
 }

@@ -1,4 +1,4 @@
-use Time::HiRes qw(gettimeofday tv_interval);
+use Benchmark;
 use Getopt::Long;
 use File::Basename;
 use XML::XPath;
@@ -99,18 +99,24 @@ for my $driver (@{$options{d}}) {
             }
 
             eval {
-                my $t0 = [gettimeofday];
-
                 $pkg->can('load_stylesheet')->($cmp->{stylesheet});
                 $pkg->can('load_input')->($cmp->{input});
 
                 $iter = $cmp->{iterations};
                 $iter = 1 if $options{t};
 
-                $pkg->can('run_transform')->($cmp->{output}, $iter);
 
-                $ms = int((tv_interval( $t0 ) * 1000));
-
+                my $bench = timeit($iter, sub {
+                        $pkg->can('run_transform')->($cmp->{output});
+                    });
+                
+                my $str = timestr($bench, 'all', '5.4f');
+                
+                if ($str =~ /\((\d+\.\d+)/) {
+                    $ms = $1;
+                    $ms *= 1000;
+                }
+                
                 $kb_in = (stat($cmp->{input}))[7];
 
                 if ($options{x}) {

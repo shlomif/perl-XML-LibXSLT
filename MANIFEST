@@ -27,3 +27,6 @@ XML-LibXML/t/04parsefh.t
 benchmark.pl
 Driver/LibXSLT.pm
 Driver/Sablotron.pm
+Driver/BaseClass.pm
+testcases/default.conf
+

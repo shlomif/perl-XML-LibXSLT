@@ -51,21 +51,19 @@ sub load_input {
 }
 
 sub run_transform {
-    my ($output, $iterations) = @_;
+    my ($output) = @_;
     $handler->{show_error} = 1;
-    for (my $i = 0; $i < $iterations; $i++) {
-        my $outfile = IO::File->new(">$output")
-                || die "Can't write $output : $!";
- 
-        my $result = '';
-        my $args = ['template', "$stylesheet", 'xml_resource', "$input"];
+    open(OUT, ">$output")
+            || die "Can't write $output : $!";
 
-        my $retcode = $xslt->RunProcessor("arg:/template", "arg:/xml_resource", "arg:/result",                                                [], $args);
-        $result = $xslt->GetResultArg("result");
-        
-        print $outfile $result;
-        $outfile->close;
-    }
+    my $result = '';
+    my $args = ['template', "$stylesheet", 'xml_resource', "$input"];
+
+    my $retcode = $xslt->RunProcessor("arg:/template", "arg:/xml_resource", "arg:/result",                                                [], $args);
+    $result = $xslt->GetResultArg("result");
+
+    print OUT $result;
+    close OUT;
 }
 
 package Driver::Sablotron::Handler;

@@ -24,8 +24,8 @@ sub load_input {
 }
 
 sub run_transform {
-    my ($output, $iterations) = @_;
-    croak("run_transform(output, iterations) unimplemented");
+    my ($output) = @_;
+    croak("run_transform(output) unimplemented");
 }
 
 sub shutdown {

@@ -1,5 +1,12 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.00
+    - More segfault fixes
+    - Benchmark updates    
+
+0.99_01
+    - More segfault fixes
+
 0.99
     - Fixed segfaults on 5.00503
 
