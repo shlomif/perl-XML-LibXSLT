@@ -9,6 +9,8 @@ README
 typemap
 example/1.xml
 example/1.xsl
+example/2.xml
+example/2.xsl
 t/01basic.t
 t/02dromeds.t
 t/03input.t
