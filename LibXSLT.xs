@@ -8,9 +8,10 @@ extern "C" {
 #include "XSUB.h"
 #include <libxml/xmlversion.h>
 #include <libxml/xmlmemory.h>
-#include <libxml/debugXML.h>
 #include <libxml/HTMLtree.h>
 #include <libxml/tree.h>
+#include <libxml/parserInternals.h>
+#include <libxslt/xsltconfig.h>
 #include <libxslt/xslt.h>
 #include <libxslt/xsltInternals.h>
 #include <libxslt/transform.h>

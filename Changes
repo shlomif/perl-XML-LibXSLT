@@ -1,5 +1,10 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.30
+    - Compatibility with XML::LibXML 1.30 (esp callbacks)
+    - EXSLT support
+    - Better test files
+
 1.09
     - Some fixes and tests for document('')
     - Better have_library implementation in Makefile.PL

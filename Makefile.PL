@@ -13,12 +13,17 @@ while($_ = shift) {
 
 my $DEBUG = delete $config{DEBUG};
 
+require XML::LibXML;
+if ($XML::LibXML::VERSION < 1.30) {
+    die "XML::LibXML 1.30 or higher required\n";
+}
+
 # get libs and inc from gnome-config
 eval {
     print "running xslt-config... ";
     my $ver = backtick('xslt-config --version');
-    my ($major, $minor) = $ver =~ /(\d+)\.(\d+)/g;
-    die "VERSION" unless $major > 0 || $minor >= 7;
+    my ($major, $minor, $point) = $ver =~ /(\d+)\.(\d+)\.(\d+)/g;
+    die "VERSION" unless $major > 1 || $minor > 0 || $point >= 6;
     $config{LIBS} ||= backtick('xslt-config --libs');
     $config{INC} ||= backtick('xslt-config --cflags');
     print "ok\n";
@@ -26,7 +31,7 @@ eval {
 if ($@) {
     print "failed\n";
     if ($@ =~ /^VERSION/) { 
-        die "XML::LibXSLT needs libxslt version 0.7.0 or higher\n";
+        die "XML::LibXSLT needs libxslt version 1.0.6 or higher\n";
     }
     warn "*** ", $@ if $DEBUG;
     warn "using fallback values for LIBS and INC\n";
