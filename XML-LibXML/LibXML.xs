@@ -597,12 +597,10 @@ _release(self)
         SV * self
     PREINIT:
         xmlParserCtxtPtr ctxt;
+        SV * hval;
     CODE:
-        ctxt = (xmlParserCtxtPtr)SvIV(
-                (SV*)SvRV(
-                        hv_delete((HV *)SvRV(self), "_context", 8, 0)
-                        )
-                    );
+        hval = hv_delete((HV *)SvRV(self), "_context", 8, 0);
+        ctxt = (xmlParserCtxtPtr)SvIV( (SV*)SvRV(hval) );
 
 char *
 get_last_error(CLASS)
