@@ -30,7 +30,7 @@ extern "C" {
         cb = newSVsv(fld);\
     }
 
-SV * LibXSLT_debug_cb;
+static SV * LibXSLT_debug_cb = NULL;
 
 void
 LibXSLT_free_all_callbacks(void)
@@ -210,12 +210,13 @@ parse_stylesheet(self, doc)
         xmlDocPtr doc
     PREINIT:
         char * CLASS = "XML::LibXSLT::Stylesheet";
+        xmlDocPtr doc_copy;
     CODE:
         if (doc == NULL) {
             XSRETURN_UNDEF;
         }
-        doc->standalone = 42;
-        RETVAL = xsltParseStylesheetDoc(doc);
+        doc_copy = xmlCopyDoc(doc, 1);
+        RETVAL = xsltParseStylesheetDoc(doc_copy);
         if (RETVAL == NULL) {
             XSRETURN_UNDEF;
         }
