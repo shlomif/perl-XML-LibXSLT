@@ -9,6 +9,7 @@ extern "C" {
 #include <libxml/xmlversion.h>
 #include <libxml/xmlmemory.h>
 #include <libxml/HTMLtree.h>
+#include <libxml/xmlIO.h>
 #include <libxml/tree.h>
 #include <libxml/parserInternals.h>
 #include <libxslt/xsltconfig.h>
@@ -43,6 +44,8 @@ extern "C" {
             cb = NULL;\
         }\
     }
+
+#define SET_CB2(cb, fld) cb=fld;
 
 static SV * LibXSLT_match_cb = NULL;
 static SV * LibXSLT_read_cb = NULL;
@@ -82,7 +85,7 @@ int
 LibXSLT_input_match(char const * filename)
 {
     int results = 0;
-    
+
     if (LibXSLT_match_cb && SvTRUE(LibXSLT_match_cb)) {
         int count;
         SV * res;
@@ -123,7 +126,6 @@ void *
 LibXSLT_input_open(char const * filename)
 {
     SV * results;
-
     if (LibXSLT_open_cb && SvTRUE(LibXSLT_open_cb)) {
         int count;
 
@@ -371,12 +373,44 @@ LibXSLT_debug_handler(void * ctxt, const char * msg, ...)
 }
 
 void
-LibXSLT_set_callbacks()
+LibXSLT_set_callbacks(SV * xsltobj)
 {
-    xmlRegisterInputCallbacks(LibXSLT_input_match,
-                    LibXSLT_input_open,
-                    LibXSLT_input_read,
-                    LibXSLT_input_close);
+    if ( xsltobj != NULL ) {
+        HV * self = (HV *)SvRV(xsltobj);
+        SV** tmp = NULL;
+        /* first we check if there are any callbacks set */
+
+        tmp = hv_fetch(self, "XML_LIBXSLT_MATCH", 17, 0); 
+        if ( tmp && *tmp ) {
+            /* warn("match cb\n"); */
+            LibXSLT_match_cb = *tmp;
+        }
+
+        tmp = hv_fetch(self, "XML_LIBXSLT_OPEN", 16, 0);
+        if ( tmp  && *tmp) {
+            /* warn("open cb\n"); */
+            LibXSLT_open_cb  = *tmp;
+        }
+    
+        tmp = hv_fetch(self, "XML_LIBXSLT_READ", 16, 0);
+        if ( tmp && *tmp ) {
+            /* warn("read cb\n"); */
+            LibXSLT_read_cb  = *tmp;
+        }
+
+        tmp = hv_fetch(self, "XML_LIBXSLT_CLOSE", 17, 0);
+        if ( tmp && *tmp){
+            /* warn("close cb\n"); */
+            LibXSLT_close_cb = *tmp;
+        }    
+
+    }
+
+    xmlRegisterInputCallbacks((xmlInputMatchCallback) LibXSLT_input_match,
+                              (xmlInputOpenCallback) LibXSLT_input_open,
+                              (xmlInputReadCallback) LibXSLT_input_read,
+                              (xmlInputCloseCallback) LibXSLT_input_close);
+
     if (LibXSLT_debug_cb) {
         xsltSetGenericDebugFunc(PerlIO_stderr(), (xmlGenericErrorFunc)LibXSLT_debug_handler);
     }
@@ -386,9 +420,17 @@ LibXSLT_set_callbacks()
 void
 LibXSLT_unset_callbacks()
 {
-    xmlRegisterInputCallbacks(NULL, NULL, NULL, NULL);
+    /* this is uses libxml2 2.4.7++ functions */
+    xmlCleanupInputCallbacks();
+    xmlRegisterDefaultInputCallbacks();
+
     xsltSetGenericDebugFunc(NULL, NULL);
     xsltSetGenericErrorFunc(NULL, NULL);
+
+    LibXSLT_match_cb = NULL;
+    LibXSLT_open_cb  = NULL ;
+    LibXSLT_read_cb  = NULL ;
+    LibXSLT_close_cb = NULL;
 }
 
 MODULE = XML::LibXSLT         PACKAGE = XML::LibXSLT
@@ -443,7 +485,7 @@ debug_callback(self, ...)
         RETVAL
 
 SV *
-match_callback(self, ...)
+_match_callback(self, ...)
         SV * self
     CODE:
         if (items > 1) {
@@ -462,7 +504,7 @@ match_callback(self, ...)
         RETVAL
 
 SV *
-read_callback(self, ...)
+_read_callback(self, ...)
         SV * self
     CODE:
         if (items > 1) {
@@ -481,7 +523,7 @@ read_callback(self, ...)
         RETVAL
 
 SV *
-open_callback(self, ...)
+_open_callback(self, ...)
         SV * self
     CODE:
         if (items > 1) {
@@ -500,7 +542,7 @@ open_callback(self, ...)
         RETVAL
 
 SV *
-close_callback(self, ...)
+_close_callback(self, ...)
         SV * self
     CODE:
         if (items > 1) {
@@ -531,11 +573,15 @@ parse_stylesheet(self, doc)
         }
         doc_copy = xmlCopyDoc(doc, 1);
         doc_copy->URL = xmlStrdup(doc->URL);
-        LibXSLT_set_callbacks();
+        LibXSLT_set_callbacks(self);
         RETVAL = xsltParseStylesheetDoc(doc_copy);
         LibXSLT_unset_callbacks();
         if (RETVAL == NULL) {
             XSRETURN_UNDEF;
+        }
+        else {
+            RETVAL->_private = self;
+            SvREFCNT_inc(RETVAL->_private);
         }
     OUTPUT:
         RETVAL
@@ -547,11 +593,15 @@ parse_stylesheet_file(self, filename)
     PREINIT:
         char * CLASS = "XML::LibXSLT::Stylesheet";
     CODE:
-        LibXSLT_set_callbacks();
+        LibXSLT_set_callbacks(self);
         RETVAL = xsltParseStylesheetFile(filename);
         LibXSLT_unset_callbacks();
         if (RETVAL == NULL) {
             XSRETURN_UNDEF;
+        }
+        else {
+            RETVAL->_private = self;
+            SvREFCNT_inc(RETVAL->_private);
         }
     OUTPUT:
         RETVAL
@@ -588,7 +638,8 @@ transform(self, doc, ...)
             # set last entry to NULL
             xslt_params[i - 2] = 0;
         }
-        LibXSLT_set_callbacks();
+
+        LibXSLT_set_callbacks(self->_private);
         real_dom = xsltApplyStylesheet(self, doc, xslt_params);
         LibXSLT_unset_callbacks();
         if (real_dom == NULL) {
@@ -630,7 +681,7 @@ transform_file(self, filename, ...)
             # set last entry to NULL
             xslt_params[i - 2] = 0;
         }
-        LibXSLT_set_callbacks();
+        LibXSLT_set_callbacks(self->_private);
         real_dom = xsltApplyStylesheet(self, xmlParseFile(filename), xslt_params);
         LibXSLT_unset_callbacks();
         if (real_dom == NULL) {
@@ -653,6 +704,10 @@ DESTROY(self)
     CODE:
         if (self == NULL) {
             XSRETURN_UNDEF;
+        }
+        else {
+            SvREFCNT_dec(self->_private);
+            self->_private = NULL;
         }
         xsltFreeStylesheet(self);
 
