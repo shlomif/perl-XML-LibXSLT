@@ -3,16 +3,38 @@
 package XML::LibXML;
 
 use strict;
-use vars qw($VERSION @ISA);
+use vars qw($VERSION @ISA @EXPORT);
 use Carp;
 
-$VERSION = "0.90";
-
+$VERSION = "0.91";
+require Exporter;
 require DynaLoader;
 
-@ISA = qw(DynaLoader);
+@ISA = qw(DynaLoader Exporter);
 
 bootstrap XML::LibXML $VERSION;
+
+@EXPORT = qw( XML_ELEMENT_NODE 
+	      XML_ATTRIBUTE_NODE
+	      XML_TEXT_NODE
+	      XML_CDATA_SECTION_NODE
+	      XML_ENTITY_REF_NODE
+	      XML_ENTITY_NODE
+	      XML_PI_NODE
+	      XML_COMMENT_NODE
+	      XML_DOCUMENT_NODE
+	      XML_DOCUMENT_TYPE_NODE
+	      XML_DOCUMENT_FRAG_NODE
+	      XML_NOTATION_NODE
+	      XML_HTML_DOCUMENT_NODE
+	      XML_DTD_NODE
+	      XML_ELEMENT_DECL
+	      XML_ATTRIBUTE_DECL
+	      XML_ENTITY_DECL
+	      XML_NAMESPACE_DECL
+	      XML_XINCLUDE_START
+	      XML_XINCLUDE_END );
+
 
 sub new {
     my $class = shift;
@@ -80,6 +102,33 @@ sub parse_file {
     $self->_release();
     return $result;
 }
+
+
+sub XML_ELEMENT_NODE(){1;}
+sub XML_ATTRIBUTE_NODE(){2;}
+sub XML_TEXT_NODE(){3;}
+sub XML_CDATA_SECTION_NODE(){4;}
+sub XML_ENTITY_REF_NODE(){5;}
+sub XML_ENTITY_NODE(){6;}
+sub XML_PI_NODE(){7;}
+sub XML_COMMENT_NODE(){8;}
+sub XML_DOCUMENT_NODE(){9;}
+sub XML_DOCUMENT_TYPE_NODE(){10;}
+sub XML_DOCUMENT_FRAG_NODE(){11;}
+sub XML_NOTATION_NODE(){12;}
+sub XML_HTML_DOCUMENT_NODE(){13;}
+sub XML_DTD_NODE(){14;}
+sub XML_ELEMENT_DECL_NODE(){15;}
+sub XML_ATTRIBUTE_DECL_NODE(){16;}
+sub XML_ENTITY_DECL_NODE(){17;}
+sub XML_NAMESPACE_DECL_NODE(){18;}
+sub XML_XINCLUDE_START(){19;}
+sub XML_XINCLUDE_END(){20;}
+
+@XML::LibXML::Element::ISA      = 'XML::LibXML::Node';
+@XML::LibXML::Text::ISA         = 'XML::LibXML::Node';
+@XML::LibXML::Comment::ISA      = 'XML::LibXML::Text';
+@XML::LibXML::CDATASection::ISA = 'XML::LibXML::Text';
 
 1;
 __END__

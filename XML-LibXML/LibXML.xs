@@ -16,6 +16,10 @@ extern "C" {
 #include <libxml/debugXML.h>
 #include <libxml/xmlerror.h>
 #include <libxml/xinclude.h>
+
+#include "dom.h"
+#include "xpath.h"
+
 #ifdef __cplusplus
 }
 #endif
@@ -88,7 +92,7 @@ LibXML_load_external_entity(
     STRLEN results_len;
     const char * results_pv;
     xmlParserInputBufferPtr input_buf;
-    
+
     if (ctxt->_private == NULL) {
         return xmlNewInputFromFile(ctxt, URL);
     }
@@ -763,6 +767,104 @@ process_xinclude(self)
     CODE:
         xmlXIncludeProcess(self);
 
+xmlDocPtr
+new( CLASS, version, encoding )
+        char * CLASS
+	char * version 
+	char * encoding
+   CODE:
+	RETVAL = domCreateDocument( version, encoding ); 
+   OUTPUT:
+	RETVAL
+
+xmlDocPtr
+createDocument( CLASS, version, encoding )
+	char * CLASS
+	char * version 
+	char * encoding
+   CODE:
+	RETVAL = domCreateDocument( version, encoding ); 
+   OUTPUT:
+	RETVAL
+
+xmlNodePtr
+createElement( dom, name )
+	xmlDocPtr dom
+	char* name
+   PREINIT:
+	char * CLASS = "XML::LibXML::Element";
+   CODE:
+	RETVAL = domCreateElement( dom , name );
+   OUTPUT:
+	RETVAL
+
+xmlNodePtr
+createTextNode( dom, content )
+	xmlDocPtr dom
+	char * content
+   PREINIT:
+	char * CLASS = "XML::LibXML::Text";
+   CODE:
+	RETVAL = domCreateTextNode( dom, content );
+   OUTPUT:
+	RETVAL
+
+xmlNodePtr 
+createComment( dom , content )
+	xmlDocPtr dom
+	char * content
+   PREINIT:
+	char * CLASS = "XML::LibXML::Comment";
+   CODE:
+	RETVAL = domCreateComment( dom, content );
+   OUTPUT:
+	RETVAL
+
+xmlNodePtr
+createCDATASection( dom, content )
+	xmlDocPtr dom
+	char * content
+   PREINIT:
+	char * CLASS = "XML::LibXML::CDATASection";
+   CODE:
+	RETVAL = domCreateCDATASection( dom, content );
+   OUTPUT:
+	RETVAL
+
+void 
+setDocumentElement( dom , elem )
+	xmlDocPtr dom
+	xmlNodePtr elem
+   CODE:
+	domSetDocumentElement( dom, elem );
+
+xmlNodePtr
+getDocumentElement( dom )
+	xmlDocPtr dom
+   PREINIT:
+	const char * CLASS = "XML::LibXML::Node";
+   CODE:
+	RETVAL = domDocumentElement( dom ) ;
+	if ( RETVAL ) {
+	  switch ( RETVAL->type ) {
+	  case XML_ELEMENT_NODE:
+             CLASS = "XML::LibXML::Element";
+    	     break;
+  	  case XML_TEXT_NODE:
+	     CLASS = "XML::LibXML::Text";
+	     break;
+	  case XML_COMMENT_NODE:
+	     CLASS = "XML::LibXML::Comment";
+	     break;
+	  case XML_CDATA_SECTION_NODE:
+	     CLASS = "XML::LibXML::CDATASection";
+	     break;
+	  default:
+  	     break;
+	  }
+	}
+   OUTPUT:
+	RETVAL
 
 MODULE = XML::LibXML         PACKAGE = XML::LibXML::Context
 
@@ -783,3 +885,554 @@ new(CLASS, external, system)
         RETVAL = xmlParseDTD((const xmlChar*)external, (const xmlChar*)system);
     OUTPUT:
         RETVAL
+
+
+
+MODULE = XML::LibXML         PACKAGE = XML::LibXML::Node
+
+void
+DESTROY( node )
+	xmlNodePtr node 
+   CODE:
+	if ( node->parent == 0 ) {
+	/* this block should remove old (unbound) nodes from the system
+	 * but for some reason this condition is not valid ... :(
+	 */
+	/* warn( "Free node\n" ); */
+	/*domUnbindNode( node );  * before freeing we unbind the node from
+				  * possible siblings */
+	/*xmlFreeNode( node ); */
+	}
+	
+int 
+getType( node ) 
+	xmlNodePtr node
+   CODE:
+	RETVAL = node->type;
+   OUTPUT:
+	RETVAL
+
+void
+unbindNode( elem )
+	xmlNodePtr elem
+   CODE:
+	domUnbindNode( elem );
+
+xmlNodePtr
+removeChild( paren, child ) 
+	xmlNodePtr paren
+	xmlNodePtr child
+   PREINIT:
+	const char * CLASS = "XML::LibXML::Node";
+   CODE:
+	RETVAL = domRemoveNode( paren, child );
+   OUTPUT:
+	RETVAL
+
+xmlNodePtr
+replaceChild( paren, newChild, oldChild ) 
+	xmlNodePtr paren
+	xmlNodePtr newChild
+	xmlNodePtr oldChild
+   PREINIT:
+	const char * CLASS = "XML::LibXML::Node";
+   CODE:
+	RETVAL = domReplaceChild( paren, newChild, oldChild );
+   OUTPUT:
+	RETVAL
+
+void
+appendChild( parent, child )
+	xmlNodePtr parent
+	xmlNodePtr child
+   CODE:
+	domAppendChild( parent, child );
+
+xmlNodePtr
+cloneNode( self, deep ) 
+	xmlNodePtr self
+	int deep
+   PREINIT:
+	const char * CLASS = "XML::LibXML::Node";
+   CODE:
+	RETVAL = domCloneNode( self, deep );
+   OUTPUT:
+	RETVAL
+
+
+xmlNodePtr
+getParentNode( self )
+	xmlNodePtr self
+   PREINIT:
+	const char * CLASS = "XML::LibXML::Element";
+   CODE:
+	RETVAL = domParentNode( self );
+   OUTPUT:
+	RETVAL
+
+int 
+hasChildNodes( elem )
+	xmlNodePtr elem
+   CODE:
+	RETVAL = elem->children == 0 ? 0 : 1 ;
+   OUTPUT:
+	RETVAL
+
+xmlNodePtr
+getNextSibling( elem )
+	xmlNodePtr elem
+   PREINIT:
+	const char * CLASS = "XML::LibXML::Node";
+   CODE:
+	RETVAL = domNextSibling( elem );
+	if ( RETVAL ) {
+	  switch ( RETVAL->type ) {
+	  case 1:
+             CLASS = "XML::LibXML::Element";
+    	     break;
+  	  case 3:
+	     CLASS = "XML::LibXML::Text";
+	     break;
+	  case 8:
+	     CLASS = "XML::LibXML::Comment";
+	     break;
+	  case XML_CDATA_SECTION_NODE:
+	     CLASS = "XML::LibXML::CDATASection";
+	     break;
+	  default:
+  	     break;
+	  }
+	}	
+   OUTPUT:
+	RETVAL
+
+xmlNodePtr
+getPreviousSibling( elem )
+	xmlNodePtr elem
+   PREINIT:
+	const char * CLASS = "XML::LibXML::Node";
+   CODE:
+	RETVAL = domPreviousSibling( elem );
+	if ( RETVAL ) {
+	  switch ( RETVAL->type ) {
+	  case 1:
+             CLASS = "XML::LibXML::Element";
+    	     break;
+  	  case 3:
+	     CLASS = "XML::LibXML::Text";
+	     break;
+	  case 8:
+	     CLASS = "XML::LibXML::Comment";
+	     break;
+	  case XML_CDATA_SECTION_NODE:
+	     CLASS = "XML::LibXML::CDATASection";
+	     break;
+	  default:
+  	     break;
+	  }
+	}
+   OUTPUT:
+	RETVAL
+
+xmlNodePtr
+getFirstChild( elem )
+	xmlNodePtr elem
+   PREINIT:
+	char * CLASS = "XML::LibXML::Node";
+   CODE:
+	RETVAL = domFirstChild( elem );
+	if ( RETVAL ) {
+	  switch ( RETVAL->type ) {
+	  case XML_ELEMENT_NODE:
+             CLASS = "XML::LibXML::Element";
+    	     break;
+  	  case XML_TEXT_NODE:
+	     CLASS = "XML::LibXML::Text";
+	     break;
+	  case XML_COMMENT_NODE:
+	     CLASS = "XML::LibXML::Comment";
+	     break;
+	  case XML_CDATA_SECTION_NODE:
+	     CLASS = "XML::LibXML::CDATASection";
+	     break;
+	  default:		 
+  	     break;
+	  }
+	}
+   OUTPUT:
+	RETVAL
+
+
+xmlNodePtr
+getLastChild( elem )
+	xmlNodePtr elem
+   PREINIT:
+	const char * CLASS = "XML::LibXML::Node";
+   CODE:
+	RETVAL = domLastChild( elem );
+	if ( RETVAL ) {
+	  switch ( RETVAL->type ) {
+	  case 1:
+             CLASS = "XML::LibXML::Element";
+    	     break;
+  	  case 3:
+	     CLASS = "XML::LibXML::Text";
+	     break;
+	  case 8:
+	     CLASS = "XML::LibXML::Comment";
+	     break;
+	  case XML_CDATA_SECTION_NODE:
+	     CLASS = "XML::LibXML::CDATASection";
+	     break;
+	  default:
+  	     break;
+	  }
+	}
+   OUTPUT:
+	RETVAL
+
+
+xmlDocPtr
+getOwnerDocument( elem )
+	xmlNodePtr elem
+   PREINIT:
+	const char * CLASS = "XML::LibXML::Document";
+   CODE:
+	RETVAL = domOwnerDocument( elem );
+   OUTPUT:
+	RETVAL
+
+void
+setOwnerDocument( elem, doc )
+	xmlNodePtr elem
+	xmlDocPtr doc
+   CODE:
+	if ( doc ) {
+		if ( elem->doc != doc ) {
+		  domUnbindNode( elem );
+		}
+		elem->doc = doc;
+	}
+
+SV*
+getName( node )
+	xmlNodePtr node
+   PREINIT:
+	const char * name;
+   CODE:
+	name = domNodeName( node );
+   	RETVAL = newSVpvn( (char *)name, xmlStrlen( name ) );
+   OUTPUT:
+	RETVAL
+
+SV*
+getData( node ) 
+	xmlNodePtr node 
+   PREINIT:
+	const char * content;
+   CODE:
+	content = domNodeValue( node );
+	if ( content != 0 ){
+		RETVAL = newSVpvn( (char *)content, xmlStrlen( content ) );
+	}
+	else {
+		RETVAL = &PL_sv_undef;
+	}
+   OUTPUT:
+	RETVAL
+
+
+SV*
+findnodes( node, xpath )
+	xmlNodePtr node
+	char * xpath 
+   PREINIT:
+	xmlNodeSetPtr nodelist;
+	SV * element;
+	int len;
+   PPCODE:
+	len = 0;
+	nodelist = domXPathSelect( node, xpath );
+		if ( nodelist && nodelist->nodeNr > 0 ) {
+	  int i = 0 ;
+ 	  char * cls = "XML::LibXML::Node";
+	  xmlNodePtr tnode;
+
+	  len = nodelist->nodeNr;
+         
+	  for( i ; i < len; i++){
+	    /* we have to create a new instance of an objectptr. and then 
+	     * place the current node into the new object. afterwards we can 
+	     * push the object to the array!
+	     */
+	    element = 0;
+	    tnode = nodelist->nodeTab[i];
+	    element = sv_newmortal(); 
+
+	    switch ( tnode->type ) {
+	    case XML_ELEMENT_NODE: 
+		cls = "XML::LibXML::Element";
+	        break;
+	    case XML_TEXT_NODE:
+		cls = "XML::LibXML::Text";
+		break;
+	    case XML_COMMENT_NODE:
+		cls = "XML::LibXML::Comment";
+		break;
+	    case XML_CDATA_SECTION_NODE:
+		cls = "XML::LibXML::CDATASection";
+		break;
+	    default:
+		break;
+            };
+            XPUSHs( sv_setref_pv( element, cls, (void*)tnode ) );
+          }
+
+          xmlXPathFreeNodeSet( nodelist );
+        }
+	XSRETURN(len);
+
+SV*
+getChildnodes( node )
+	xmlNodePtr node
+   PREINIT:
+	xmlNodePtr cld;
+	SV * element;
+	int len;
+	char * cls = "XML::LibXML::Node";
+   PPCODE:
+	len = 0;
+	
+	cld = node->children;
+	while ( cld ) {	
+	    element = sv_newmortal();
+	    switch ( cld->type ) {
+	    case XML_ELEMENT_NODE: 
+		cls = "XML::LibXML::Element";
+	        break;
+	    case XML_TEXT_NODE:
+		cls = "XML::LibXML::Text";
+		break;
+	    case XML_COMMENT_NODE:
+		cls = "XML::LibXML::Comment";
+		break;
+	    case XML_CDATA_SECTION_NODE:
+		cls = "XML::LibXML::CDATASection";
+		break;
+	    default:
+		break;
+            };
+            XPUSHs( sv_setref_pv( element, cls, (void*)cld ) );
+	    cld = cld->next;
+	    len++;
+	}
+	XSRETURN(len);
+
+MODULE = XML::LibXML         PACKAGE = XML::LibXML::Element
+
+xmlNodePtr
+new(CLASS, name )
+	char * CLASS
+	char * name
+   CODE:
+	/* CLASS = "XML::LibXML::Element"; */
+	RETVAL = xmlNewNode( 0, name );
+	if ( RETVAL != 0 ) {
+		RETVAL->next = 0;
+		RETVAL->prev = 0;
+		RETVAL->children = 0 ;
+		RETVAL->last = 0;
+		RETVAL->doc = 0;
+	}
+   OUTPUT:
+	RETVAL
+
+void
+DESTROY( node )
+	xmlNodePtr node 
+   CODE:
+
+void
+setAttribute( elem, name, value )
+	xmlNodePtr elem	
+	char * name
+	char * value
+   CODE:
+	domSetAttribute( elem, name, value );
+
+int 
+hasAttribute( elem, name ) 
+	xmlNodePtr elem
+	char * name
+   PREINIT:
+	xmlAttrPtr att;
+   CODE:
+	att = xmlHasProp( elem, name );
+	RETVAL = att == NULL ? 0 : 1 ;
+   OUTPUT:
+	RETVAL
+
+SV*
+getAttribute( elem, name ) 
+	xmlNodePtr elem
+	char * name 
+   PREINIT:
+	char * content;
+   CODE:
+	content = domGetAttribute( elem, name );
+	if ( content != NULL ) {
+		RETVAL  = newSVpvn( content, xmlStrlen( content ) );
+	}
+	else {
+		RETVAL = NULL;
+	}
+   OUTPUT:
+	RETVAL
+
+void
+removeAttribute( elem, name ) 	
+	xmlNodePtr elem
+	char * name
+   CODE:
+	domRemoveAttribute( elem, name );	
+
+SV*
+getElementsByTagName( elem, name )
+	xmlNodePtr elem
+	char * name 
+   PREINIT:
+	xmlNodeSetPtr nodelist;
+	SV * element;
+ 	int len;
+   PPCODE:
+	len = 0;
+	nodelist = domGetElementsByTagName( elem , name );
+	if ( nodelist && nodelist->nodeNr > 0 ) {
+	  int i = 0 ;
+ 	  char * cls = "XML::LibXML::Node";
+	  xmlNodePtr tnode;
+
+	  len = nodelist->nodeNr;
+         
+	  for( i ; i < len; i++){
+	    /* we have to create a new instance of an objectptr. and then 
+	     * place the current node into the new object. afterwards we can 
+	     * push the object to the array!
+	     */
+	    element = 0;
+	    tnode = nodelist->nodeTab[i];
+	    element = sv_newmortal(); 
+
+	    switch ( tnode->type ) {
+	    case XML_ELEMENT_NODE: 
+		cls = "XML::LibXML::Element";
+	        break;
+	    case XML_TEXT_NODE:
+		cls = "XML::LibXML::Text";
+		break;
+	    case XML_COMMENT_NODE:
+		cls = "XML::LibXML::Comment";
+		break;
+	    case XML_CDATA_SECTION_NODE:
+		cls = "XML::LibXML::CDATASection";
+		break;
+	    default:
+		break;
+            };
+            XPUSHs( sv_setref_pv( element, cls, (void*)tnode ) );
+          }
+
+          xmlXPathFreeNodeSet( nodelist );
+        }
+	XSRETURN(len);
+
+
+MODULE = XML::LibXML         PACKAGE = XML::LibXML::Text
+
+void
+setData( node, value )
+	xmlNodePtr node
+	char * value 
+   CODE:
+	domSetNodeValue( node, value );
+
+xmlNodePtr
+new( CLASS, content )
+ 	char * CLASS
+	char * content
+   PREINIT:
+	xmlBufferPtr in, out;
+   CODE:
+    	in = xmlBufferCreate();
+	out =xmlBufferCreate();
+    
+	xmlBufferCat( in, content );
+	xmlCharEncInFunc( 
+			xmlGetCharEncodingHandler( 
+				xmlParseCharEncoding("UTF-8") ), 
+			out, 
+			in);
+	RETVAL = xmlNewText( out->content );
+   OUTPUT:
+	RETVAL
+
+void
+DESTROY( node )
+	xmlNodePtr node 
+   CODE:
+
+MODULE = XML::LibXML         PACKAGE = XML::LibXML::Comment
+
+xmlNodePtr
+new( CLASS, content ) 
+  	char * CLASS
+	char * content
+   PREINIT:
+	xmlBufferPtr in, out;
+   CODE:
+    	in = xmlBufferCreate();
+	out =xmlBufferCreate();
+    
+	xmlBufferCat( in, content );
+	xmlCharEncInFunc( 
+			xmlGetCharEncodingHandler( 
+				xmlParseCharEncoding("UTF-8") ), 
+			out, 
+			in);
+	RETVAL = xmlNewComment( out->content );
+   OUTPUT:
+	RETVAL
+
+void
+DESTROY( node )
+	xmlNodePtr node 
+   CODE:
+
+MODULE = XML::LibXML         PACKAGE = XML::LibXML::CDATASection
+
+xmlNodePtr
+new( CLASS , content )
+    	char * CLASS
+	char * content
+   PREINIT:
+	xmlBufferPtr in, out;
+   CODE:
+    	in = xmlBufferCreate();
+	out =xmlBufferCreate();
+    
+	xmlBufferCat( in, content );
+	xmlCharEncInFunc( 
+			xmlGetCharEncodingHandler( 
+				xmlParseCharEncoding("UTF-8") ), 
+			out, 
+			in);
+	RETVAL = xmlNewCDataBlock( 0 , 
+				   out->content, 
+				   xmlStrlen( out->content ) );
+   OUTPUT:
+	RETVAL
+
+void
+DESTROY( node )
+	xmlNodePtr node 
+   CODE:
