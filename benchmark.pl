@@ -87,17 +87,17 @@ for my $driver (@{$options{d}}) {
             }
 
             eval {
+                my $t0 = [gettimeofday];
+
                 $pkg->can('load_stylesheet')->($cmp->{stylesheet});
                 $pkg->can('load_input')->($cmp->{input});
 
                 $iter = $cmp->{iterations};
                 $iter = 1 if $options{t};
 
-                my $t0 = [gettimeofday];
-
                 $pkg->can('run_transform')->($cmp->{output}, $iter);
 
-                $ms = int(tv_interval( $t0 ) * 10000);
+                $ms = int((tv_interval( $t0 ) * 10000) / $iter);
 
                 $kb_in += (stat($cmp->{input}))[7];
                 $kb_in += (stat($cmp->{stylesheet}))[7];
