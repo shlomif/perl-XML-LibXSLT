@@ -19,3 +19,6 @@ XML-LibXML/t/01basic.t
 XML-LibXML/t/02parsestring.t
 XML-LibXML/t/03parsefile.t
 XML-LibXML/t/04parsefh.t
+benchmark.pl
+Driver/LibXSLT.pm
+Driver/Sablotron.pm

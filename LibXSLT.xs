@@ -131,6 +131,29 @@ error_handler(void * ctxt, const char * msg, ...)
     LEAVE;
 }
 
+void
+setup_parser(SV * self)
+{
+    SV ** value;
+    HV * real_obj = (HV *)SvRV(self);
+    
+    value = hv_fetch(real_obj, "error_handler", 13, 0);
+    if (value && SvTRUE(*value)) {
+        xsltSetGenericErrorFunc((void*)self, (xmlGenericErrorFunc)error_handler);
+    }
+    else {
+        xsltSetGenericErrorFunc((void*)self, (xmlGenericErrorFunc)xsltGenericError);
+    }
+    
+    value = hv_fetch(real_obj, "max_depth", 9, 0);
+    if (value && SvTRUE(*value)) {
+        xsltMaxDepth = SvIV(*value);
+    }
+    else {
+        xsltMaxDepth = 250;
+    }
+}
+
 MODULE = XML::LibXSLT         PACKAGE = XML::LibXSLT
 
 xsltStylesheetPtr
@@ -145,13 +168,7 @@ parse_stylesheet(self, doc)
             XSRETURN_UNDEF;
         }
         doc->standalone = 42;
-        value = hv_fetch((HV *)SvRV(self), "error_handler", 13, 0);
-        if (value && SvTRUE(*value)) {
-            xsltSetGenericErrorFunc((void*)self, (xmlGenericErrorFunc)error_handler);
-        }
-        else {
-            xsltSetGenericErrorFunc((void*)self, (xmlGenericErrorFunc)xsltGenericDebug);
-        }
+        setup_parser(self);
         RETVAL = xsltParseStylesheetDoc(doc);
         if (RETVAL == NULL) {
             XSRETURN_UNDEF;
