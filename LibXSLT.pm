@@ -93,7 +93,7 @@ XML::LibXSLT::Stylesheet object, or undef on failure. If the XSLT is
 invalid, an exception will be thrown, so wrap the call to 
 parse_stylesheet in an eval{} block to trap this.
 
-=head2 parse_file($filename)
+=head2 parse_stylesheet_file($filename)
 
 Exactly the same as the above, but parses the given filename directly.
 
