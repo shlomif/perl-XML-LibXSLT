@@ -291,7 +291,7 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
     PUTBACK;
 
     perl_dispatch = sv_2mortal(newSVpv("XML::LibXSLT::perl_dispatcher",0));
-    count = call_sv(perl_dispatch, G_SCALAR|G_EVAL);
+    count = perl_call_sv(perl_dispatch, G_SCALAR|G_EVAL);
     
     SPAGAIN;
 
