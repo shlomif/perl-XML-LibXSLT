@@ -45,62 +45,33 @@ extern "C" {
 #define xs_warn(string)
 #endif
 
-struct _ProxyNode {
-    xmlNodePtr node;
-    xmlNodePtr owner;
-    int count;
-};
-
-/* helper type for the proxy structure */
+struct _ProxyNode;
 typedef struct _ProxyNode ProxyNode;
-
-/* pointer to the proxy structure */
 typedef ProxyNode* ProxyNodePtr;
 
 /* this my go only into the header used by the xs */
 #define SvPROXYNODE(x) ((ProxyNodePtr)SvIV(SvRV(x)))
 
-#define PmmREFCNT(node)      node->count
-#define PmmREFCNT_inc(node)  node->count++
-#define PmmNODE(xnode)       xnode->node
-#define PmmOWNER(node)       node->owner
-#define PmmOWNERPO(node)     ((node && PmmOWNER(node)) ? (ProxyNodePtr)PmmOWNER(node)->_private : node)
+#define x_PmmREFCNT(node)      node->count
+#define x_PmmREFCNT_inc(node)  node->count++
+#define x_PmmNODE(xnode)       xnode->node
+#define x_PmmOWNER(node)       node->owner
+#define x_PmmOWNERPO(node)     ((node && x_PmmOWNER(node)) ? (ProxyNodePtr)x_PmmOWNER(node)->_private : node)
 
 ProxyNodePtr
-PmmNewNode(xmlNodePtr node);
+x_PmmNewNode(xmlNodePtr node);
 
 ProxyNodePtr
-PmmNewFragment(xmlDocPtr document);
-
-SV*
-PmmCreateDocNode( unsigned int type, ProxyNodePtr pdoc, ...);
+x_PmmNewFragment(xmlDocPtr document);
 
 int
-PmmREFCNT_dec( ProxyNodePtr node );
+x_PmmREFCNT_dec( ProxyNodePtr node );
 
 SV*
-PmmNodeToSv( xmlNodePtr node, ProxyNodePtr owner );
+x_PmmNodeToSv( xmlNodePtr node, ProxyNodePtr owner );
 
 xmlNodePtr
-PmmSvNode( SV * perlnode );
-
-xmlNodePtr
-PmmSvOwner( SV * perlnode );
-
-SV*
-PmmSetSvOwner(SV * perlnode, SV * owner );
-
-void
-PmmFixOwner(ProxyNodePtr node, ProxyNodePtr newOwner );
-
-int
-PmmContextREFCNT_dec( ProxyNodePtr node );
-
-SV*
-PmmContextSv( xmlParserCtxtPtr ctxt );
-
-xmlParserCtxtPtr
-PmmSvContext( SV * perlctxt );
+x_PmmSvNode( SV * perlnode );
 
 /**
  * NAME domNodeTypeName
@@ -112,52 +83,6 @@ PmmSvContext( SV * perlctxt );
  * CLASS = domNodeTypeName( node );
  */
 const char*
-PmmNodeTypeName( xmlNodePtr elem );
-
-xmlChar*
-PmmEncodeString( const char *encoding, const char *string );
-
-char*
-PmmDecodeString( const char *encoding, const xmlChar *string);
-
-/* string manipulation will go elsewhere! */
-
-/*
- * NAME c_string_to_sv
- * TYPE function
- * SYNOPSIS
- * SV *my_sv = c_string_to_sv( "my string", encoding );
- * 
- * this function converts a libxml2 string to a SV*. although the
- * string is copied, the func does not free the c-string for you!
- *
- * encoding is either NULL or a encoding string such as provided by
- * the documents encoding. if encoding is NULL UTF8 is assumed.
- *
- */
-SV*
-C2Sv( const xmlChar *string, const xmlChar *encoding );
-
-/*
- * NAME sv_to_c_string
- * TYPE function
- * SYNOPSIS
- * SV *my_sv = sv_to_c_string( my_sv, encoding );
- * 
- * this function converts a SV* to a libxml string. the SV-value will
- * be copied into a *newly* allocated string. (don't forget to free it!)
- *
- * encoding is either NULL or a encoding string such as provided by
- * the documents encoding. if encoding is NULL UTF8 is assumed.
- *
- */
-xmlChar *
-Sv2C( SV* scalar, const xmlChar *encoding );
-
-SV*
-nodeC2Sv( const xmlChar * string,  xmlNodePtr refnode );
-
-xmlChar *
-nodeSv2C( SV * scalar, xmlNodePtr refnode );
+x_PmmNodeTypeName( xmlNodePtr elem );
 
 #endif
