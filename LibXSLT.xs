@@ -134,15 +134,17 @@ void
 LibXSLT_error_handler(void * ctxt, const char * msg, ...)
 {
     va_list args;
-    char buffer[50000];
+    SV * sv;
+    STRLEN n_a;
     
-    buffer[0] = 0;
+    sv = NEWSV(0,0);
     
     va_start(args, msg);
-    vsprintf(&buffer[strlen(buffer)], msg, args);
+    sv_vsetpvfn(sv, msg, strlen(msg), &args, NULL, 0, NULL);
     va_end(args);
 
-    croak(buffer);
+    sv_2mortal(sv);
+    croak(SvPV(sv, n_a));
 }
 
 void
@@ -151,24 +153,24 @@ LibXSLT_debug_handler(void * ctxt, const char * msg, ...)
     dSP;
     
     va_list args;
-    char buffer[50000];
+    SV * sv;
+    STRLEN n_a;
     
-    buffer[0] = 0;
+    sv = NEWSV(0,0);
 
     va_start(args, msg);
-    vsprintf(&buffer[strlen(buffer)], msg, args);
+    sv_vsetpvfn(sv, msg, strlen(msg), &args, NULL, 0, NULL);
     va_end(args);
 
     if (LibXSLT_debug_cb && SvTRUE(LibXSLT_debug_cb)) {
         int cnt = 0;
-        SV * tbuff = newSVpv((char*)buffer, 0);
     
         ENTER;
         SAVETMPS;
 
         PUSHMARK(SP);
         EXTEND(SP, 1);
-        PUSHs(tbuff);
+        PUSHs(sv);
         PUTBACK;
 
         cnt = perl_call_sv(LibXSLT_debug_cb, G_SCALAR);
@@ -185,6 +187,7 @@ LibXSLT_debug_handler(void * ctxt, const char * msg, ...)
         LEAVE;
     }
     
+    SvREFCNT_dec(sv);
 }
 
 MODULE = XML::LibXSLT         PACKAGE = XML::LibXSLT
