@@ -375,11 +375,23 @@ PROTOTYPES: DISABLE
 BOOT:
     LIBXML_TEST_VERSION
     xsltMaxDepth = 250;
+    xsltSetXIncludeDefault(1);
     LibXSLT_HV_allCallbacks = newHV();
 #ifdef HAVE_EXSLT
     exsltRegisterAll();
 #endif
 
+
+int
+xinclude_default(self, ...)
+        SV * self
+    CODE:
+        RETVAL = xsltGetXIncludeDefault();
+        if (items > 1) {
+           xsltSetXIncludeDefault(SvIV(ST(1)));
+        }
+    OUTPUT:
+        RETVAL
 
 int
 max_depth(self, ...)
