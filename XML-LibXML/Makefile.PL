@@ -18,8 +18,8 @@ my $DEBUG = delete $config{DEBUG};
 # get libs and inc from gnome-config
 eval {
     print "running gnome-config... ";
-    $config{LIBS} ||= backtick('gnome-config --libs xml2');
-    $config{INC} ||= backtick('gnome-config --cflags xml2');
+    $config{LIBS} ||= backtick('xml2-config --libs');
+    $config{INC} ||= backtick('xml2-config --cflags');
     print "ok\n";
 };
 if ($@) {
