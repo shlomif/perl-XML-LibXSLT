@@ -1,5 +1,11 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.03
+    - Added output_encoding and media_type methods
+
+1.02
+    - Segfault fixes
+
 1.01
     - Removed hack where we set dom->standalone = 42 to prevent
       XML::LibXML from garbage collecting
