@@ -25,6 +25,7 @@ extern "C" {
 #include "perl.h"
 #include "XSUB.h"
 #include "perl-libxml-mm.h"
+#include "ppport.h"
 #ifdef __cplusplus
 }
 #endif
