@@ -3,6 +3,9 @@ Revision history for Perl extension XML::LibXSLT.
 1.51
     - Mac OS X fixes
     - Cleaned up XPath quoting
+    - Fixed document('') test (though if it still doesn't work
+      in your code, see t/07blankdoc.t for details about how to
+      make it work).
 
 1.50
     - Cleaned up media_type method so it doesn't segfault.
