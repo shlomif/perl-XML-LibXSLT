@@ -90,7 +90,7 @@ sub close_callback {
 
 sub parse_stylesheet {
     my $self = shift;
-    if (!$self->{XML_LIBXSLT_MATCH}) {
+    if (!ref($self) || !$self->{XML_LIBXSLT_MATCH}) {
         return $self->_parse_stylesheet(@_);
     }
     local $XML::LibXML::match_cb = $self->{XML_LIBXSLT_MATCH};
@@ -102,7 +102,7 @@ sub parse_stylesheet {
 
 sub parse_stylesheet_file {
     my $self = shift;
-    if (!$self->{XML_LIBXSLT_MATCH}) {
+    if (!ref($self) || !$self->{XML_LIBXSLT_MATCH}) {
         return $self->_parse_stylesheet_file(@_);
     }
     local $XML::LibXML::match_cb = $self->{XML_LIBXSLT_MATCH};
