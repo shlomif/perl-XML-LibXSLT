@@ -22,7 +22,7 @@ my $style_doc = $parser->parse_string(<<'EOF');
     version="1.0"
 >
 
-<xsl:output method="xml"/>
+<xsl:output media-type="text/vnd.wap.wml" />
 
 <xsl:template match="*|@*">
 <xsl:copy-of select="."/>
@@ -39,4 +39,4 @@ ok($stylesheet);
 
 ok($stylesheet->output_encoding, 'UTF-8');
 
-ok($stylesheet->media_type, 'text/xml');
+ok($stylesheet->media_type, 'text/vnd.wap.wml');
