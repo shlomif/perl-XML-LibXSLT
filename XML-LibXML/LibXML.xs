@@ -22,6 +22,8 @@ extern "C" {
 
 #define BUFSIZE 32768
 
+#define PREFIX LibXML
+
 #ifdef VMS
 extern int xmlDoValidityCheckingDefaultVal;
 #define xmlDoValidityCheckingDefaultValue xmlDoValidityCheckingDefaultVal
@@ -47,34 +49,35 @@ extern int xmlPedanticParserDefaultValue;
         cb = newSVsv(fld);\
     }
 
-SV * match_cb;
-SV * read_cb;
-SV * open_cb;
-SV * close_cb;
-SV * error;
+SV * PREFIX_match_cb;
+SV * PREFIX_read_cb;
+SV * PREFIX_open_cb;
+SV * PREFIX_close_cb;
+SV * PREFIX_error;
 
 void
-free_all_callbacks(void)
+PREFIX_free_all_callbacks(void)
 {
-    if (match_cb) {
-        SvREFCNT_dec(match_cb);
+    if (PREFIX_match_cb) {
+        SvREFCNT_dec(PREFIX_match_cb);
     }
     
-    if (read_cb) {
-        SvREFCNT_dec(read_cb);
+    if (PREFIX_read_cb) {
+        SvREFCNT_dec(PREFIX_read_cb);
     }
     
-    if (open_cb) {
-        SvREFCNT_dec(open_cb);
+    if (PREFIX_open_cb) {
+        SvREFCNT_dec(PREFIX_open_cb);
     }
     
-    if (close_cb) {
-        SvREFCNT_dec(close_cb);
+    if (PREFIX_close_cb) {
+        SvREFCNT_dec(PREFIX_close_cb);
     }
 
 }
 
-xmlParserInputPtr load_external_entity(
+xmlParserInputPtr
+PREFIX_load_external_entity(
         const char * URL, 
         const char * ID, 
         xmlParserCtxtPtr ctxt)
@@ -113,16 +116,15 @@ xmlParserInputPtr load_external_entity(
         
         results = POPs;
         
-        PUTBACK;
-        FREETMPS;
-        LEAVE;
-        
         results_pv = SvPV(results, results_len);
         input_buf = xmlParserInputBufferCreateMem(
                         results_pv,
                         results_len,
                         XML_CHAR_ENCODING_NONE
                         );
+        
+        FREETMPS;
+        LEAVE;
         
         return xmlNewIOInputStream(ctxt, input_buf, XML_CHAR_ENCODING_NONE);
     }
@@ -135,12 +137,14 @@ xmlParserInputPtr load_external_entity(
     
 }
 
-int input_match(char const * filename)
+int 
+PREFIX_input_match(char const * filename)
 {
     int results = 0;
     
-    if (match_cb && SvTRUE(match_cb)) {
+    if (PREFIX_match_cb && SvTRUE(PREFIX_match_cb)) {
         int count;
+        SV * res;
 
         dSP;
 
@@ -152,18 +156,20 @@ int input_match(char const * filename)
         PUSHs(sv_2mortal(newSVpv((char*)filename, 0)));
         PUTBACK;
 
-        count = perl_call_sv(match_cb, G_SCALAR);
+        count = perl_call_sv(PREFIX_match_cb, G_SCALAR);
 
         SPAGAIN;
-
+        
         if (count != 1) {
             croak("match callback must return a single value");
         }
+        
+        res = POPs;
 
-        if (SvTRUE(POPs)) {
+        if (SvTRUE(res)) {
             results = 1;
         }
-
+        
         PUTBACK;
         FREETMPS;
         LEAVE;
@@ -172,11 +178,12 @@ int input_match(char const * filename)
     return results;
 }
 
-void * input_open(char const * filename)
+void * 
+PREFIX_input_open(char const * filename)
 {
     SV * results;
     
-    if (open_cb && SvTRUE(open_cb)) {
+    if (PREFIX_open_cb && SvTRUE(PREFIX_open_cb)) {
         int count;
 
         dSP;
@@ -189,10 +196,10 @@ void * input_open(char const * filename)
         PUSHs(sv_2mortal(newSVpv((char*)filename, 0)));
         PUTBACK;
 
-        count = perl_call_sv(open_cb, G_SCALAR);
+        count = perl_call_sv(PREFIX_open_cb, G_SCALAR);
 
         SPAGAIN;
-
+        
         if (count != 1) {
             croak("open callback must return a single value");
         }
@@ -209,14 +216,16 @@ void * input_open(char const * filename)
     return (void *)results;
 }
 
-int input_read(void * context, char * buffer, int len)
+int 
+PREFIX_input_read(void * context, char * buffer, int len)
 {
-    SV * results;
-    int res_len = 0;
+    SV * results = NULL;
+    STRLEN res_len = 0;
+    const char * output;
     
     SV * ctxt = (SV *)context;
     
-    if (read_cb && SvTRUE(read_cb)) {
+    if (PREFIX_read_cb && SvTRUE(PREFIX_read_cb)) {
         int count;
 
         dSP;
@@ -230,33 +239,39 @@ int input_read(void * context, char * buffer, int len)
         PUSHs(sv_2mortal(newSViv(len)));
         PUTBACK;
 
-        count = perl_call_sv(read_cb, G_SCALAR);
+        count = perl_call_sv(PREFIX_read_cb, G_SCALAR);
 
         SPAGAIN;
-
+        
         if (count != 1) {
             croak("read callback must return a single value");
         }
 
-        results = POPs;
-
-        PUTBACK;
+        output = POPp;
+        if (output != NULL) {
+            res_len = strlen(output);
+            if (res_len) {
+                strncpy(buffer, output, res_len);
+            }
+            else {
+                buffer[0] = 0;
+            }
+        }
+        
         FREETMPS;
         LEAVE;
     }
     
-    if (results != NULL) {
-        buffer = SvPV(results, res_len);
-    }
-    
+    /* warn("read, asked for: %d, returning: [%d] %s\n", len, res_len, buffer); */
     return res_len;
 }
 
-void input_close(void * context)
+void 
+PREFIX_input_close(void * context)
 {
     SV * ctxt = (SV *)context;
     
-    if (close_cb && SvTRUE(close_cb)) {
+    if (PREFIX_close_cb && SvTRUE(PREFIX_close_cb)) {
         int count;
 
         dSP;
@@ -269,7 +284,7 @@ void input_close(void * context)
         PUSHs(ctxt);
         PUTBACK;
 
-        count = perl_call_sv(close_cb, G_SCALAR);
+        count = perl_call_sv(PREFIX_close_cb, G_SCALAR);
 
         SPAGAIN;
 
@@ -286,7 +301,7 @@ void input_close(void * context)
 }
 
 void
-error_handler(void * ctxt, const char * msg, ...)
+PREFIX_error_handler(void * ctxt, const char * msg, ...)
 {
     va_list args;
     char buffer[50000];
@@ -297,12 +312,12 @@ error_handler(void * ctxt, const char * msg, ...)
     vsprintf(&buffer[strlen(buffer)], msg, args);
     va_end(args);
     
-    sv_catpv(error, buffer);
+    sv_catpv(PREFIX_error, buffer);
 /*    croak(buffer); */
 }
 
 void
-validity_error(void * ctxt, const char * msg, ...)
+PREFIX_validity_error(void * ctxt, const char * msg, ...)
 {
     va_list args;
     char buffer[50000];
@@ -313,12 +328,12 @@ validity_error(void * ctxt, const char * msg, ...)
     vsprintf(&buffer[strlen(buffer)], msg, args);
     va_end(args);
     
-    sv_catpv(error, buffer);
+    sv_catpv(PREFIX_error, buffer);
 /*    croak(buffer); */
 }
 
 void
-validity_warning(void * ctxt, const char * msg, ...)
+PREFIX_validity_warning(void * ctxt, const char * msg, ...)
 {
     va_list args;
     char buffer[50000];
@@ -333,7 +348,7 @@ validity_warning(void * ctxt, const char * msg, ...)
 }
 
 xmlParserCtxtPtr
-get_context(SV * self)
+PREFIX_get_context(SV * self)
 {
     SV ** ctxt_sv;
     ctxt_sv = hv_fetch((HV *)SvRV(self), "_context", 8, 0);
@@ -344,7 +359,7 @@ get_context(SV * self)
 }
 
 xmlDocPtr
-parse_stream(SV * self, SV * ioref)
+PREFIX_parse_stream(SV * self, SV * ioref)
 {
     dSP;
     
@@ -363,7 +378,7 @@ parse_stream(SV * self, SV * ioref)
     tbuff = newSV(0);
     tsize = newSViv(BUFSIZE);
     
-    ctxt = get_context(self);
+    ctxt = PREFIX_get_context(self);
     
     while (!done) {
         int cnt;
@@ -437,33 +452,33 @@ PROTOTYPES: DISABLE
 BOOT:
     xmlInitParser();
     xmlRegisterInputCallbacks(
-            (xmlInputMatchCallback)input_match,
-            (xmlInputOpenCallback)input_open,
-            (xmlInputReadCallback)input_read,
-            (xmlInputCloseCallback)input_close
+            (xmlInputMatchCallback)PREFIX_input_match,
+            (xmlInputOpenCallback)PREFIX_input_open,
+            (xmlInputReadCallback)PREFIX_input_read,
+            (xmlInputCloseCallback)PREFIX_input_close
         );
     xmlSubstituteEntitiesDefaultValue = 1;
     xmlKeepBlanksDefaultValue = 1;
-    xmlSetExternalEntityLoader((xmlExternalEntityLoader)load_external_entity);
-    xmlSetGenericErrorFunc(PerlIO_stderr(), (xmlGenericErrorFunc)error_handler);
-    error = newSVpv("", 0);
+    xmlSetExternalEntityLoader((xmlExternalEntityLoader)PREFIX_load_external_entity);
+    xmlSetGenericErrorFunc(PerlIO_stderr(), (xmlGenericErrorFunc)PREFIX_error_handler);
+    PREFIX_error = newSVpv("", 0);
 
 void
 END()
     CODE:
-        free_all_callbacks();
+        PREFIX_free_all_callbacks();
         xmlCleanupParser();
-        SvREFCNT_dec(error);
+        SvREFCNT_dec(PREFIX_error);
 
 SV *
 match_callback(self, ...)
         SV * self
     CODE:
         if (items > 1) {
-            SET_CB(match_cb, ST(1));
+            SET_CB(PREFIX_match_cb, ST(1));
         }
         else {
-            RETVAL = match_cb ? sv_2mortal(match_cb) : &PL_sv_undef;
+            RETVAL = PREFIX_match_cb ? sv_2mortal(PREFIX_match_cb) : &PL_sv_undef;
         }
     OUTPUT:
         RETVAL
@@ -473,10 +488,10 @@ open_callback(self, ...)
         SV * self
     CODE:
         if (items > 1) {
-            SET_CB(open_cb, ST(1));
+            SET_CB(PREFIX_open_cb, ST(1));
         }
         else {
-            RETVAL = open_cb ? sv_2mortal(open_cb) : &PL_sv_undef;
+            RETVAL = PREFIX_open_cb ? sv_2mortal(PREFIX_open_cb) : &PL_sv_undef;
         }
     OUTPUT:
         RETVAL
@@ -486,10 +501,10 @@ read_callback(self, ...)
         SV * self
     CODE:
         if (items > 1) {
-            SET_CB(read_cb, ST(1));
+            SET_CB(PREFIX_read_cb, ST(1));
         }
         else {
-            RETVAL = read_cb ? sv_2mortal(read_cb) : &PL_sv_undef;
+            RETVAL = PREFIX_read_cb ? sv_2mortal(PREFIX_read_cb) : &PL_sv_undef;
         }
     OUTPUT:
         RETVAL
@@ -499,10 +514,10 @@ close_callback(self, ...)
         SV * self
     CODE:
         if (items > 1) {
-            SET_CB(close_cb, ST(1));
+            SET_CB(PREFIX_close_cb, ST(1));
         }
         else {
-            RETVAL = close_cb ? sv_2mortal(close_cb) : &PL_sv_undef;
+            RETVAL = PREFIX_close_cb ? sv_2mortal(PREFIX_close_cb) : &PL_sv_undef;
         }
     OUTPUT:
         RETVAL
@@ -569,8 +584,9 @@ _prepare(self)
         xmlParserCtxtPtr ctxt;
         SV * ctxt_sv;
     CODE:
-        sv_setpvn(error, "", 0);
+        sv_setpvn(PREFIX_error, "", 0);
         ctxt = xmlCreatePushParserCtxt(NULL, NULL, "", 0, NULL);
+        ctxt->_private = (void*)self;
         ctxt_sv = NEWSV(0, 0);
         sv_setref_pv(ctxt_sv, "XML::LibXML::Context", (void*)ctxt);
         hv_store((HV *)SvRV(self), "_context", 8, ctxt_sv, 0);
@@ -587,6 +603,16 @@ _release(self)
                         )
                     );
 
+char *
+get_last_error(CLASS)
+        char * CLASS
+    PREINIT:
+        STRLEN len;
+    CODE:
+        RETVAL = SvPV(PREFIX_error, len);
+    OUTPUT:
+        RETVAL
+
 xmlDocPtr
 _parse_string(self, string)
         SV * self
@@ -599,14 +625,14 @@ _parse_string(self, string)
         int well_formed;
     CODE:
         ptr = SvPV(string, len);
-        ctxt = get_context(self);
+        ctxt = PREFIX_get_context(self);
         xmlParseChunk(ctxt, ptr, len, 0);
         xmlParseChunk(ctxt, ptr, 0, 1);
         well_formed = ctxt->wellFormed;
         RETVAL = ctxt->myDoc;
         if (!well_formed) {
             xmlFreeDoc(RETVAL);
-            croak(SvPV(error, len));
+            croak(SvPV(PREFIX_error, len));
         }
     OUTPUT:
         RETVAL
@@ -617,10 +643,11 @@ _parse_fh(self, fh)
         SV * fh
     PREINIT:
         char * CLASS = "XML::LibXML::Document";
+        STRLEN len;
     CODE:
-        RETVAL = parse_stream(self, fh);
+        RETVAL = PREFIX_parse_stream(self, fh);
         if (RETVAL == NULL) {
-            XSRETURN_UNDEF;
+            croak(SvPV(PREFIX_error, len));
         }
     OUTPUT:
         RETVAL
@@ -644,7 +671,7 @@ _parse_file(self, filename)
 	    f = PerlIO_open(filename, "r");
 	}
 	if (f != NULL) {
-            ctxt = get_context(self);
+            ctxt = PREFIX_get_context(self);
 	    res = PerlIO_read(f, chars, 4);
 	    if (res > 0) {
                 xmlParseChunk(ctxt, chars, res, 0);
@@ -657,7 +684,7 @@ _parse_file(self, filename)
 		if (!ret) {
                     PerlIO_close(f);
 		    xmlFreeDoc(RETVAL);
-		    croak(SvPV(error, len));
+		    croak(SvPV(PREFIX_error, len));
 		}
 	    }
             PerlIO_close(f);
@@ -717,8 +744,8 @@ is_valid(self, ...)
                 croak("is_valid: argument must be a DTD object");
             }
             cvp.userData = (void*)PerlIO_stderr();
-            cvp.error = (xmlValidityErrorFunc)validity_error;
-            cvp.warning = (xmlValidityWarningFunc)validity_warning;
+            cvp.error = (xmlValidityErrorFunc)PREFIX_validity_error;
+            cvp.warning = (xmlValidityWarningFunc)PREFIX_validity_warning;
             RETVAL = xmlValidateDtd(&cvp, self, dtd);
         }
         else {
