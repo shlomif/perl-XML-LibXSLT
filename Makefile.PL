@@ -46,7 +46,7 @@ OPT
 
 }
 
-my $LINK = "$Config{ld} -o conftest $Config{ccflags} -I$Config{incpath} %s $Config{ldflags} conftest.c $Config{libs} %s %s";
+my $LINK = "$Config{ld} -o conftest $Config{ccflags} -I$Config{incpath} %s $Config{lddlflags} $Config{ldflags} conftest.c $Config{libs} %s %s";
 
 if ($config{LIBS} !~ /\-lxslt/) {
     $config{LIBS} .= ' -lxslt -lxml2 -lz -lm';
