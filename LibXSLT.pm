@@ -202,10 +202,11 @@ current date and time as a string:
   </xsl:template>
   </xsl:stylesheet>
 
-If you pass parameters to your extension function they are all down
-converted into strings at runtime - there is no internal access to
-nodelists. The return from your function is also just a plain string,
-there is no support for returning a nodelist.
+Parameters can be in whatever format you like. If you pass in a nodelist
+it will be a XML::LibXML::NodeList object in your perl code, and a
+number will be a XML::LibXML::Number object and so on. Return values can
+be a nodelist or a plain value - the code will just do the right thing.
+But only a single return value is supported.
 
 =head1 API
 
