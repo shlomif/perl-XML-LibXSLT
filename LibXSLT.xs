@@ -282,7 +282,9 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
             XPUSHs(sv_2mortal(newSVpv(obj->stringval, 0)));
             break;
         default:
-            croak("Unknown XPath return type");
+            warn("Unknown XPath return type (%d) in call to {%s}%s - assuming string", uri, function);
+            XPUSHs(sv_2mortal(newSVpv("XML::LibXML::Literal", 0)));
+            XPUSHs(sv_2mortal(newSVpv(obj->stringval, 0)));
         }
         xmlXPathFreeObject(obj);
     }
