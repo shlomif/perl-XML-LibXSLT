@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan tests => 4 }
+BEGIN { plan tests => 7 }
 use XML::LibXSLT;
 use XML::LibXML;
 
@@ -15,4 +15,12 @@ ok($source);
 my $style_doc = $parser->parse_file('example/1.xsl');
 my $stylesheet = $xslt->parse_stylesheet($style_doc);
 my $results = $stylesheet->transform($source);
+ok($stylesheet->output_string($results));
+
+$source = $parser->parse_file('example/2.xml');
+ok($source);
+$style_doc = $parser->parse_file('example/2.xsl');
+$stylesheet = $xslt->parse_stylesheet($style_doc);
+$results = $stylesheet->transform($source);
+ok($stylesheet->media_type);
 ok($stylesheet->output_string($results));
