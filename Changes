@@ -2,6 +2,10 @@ Revision history for Perl extension XML::LibXSLT.
 
 1.53
     - Fixed ordering of params to perl extension funcs
+    - Implemented nodelist and other data type passing to
+      extension functions, and returning nodelist and elements
+      (some code from Ido Ben-Zvi)
+    - Slightly better error handling
 
 1.52
     - Perl extension functions (whee!)
