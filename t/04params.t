@@ -5,9 +5,6 @@ use XML::LibXSLT;
 use XML::LibXML;
 ok(1);
 
-my ($xml_file, $xsl_file) = @_;
-
-
 my $parser = XML::LibXML->new();
 my $xslt = XML::LibXSLT->new();
 
@@ -50,7 +47,7 @@ ok($stylesheet);
 
 my $results = $stylesheet->transform($source,
         'incoming' => 'INCOMINGTEXT',
-        'incoming' => 'INCOMINGTEXT2',
+#        'incoming' => 'INCOMINGTEXT2',
         'outgoing' => 'OUTGOINGTEXT',
         );
 
