@@ -46,18 +46,43 @@ sub callbacks {
     my $self = shift;
     if (@_) {
         my ($match, $open, $read, $close) = @_;
-        $self->match_callback($match);
-        $self->open_callback($open);
-        $self->read_callback($read);
-        $self->close_callback($close);
+
+        $self->{XML_LIBXSLT_MATCH} = $match ;
+        $self->{XML_LIBXSLT_OPEN} = $open ;
+        $self->{XML_LIBXSLT_READ} = $read ;
+        $self->{XML_LIBXSLT_CLOSE} = $close ;
     }
     else {
         return
-            $self->match_callback,
-            $self->open_callback,
-            $self->read_callback,
-            $self->close_callback;
+            $self->{XML_LIBXSLT_MATCH},
+            $self->{XML_LIBXSLT_OPEN},
+            $self->{XML_LIBXSLT_READ},
+            $self->{XML_LIBXSLT_CLOSE};
     }
+}
+
+sub match_callback {
+    my $self = shift;
+    $self->{XML_LIBXSLT_MATCH} = shift if scalar @_;
+    return $self->{XML_LIBXSLT_MATCH};
+}
+
+sub open_callback {
+    my $self = shift;
+    $self->{XML_LIBXSLT_OPEN} = shift if scalar @_;
+    return $self->{XML_LIBXSLT_OPEN};
+}
+
+sub read_callback {
+    my $self = shift;
+    $self->{XML_LIBXSLT_READ} = shift if scalar @_;
+    return $self->{XML_LIBXSLT_READ};
+}
+
+sub close_callback {
+    my $self = shift;
+    $self->{XML_LIBXSLT_CLOSE} = shift if scalar @_;
+    return $self->{XML_LIBXSLT_CLOSE};
 }
 
 1;
