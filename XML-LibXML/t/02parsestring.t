@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan tests => 3 };
+BEGIN { plan tests => 4 };
 use XML::LibXML;
 ok(1);
 
@@ -12,8 +12,11 @@ EOT
 
 ok($doc);
 
-my $doc2 = $parser->parse_string(<<'EOT');
-<foo/>
+eval {
+    my $fail = $parser->parse_string(<<'EOT');
+<foo>&</foo>
 EOT
+};
+ok($@);
 
 # warn "doc is: ", $doc2->toString, "\n";
