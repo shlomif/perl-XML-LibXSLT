@@ -317,10 +317,10 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
             ret =  (xmlXPathObjectPtr)xmlXPathNewNodeSet(NULL);  
             array_result = (AV*)SvRV(perl_result);
             while (av_len(array_result) >= 0) {
-                    /* memory leak ?? */
-                    tmp_node1 = (xmlNodePtr)x_PmmSvNode(av_shift(array_result));
+                    tmp_node1 = (xmlNodePtr)x_PmmSvNode(sv_2mortal(av_shift(array_result)));
                     tmp_node = xmlDocCopyNode(tmp_node1, ctxt->context->doc, 1);
                     xmlXPathNodeSetAdd(ret->nodesetval,tmp_node);
+                    xmlFreeNode(tmp_node);
             }
             goto FINISH;
         } 
