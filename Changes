@@ -1,5 +1,8 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.08
+    - Fixed Makefile.PL check for libxslt > 0.7.0 to work with 1.0.0
+
 1.07
     - Fixes to work with XML::LibXML 0.94
 
