@@ -6,6 +6,10 @@ use strict;
 use vars qw($VERSION @ISA);
 
 use XML::LibXML 1.49;
+use XML::LibXML::Literal;
+use XML::LibXML::Boolean;
+use XML::LibXML::Number;
+use XML::LibXML::NodeList;
 
 require Exporter;
 
