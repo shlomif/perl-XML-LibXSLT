@@ -67,6 +67,16 @@ A subroutine reference or function name that is called whenever an XSLT
 processsing error occurs. Note that this is not the same as an XML
 parsing error - for that see L<XML::LibXSLT>.
 
+=item debug_handler
+
+This is identical to error_handler above, except for libxslt debug 
+messages.
+
+=item max_depth
+
+Maximum recurse depth. If your stylesheet recurses, XML::LibXSLT will by
+default stop at 250 recursions. Set this if you want that value increased.
+
 =back
 
 =head1 API
@@ -79,6 +89,11 @@ C<$doc> here is an XML::LibXML::Document object (see L<XML::LibXML>)
 representing an XSLT file. This method will return a 
 XML::LibXSLT::Stylesheet object, or undef on failure.
 
+=head2 parse_file($filename)
+
+Parses the file given in $filename, returning a XML::LibXSLT::Stylesheet
+object, or undef on failure.
+
 =head1 XML::LibXSLT::Stylesheet
 
 The main API is on the stylesheet, though it is fairly minimal.
@@ -87,6 +102,10 @@ One of the main advantages of XML::LibXSLT is that you have a generic
 stylesheet object which you call the transform() method passing in a
 document to transform. This allows you to have multiple transformations
 happen with one stylesheet without requiring a reparse.
+
+=head2 add_param($param)
+
+Add a string as a parameter passed to the stylesheet (for xsl:param).
 
 =head2 transform($doc)
 

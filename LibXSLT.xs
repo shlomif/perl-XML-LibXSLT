@@ -101,7 +101,55 @@ error_handler(void * ctxt, const char * msg, ...)
     vsprintf(&buffer[strlen(buffer)], msg, args);
     va_end(args);
     
-    func = hv_fetch((HV *)SvRV(self), "_error_handler", 14, 0);
+    func = hv_fetch((HV *)SvRV(self), "error_handler", 13, 0);
+    
+    if (!func || !SvTRUE(*func)) {
+        return;
+    }
+    
+    tbuff = newSVpv((char*)buffer, 0);
+    
+    ENTER;
+    SAVETMPS;
+    
+    PUSHMARK(SP);
+    EXTEND(SP, 1);
+    PUSHs(tbuff);
+    PUTBACK;
+    
+    cnt = perl_call_sv(*func, G_SCALAR);
+    
+    SPAGAIN;
+    
+    if (cnt != 1) {
+        croak("error handler call failed");
+    }
+    
+    PUTBACK;
+    
+    FREETMPS;
+    LEAVE;
+}
+
+void
+debug_handler(void * ctxt, const char * msg, ...)
+{
+    dSP;
+    
+    SV * self = (SV *)ctxt;
+    SV * tbuff;
+    SV ** func;
+    va_list args;
+    char buffer[50000];
+    int cnt;
+    
+    buffer[0] = 0;
+    
+    va_start(args, msg);
+    vsprintf(&buffer[strlen(buffer)], msg, args);
+    va_end(args);
+    
+    func = hv_fetch((HV *)SvRV(self), "debug_handler", 13, 0);
     
     if (!func || !SvTRUE(*func)) {
         return;
@@ -145,6 +193,14 @@ setup_parser(SV * self)
         xsltSetGenericErrorFunc((void*)self, (xmlGenericErrorFunc)xsltGenericError);
     }
     
+    value = hv_fetch(real_obj, "debug_handler", 13, 0);
+    if (value && SvTRUE(*value)) {
+        xsltSetGenericDebugFunc((void*)self, (xmlGenericErrorFunc)debug_handler);
+    }
+    else {
+        xsltSetGenericDebugFunc((void*)self, (xmlGenericErrorFunc)xsltGenericDebug);
+    }
+    
     value = hv_fetch(real_obj, "max_depth", 9, 0);
     if (value && SvTRUE(*value)) {
         xsltMaxDepth = SvIV(*value);
@@ -176,8 +232,26 @@ parse_stylesheet(self, doc)
     OUTPUT:
         RETVAL
 
+xsltStylesheetPtr
+parse_file(self, filename)
+        SV * self
+        const char * filename
+    CODE:
+        setup_parser(self);
+        RETVAL = xsltParseStylesheetFile(filename);
+        if (RETVAL == NULL) {
+            XSRETURN_UNDEF;
+    OUTPUT:
+        RETVAL
 
 MODULE = XML::LibXSLT         PACKAGE = XML::LibXSLT::Stylesheet
+
+void
+add_param(self, param)
+        xsltStylesheetPtr self
+        const char * param
+    CODE:
+        xsltParseGlobalParam(self, xmlNewText(param));
 
 xmlDocPtr
 transform(self, doc)
