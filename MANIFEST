@@ -1,0 +1,7 @@
+Changes
+LibXSLT.pm
+LibXSLT.xs
+Makefile.PL
+MANIFEST
+README
+t/01basic.t
