@@ -75,7 +75,7 @@ PREFIX_iowrite_fh(void * context, const char * buffer, int len)
     PUSHMARK(SP);
     EXTEND(SP, 2);
     PUSHs(ioref);
-    PUSHs(tbuff);
+    PUSHs(sv_2mortal(tbuff));
     PUTBACK;
     
     cnt = perl_call_method("print", G_SCALAR);
