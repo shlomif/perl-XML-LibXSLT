@@ -23,6 +23,7 @@ my $style = $parser->parse_string(<<'EOT');
 
 <xsl:template match="/">
   (( <xsl:value-of select="foo:test('Foo', '!')"/> ))
+  (( <xsl:value-of select="foo:test('Foo', '!')"/> ))
   [[ <xsl:value-of select="foo:test2(/*)"/> ]]
 </xsl:template>
 
