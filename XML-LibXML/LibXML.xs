@@ -30,6 +30,8 @@ extern int xmlDoValidityCheckingDefaultValue;
 #endif
 extern int xmlGetWarningsDefaultValue;
 
+SV * global_ctxt;
+
 xmlParserInputPtr load_external_entity(
         const char * URL, 
         const char * ID, 
@@ -46,7 +48,7 @@ xmlParserInputPtr load_external_entity(
     
     self = (SV *)ctxt->_private;
     real_obj = (HV *)SvRV(self);
-    func = hv_fetch(real_obj, "_ext_ent_func", 13, 0);
+    func = hv_fetch(real_obj, "ext_ent_handler", 15, 0);
     
     if (func) {
         dSP;
@@ -87,24 +89,198 @@ xmlParserInputPtr load_external_entity(
 
 int input_match(char const * filename)
 {
-    return 1;
+    HV * real_obj;
+    SV ** value;
+    HV * callback_vector;
+    int results = 0;
+    
+    real_obj = (HV *)SvRV(global_ctxt);
+
+    value = hv_fetch(real_obj, "input_callbacks", 14, 0);
+    if (value && SvTRUE(*value)) {
+        callback_vector = (HV *)SvRV(*value);
+        value = hv_fetch(callback_vector, "match", 5, 0);
+        if (value && SvTRUE(*value)) {
+            int count;
+            
+            dSP;
+
+            ENTER;
+            SAVETMPS;
+
+            PUSHMARK(SP);
+            EXTEND(SP, 1);
+            PUSHs(sv_2mortal(newSVpv((char*)filename, 0)));
+            PUTBACK;
+
+            count = perl_call_sv(*value, G_SCALAR);
+
+            SPAGAIN;
+
+            if (!count) {
+                croak("Big trouble!");
+            }
+
+            results = SvIV(POPs);
+
+            PUTBACK;
+            FREETMPS;
+            LEAVE;
+        }
+        else {
+            croak("match function must be defined!");
+        }
+    }
+    
+    return results;
 }
 
 void * input_open(char const * filename)
 {
-    SV * f;
+    HV * real_obj;
+    SV ** value;
+    HV * callback_vector;
+    SV * results;
     
-    f = newSVpv((char*)filename, 0);
+    real_obj = (HV *)SvRV(global_ctxt);
+
+    value = hv_fetch(real_obj, "input_callbacks", 14, 0);
+    if (value && SvTRUE(*value)) {
+        callback_vector = (HV *)SvRV(*value);
+        value = hv_fetch(callback_vector, "open", 4, 0);
+        if (value && SvTRUE(*value)) {
+            int count;
+            
+            dSP;
+
+            ENTER;
+            SAVETMPS;
+
+            PUSHMARK(SP);
+            EXTEND(SP, 1);
+            PUSHs(sv_2mortal(newSVpv((char*)filename, 0)));
+            PUTBACK;
+
+            count = perl_call_sv(*value, G_SCALAR);
+
+            SPAGAIN;
+
+            if (!count) {
+                croak("Big trouble!");
+            }
+
+            results = POPs;
+
+            PUTBACK;
+            FREETMPS;
+            LEAVE;
+        }
+        else {
+            croak("open function must be defined!");
+        }
+    }
     
-    return (void*)f;
+    return (void *)results;
 }
 
 int input_read(void * context, char * buffer, int len)
 {
+    HV * real_obj;
+    SV ** value;
+    HV * callback_vector;
+    SV * results = newSVpvn("", 0);
+    int res_len = 0;
+    
+    SV * ctxt;
+    
+    ctxt = (SV*)context;
+    
+    real_obj = (HV *)SvRV(global_ctxt);
+
+    value = hv_fetch(real_obj, "input_callbacks", 14, 0);
+    if (value && SvTRUE(*value)) {
+        callback_vector = (HV *)SvRV(*value);
+        value = hv_fetch(callback_vector, "read", 4, 0);
+        if (value && SvTRUE(*value)) {
+            int count;
+            
+            dSP;
+
+            ENTER;
+            SAVETMPS;
+
+            PUSHMARK(SP);
+            EXTEND(SP, 2);
+            PUSHs(ctxt);
+            PUSHs(sv_2mortal(newSViv(len)));
+            PUTBACK;
+
+            count = perl_call_sv(*value, G_SCALAR);
+
+            SPAGAIN;
+
+            if (!count) {
+                croak("Big trouble!");
+            }
+
+            results = POPs;
+
+            PUTBACK;
+            FREETMPS;
+            LEAVE;
+        }
+        else {
+            croak("read function must be defined!");
+        }
+    }
+    
+    buffer = SvPV(results, res_len);
+    
+    return res_len;
 }
 
 void input_close(void * context)
 {
+    HV * real_obj;
+    SV ** value;
+    HV * callback_vector;
+    SV * ctxt = (SV*)context;
+    
+    real_obj = (HV *)SvRV(global_ctxt);
+
+    value = hv_fetch(real_obj, "input_callbacks", 14, 0);
+    if (value && SvTRUE(*value)) {
+        callback_vector = (HV *)SvRV(*value);
+        value = hv_fetch(callback_vector, "close", 4, 0);
+        if (value && SvTRUE(*value)) {
+            int count;
+            
+            dSP;
+
+            ENTER;
+            SAVETMPS;
+
+            PUSHMARK(SP);
+            EXTEND(SP, 1);
+            PUSHs(ctxt);
+            PUTBACK;
+
+            count = perl_call_sv(*value, G_SCALAR);
+
+            SPAGAIN;
+
+            if (!count) {
+                croak("Big trouble!");
+            }
+
+            PUTBACK;
+            FREETMPS;
+            LEAVE;
+        }
+        else {
+            croak("close function must be defined!");
+        }
+    }
 }
 
 void
@@ -148,9 +324,10 @@ setup_parser(SV * self)
             );
     }
     
-    value = hv_fetch(real_obj, "input_callback", 14, 0);
+    value = hv_fetch(real_obj, "input_callbacks", 14, 0);
     if (value && SvTRUE(*value)) {
         /* warn("setting input callback\n"); */
+        global_ctxt = self;
         xmlRegisterInputCallbacks(
                 (xmlInputMatchCallback)input_match,
                 (xmlInputOpenCallback)input_open,
