@@ -247,6 +247,7 @@ parse_stylesheet(self, doc)
             XSRETURN_UNDEF;
         }
         doc_copy = xmlCopyDoc(doc, 1);
+        doc_copy->URL = xmlStrdup(doc->URL);
         RETVAL = xsltParseStylesheetDoc(doc_copy);
         if (RETVAL == NULL) {
             XSRETURN_UNDEF;
