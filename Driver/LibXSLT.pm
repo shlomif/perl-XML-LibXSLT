@@ -6,7 +6,6 @@ use Driver::BaseClass;
 
 use XML::LibXSLT;
 use XML::LibXML;
-use IO::File;
 
 use vars qw(
         $parser
@@ -33,12 +32,13 @@ sub load_input {
 
 sub run_transform {
     my ($output, $iterations) = @_;
+    my $results;
     for (my $i = 0; $i < $iterations; $i++) {
-        my $outfile = IO::File->new(">$output")
-                || die "Can't write $output : $!";
-        my $results = $stylesheet->transform($input);
-        $stylesheet->output_fh($results, $outfile);
+#        print STDERR ".";
+        $results = $stylesheet->transform($input);
     }
+    $stylesheet->output_file($results, $output);
+#    print STDERR "\n";
 }
 
 1;
