@@ -29,12 +29,17 @@ sub xpath_to_string {
     while (@_) {
         my $value = shift(@_); $value = '' unless defined $value;
         push @results, $value;
-        next if @results % 2;
-        if ($value =~ s/'/', "'", '/g) {
-	    $results[-1] = "concat('$value')";
+        if (@results % 2) {
+            # key
+            $results[-1] =~ s/:/_/g; # XSLT doesn't like names with colons
         }
         else {
-            $results[-1] = "'$results[-1]'";
+            if ($value =~ s/'/', "'", '/g) {
+	        $results[-1] = "concat('$value')";
+            }
+            else {
+                $results[-1] = "'$results[-1]'";
+            }
         }
     }
     return @results;
