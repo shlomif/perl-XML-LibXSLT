@@ -52,6 +52,7 @@ sub load_input {
 
 sub run_transform {
     my ($output, $iterations) = @_;
+    $handler->{show_error} = 1;
     for (my $i = 0; $i < $iterations; $i++) {
         my $outfile = IO::File->new(">$output")
                 || die "Can't write $output : $!";
@@ -84,16 +85,16 @@ sub MHMakeCode {
 }
 
 sub MHLog {
-    my $self = shift;
-    my $processor = shift;
-    
-    warn "Sablotron [Log]: ", join(' :: ', @fields), "\n" if $self->{verbose};
     return 1;
 }
 
 sub MHError {
     my $self = shift;
     my $processor = shift;
+    my ($code, $level, @fields) = @_;
+    
+    return unless $self->{show_error};
+    $self->{show_error} = 0;
     
     warn "Sablotron [Error]: ", join(' :: ', @fields), "\n" if $self->{verbose};
     return 1;
