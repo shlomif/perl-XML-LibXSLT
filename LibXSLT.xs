@@ -244,11 +244,9 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
                     SV * element;
                     len = nodelist->nodeNr;
                     for( i ; i < len; i++){
-                        SV *tmp = NULL;
                         tnode = nodelist->nodeTab[i];
                         if( tnode != NULL	&& tnode->doc != NULL) {
-                            tmp = x_PmmNodeToSv((xmlNodePtr)(tnode->doc), NULL);
-                            owner = SvPROXYNODE(tmp);
+                            owner = SvPROXYNODE(sv_2mortal(x_PmmNodeToSv((xmlNodePtr)(tnode->doc), NULL)));
                         }
                         if (tnode->type == XML_NAMESPACE_DECL) {
                             element = sv_newmortal();
@@ -263,8 +261,6 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
                             xmlNodePtr tnode_cpy = xmlCopyNode(tnode, 1);
                             element = x_PmmNodeToSv(tnode_cpy, owner);
                         }
-                        if (tmp)
-                            SvREFCNT_dec(tmp);
                         XPUSHs( sv_2mortal(element) );
                     }
                 }
