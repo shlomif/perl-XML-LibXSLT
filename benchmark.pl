@@ -4,6 +4,8 @@ use File::Basename;
 use XML::XPath;
 use strict;
 
+$|++;
+
 use vars qw(
         $component $iter $ms $kb_in $kb_out $kb_sec $result $ref_size
         );
@@ -178,6 +180,8 @@ for my $driver (@{$options{d}}) {
             print_output() unless $cmp->{written};
             $cmp->{written}++;
         } # $options{n} loop
+        
+        delete $cmp->{written};
     } # each component
     
     $pkg->can('shutdown')->();
@@ -227,8 +231,3 @@ sub print_output {
     printf STDOUT "%-15.15s %5.0d %5.0d %7.0f %7.0f %9.2f   %-15.15s\n",
             $component, $iter, $ms, $kb_in, $kb_out, $kb_sec, $result;
 }
-
-format STDOUT =
-@<<<<<<<<<<<<<< @<<<<<< @<<<<<< @<<<<<< @<<<<<< @<<<<<< @<<<<<<<<<<<<<<<<<<
-$component,     $iter,  $ms,    $kb_in, $kb_out,$kb_sec,$result
-.
