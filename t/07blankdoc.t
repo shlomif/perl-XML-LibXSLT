@@ -20,7 +20,7 @@ xmlns:data="data.uri" version="1.0">
 
 <data:type>typed data in stylesheet</data:type>
 
-<xsl:template match="document">
+<xsl:template match="/*">
 
 Data: <xsl:value-of select="document('')/xsl:stylesheet/data:type"/><xsl:text>
 </xsl:text>
@@ -32,9 +32,10 @@ EOT
 
 ok($style);
 my $stylesheet = $xslt->parse_stylesheet($style);
+# my $stylesheet = $xslt->parse_stylesheet_file("example/document.xsl");
 
 my $results = $stylesheet->transform($source);
 ok($results);
 
-ok($results->toString =~ /typed data in stylesheet/);
+ok($results->toString, qr/typed data in stylesheet/);
 

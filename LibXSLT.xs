@@ -247,6 +247,9 @@ _parse_stylesheet(self, sv_doc)
         }
         doc_copy = xmlCopyDoc(doc, 1);
         doc_copy->URL = xmlStrdup(doc->URL);
+        if (doc_copy->children) {
+            xmlNodeSetBase(doc_copy->children, doc_copy->URL);
+        }
 
         if (LibXSLT_debug_cb && SvTRUE(LibXSLT_debug_cb)) {
             xsltSetGenericDebugFunc(PerlIO_stderr(), (xmlGenericErrorFunc)LibXSLT_debug_handler);
