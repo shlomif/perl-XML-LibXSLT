@@ -1,5 +1,10 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.01
+    - Removed hack where we set dom->standalone = 42 to prevent
+      XML::LibXML from garbage collecting
+    - Removed XML::LibXML from the distribution. Now separate.
+
 1.00
     - More segfault fixes
     - Benchmark updates    
