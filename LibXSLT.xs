@@ -83,6 +83,53 @@ ioclose_fh(void * context)
     return 0; /* we let Perl close the FH */
 }
 
+void
+error_handler(void * ctxt, const char * msg, ...)
+{
+    dSP;
+    
+    SV * self = (SV *)ctxt;
+    SV * tbuff;
+    SV ** func;
+    va_list args;
+    char buffer[50000];
+    int cnt;
+    
+    buffer[0] = 0;
+    
+    va_start(args, msg);
+    vsprintf(&buffer[strlen(buffer)], msg, args);
+    va_end(args);
+    
+    func = hv_fetch((HV *)SvRV(self), "_error_handler", 14, 0);
+    
+    if (!func || !SvTRUE(*func)) {
+        return;
+    }
+    
+    tbuff = newSVpv((char*)buffer, 0);
+    
+    ENTER;
+    SAVETMPS;
+    
+    PUSHMARK(SP);
+    EXTEND(SP, 1);
+    PUSHs(tbuff);
+    PUTBACK;
+    
+    cnt = perl_call_sv(*func, G_SCALAR);
+    
+    SPAGAIN;
+    
+    if (cnt != 1) {
+        croak("error handler call failed");
+    }
+    
+    PUTBACK;
+    
+    FREETMPS;
+    LEAVE;
+}
 
 MODULE = XML::LibXSLT         PACKAGE = XML::LibXSLT
 
@@ -103,6 +150,15 @@ parse_stylesheet(self, doc)
         }
     OUTPUT:
         RETVAL
+
+void
+set_error_handler(self, func)
+        SV * self
+        SV * func
+    CODE:
+        hv_store((HV *)SvRV(self), "_error_handler", 14, func, 0);
+        xsltSetGenericErrorFunc((void*)self, (xmlGenericErrorFunc)error_handler);
+
 
 MODULE = XML::LibXSLT         PACKAGE = XML::LibXSLT::Stylesheet
 
