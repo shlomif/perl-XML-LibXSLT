@@ -130,10 +130,10 @@ sub parse_stylesheet {
         #warn "callbacks: $XML::LibXML::match_cb $XML::LibXML::open_cb $XML::LibXML::read_cb $XML::LibXML::close_cb";
         return $self->_parse_stylesheet(@_);
     }
-    local $XML::LibXML::match_cb = $self->{XML_LIBXSLT_MATCH};
-    local $XML::LibXML::open_cb = $self->{XML_LIBXSLT_OPEN};
-    local $XML::LibXML::read_cb = $self->{XML_LIBXSLT_READ};
-    local $XML::LibXML::close_cb = $self->{XML_LIBXSLT_CLOSE};
+    local $XML::LibXSLT::match_cb = $self->{XML_LIBXSLT_MATCH};
+    local $XML::LibXSLT::open_cb = $self->{XML_LIBXSLT_OPEN};
+    local $XML::LibXSLT::read_cb = $self->{XML_LIBXSLT_READ};
+    local $XML::LibXSLT::close_cb = $self->{XML_LIBXSLT_CLOSE};
 
     #warn "localised callbacks: $XML::LibXML::match_cb $XML::LibXML::open_cb $XML::LibXML::read_cb $XML::LibXML::close_cb";
     $self->_parse_stylesheet(@_);
@@ -145,10 +145,10 @@ sub parse_stylesheet_file {
         #warn "callbacks: $XML::LibXML::match_cb $XML::LibXML::open_cb $XML::LibXML::read_cb $XML::LibXML::close_cb";
         return $self->_parse_stylesheet_file(@_);
     }
-    local $XML::LibXML::match_cb = $self->{XML_LIBXSLT_MATCH};
-    local $XML::LibXML::open_cb = $self->{XML_LIBXSLT_OPEN};
-    local $XML::LibXML::read_cb = $self->{XML_LIBXSLT_READ};
-    local $XML::LibXML::close_cb = $self->{XML_LIBXSLT_CLOSE};
+    local $XML::LibXSLT::match_cb = $self->{XML_LIBXSLT_MATCH};
+    local $XML::LibXSLT::open_cb = $self->{XML_LIBXSLT_OPEN};
+    local $XML::LibXSLT::read_cb = $self->{XML_LIBXSLT_READ};
+    local $XML::LibXSLT::close_cb = $self->{XML_LIBXSLT_CLOSE};
 
     #warn "localised callbacks: $XML::LibXML::match_cb $XML::LibXML::open_cb $XML::LibXML::read_cb $XML::LibXML::close_cb";
     $self->_parse_stylesheet_file(@_);
