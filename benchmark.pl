@@ -124,8 +124,8 @@ for my $driver (@{$options{d}}) {
                     my $new = <NEW>;
                     close REFERENCE;
                     close NEW;
-                    $new =~ s/\A<\?xml.*?\?>//;
-                    $new =~ s/\A<!DOCTYPE.*?>//;
+                    $new =~ s/\A<\?xml.*?\?>\s*//;
+                    $new =~ s/\A<!DOCTYPE.*?>\s*//;
 
                     if (!length($new)) {
                         die "output length failed\n";
@@ -202,7 +202,14 @@ usage: $0 [options]
         -c <file>   load configuration from <file>
                     defaults to testcases/default.conf
                     
-        -n <num>    run each test case <num> times.
+        -n <num>    run each test case <num> times. Default = 1.
+        
+        -t          only one iteration per test case (note this
+                    is different to -n 1)
+        
+        -d <Driver> test <Driver>. Use multiple -d options to test
+                    more than one driver.
+                    
 EOT
     exit(0);
 }
