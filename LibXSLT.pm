@@ -1,5 +1,4 @@
 # $Id$
-
 package XML::LibXSLT;
 
 use strict;
@@ -83,46 +82,75 @@ sub xpath_to_string {
 }
 
 sub callbacks {
-    die "callbacks() never worked and has been removed."
+    my $self = shift;
+    if (@_) {
+        my ($match, $open, $read, $close) = @_;
+
+        $self->{XML_LIBXSLT_MATCH} = $match ;
+        $self->{XML_LIBXSLT_OPEN} = $open ;
+        $self->{XML_LIBXSLT_READ} = $read ;
+        $self->{XML_LIBXSLT_CLOSE} = $close ;
+    }
+    else {
+        return
+            $self->{XML_LIBXSLT_MATCH},
+            $self->{XML_LIBXSLT_OPEN},
+            $self->{XML_LIBXSLT_READ},
+            $self->{XML_LIBXSLT_CLOSE};
+    }
 }
 
 sub match_callback {
-    die "match_callback never worked and has been removed.\nPlease set \$XML::LibXML::match_cb instead";
+    my $self = shift;
+    $self->{XML_LIBXSLT_MATCH} = shift if scalar @_;
+    return $self->{XML_LIBXSLT_MATCH};
 }
 
 sub open_callback {
-    die "open_callback never worked and has been removed.\nPlease set \$XML::LibXML::open_cb instead";
+    my $self = shift;
+    $self->{XML_LIBXSLT_OPEN} = shift if scalar @_;
+    return $self->{XML_LIBXSLT_OPEN};
 }
 
 sub read_callback {
-    die "read_callback never worked and has been removed.\nPlease set \$XML::LibXML::read_cb instead";
+    my $self = shift;
+    $self->{XML_LIBXSLT_READ} = shift if scalar @_;
+    return $self->{XML_LIBXSLT_READ};
 }
 
 sub close_callback {
-    die "close_callback never worked and has been removed.\nPlease set \$XML::LibXML::close_cb instead";
+    my $self = shift;
+    $self->{XML_LIBXSLT_CLOSE} = shift if scalar @_;
+    return $self->{XML_LIBXSLT_CLOSE};
 }
 
 sub parse_stylesheet {
     my $self = shift;
     if (!ref($self) || !$self->{XML_LIBXSLT_MATCH}) {
+        #warn "callbacks: $XML::LibXML::match_cb $XML::LibXML::open_cb $XML::LibXML::read_cb $XML::LibXML::close_cb";
         return $self->_parse_stylesheet(@_);
     }
     local $XML::LibXML::match_cb = $self->{XML_LIBXSLT_MATCH};
     local $XML::LibXML::open_cb = $self->{XML_LIBXSLT_OPEN};
     local $XML::LibXML::read_cb = $self->{XML_LIBXSLT_READ};
     local $XML::LibXML::close_cb = $self->{XML_LIBXSLT_CLOSE};
+
+    #warn "localised callbacks: $XML::LibXML::match_cb $XML::LibXML::open_cb $XML::LibXML::read_cb $XML::LibXML::close_cb";
     $self->_parse_stylesheet(@_);
 }
 
 sub parse_stylesheet_file {
     my $self = shift;
     if (!ref($self) || !$self->{XML_LIBXSLT_MATCH}) {
+        #warn "callbacks: $XML::LibXML::match_cb $XML::LibXML::open_cb $XML::LibXML::read_cb $XML::LibXML::close_cb";
         return $self->_parse_stylesheet_file(@_);
     }
     local $XML::LibXML::match_cb = $self->{XML_LIBXSLT_MATCH};
     local $XML::LibXML::open_cb = $self->{XML_LIBXSLT_OPEN};
     local $XML::LibXML::read_cb = $self->{XML_LIBXSLT_READ};
     local $XML::LibXML::close_cb = $self->{XML_LIBXSLT_CLOSE};
+
+    #warn "localised callbacks: $XML::LibXML::match_cb $XML::LibXML::open_cb $XML::LibXML::read_cb $XML::LibXML::close_cb";
     $self->_parse_stylesheet_file(@_);
 }
 
@@ -235,6 +263,11 @@ parse_stylesheet in an eval{} block to trap this.
 =head2 parse_stylesheet_file($filename)
 
 Exactly the same as the above, but parses the given filename directly.
+
+=head2 Input Callbacks
+
+To define XML::LibXSLT specific input callbacks, reuse the XML::LibXML
+input callback API as described in L<XML::LibXML::Document(3)/"Input Callbacks">.
 
 =head1 XML::LibXSLT::Stylesheet
 

@@ -245,7 +245,8 @@ use Conftest; \$loaded++;
 EOT
     close($cfile);
     xsystem("$^X Makefile.PL " . join(' ', map { "'$_=$config{$_}'" } keys %config));
-    xsystem("$Config{make} test 'OTHERLDFLAGS=$opt'");
+    my $file = $config{MAKEAPERL} ? "-f Makefile.aperl FIRST_MAKEFILE=Makefile.aperl" : "";
+    xsystem("$Config{make} $file test 'OTHERLDFLAGS=$opt'");
 }
 
 sub try_link {

@@ -102,6 +102,7 @@ struct _ProxyNode {
     xmlNodePtr node;
     xmlNodePtr owner;
     int count;
+    int encoding;
 };
 
 /* helper type for the proxy structure */
@@ -135,6 +136,7 @@ x_PmmNewNode(xmlNodePtr node)
             proxy->node  = node;
             proxy->owner   = NULL;
             proxy->count   = 0;
+            proxy->encoding = 0;
             node->_private = (void*) proxy;
         }
     }
