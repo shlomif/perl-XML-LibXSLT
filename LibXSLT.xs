@@ -124,7 +124,6 @@ debug_handler(void * ctxt, const char * msg, ...)
 {
     dSP;
     
-    SV * tbuff;
     va_list args;
     char buffer[50000];
     
@@ -162,6 +161,7 @@ debug_handler(void * ctxt, const char * msg, ...)
     else {
         xmlGenericError(ctxt, buffer);
     }
+    
 }
 
 MODULE = XML::LibXSLT         PACKAGE = XML::LibXSLT
@@ -206,7 +206,6 @@ parse_stylesheet(self, doc)
         xmlDocPtr doc
     PREINIT:
         char * CLASS = "XML::LibXSLT::Stylesheet";
-        SV ** value;
     CODE:
         if (doc == NULL) {
             XSRETURN_UNDEF;
