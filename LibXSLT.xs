@@ -401,12 +401,13 @@ media_type(self)
             if (child != NULL) {
                  RETVAL = xmlGetProp(child, "media-type");
             }
-            else {
-                RETVAL = "text/html";
+            
+            if (RETVAL == NULL) {
+                RETVAL = "text/xml";
                 /* this below is rather simplistic, but should work for most cases */
                 if (self->method != NULL) {
-                    if (strcmp(self->method, "xml") == 0) {
-                        RETVAL = "text/xml";
+                    if (strcmp(self->method, "html") == 0) {
+                        RETVAL = "text/html";
                     }
                     else if (strcmp(self->method, "text") == 0) {
                         RETVAL = "text/plain";
