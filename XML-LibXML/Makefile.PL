@@ -18,8 +18,8 @@ my $DEBUG = delete $config{DEBUG};
 # get libs and inc from gnome-config
 eval {
     print "running gnome-config... ";
-    $config{LIBS} ||= backtick('gnome-config --libs xslt');
-    $config{INC} ||= backtick('gnome-config --cflags xslt');
+    $config{LIBS} ||= backtick('gnome-config --libs xml2');
+    $config{INC} ||= backtick('gnome-config --cflags xml2');
     print "ok\n";
 };
 if ($@) {
@@ -27,7 +27,7 @@ if ($@) {
     warn "*** ", $@ if $DEBUG;
     warn "using fallback values for LIBS and INC\n";
     # backtick fails if gnome-config didn't exist...
-    $config{LIBS} = '-L/usr/local/lib -L/usr/lib -lxslt -lxml2 -lz -lm';
+    $config{LIBS} = '-L/usr/local/lib -L/usr/lib -lxml2 -lz -lm';
     $config{INC} = '-I/usr/local/include -I/usr/include';
     
     print <<OPT;
@@ -43,24 +43,34 @@ OPT
 
 my $LINK = "$Config{ld} -o conftest $Config{ccflags} -I$Config{incpath} %s $Config{ldflags} conftest.c $Config{libs} %s %s";
 
-if ($config{LIBS} !~ /\-lxslt/) {
-    $config{LIBS} .= ' -lxslt -lxml -lz -lm';
+if ($config{LIBS} !~ /\-lxml2\b/) {
+    $config{LIBS} .= ' -lxml2';
 }
 
-if (!have_library("xslt")) {
+if ($config{LIBS} !~ /\-lz\b/) {
+    $config{LIBS} .= ' -lz';
+}
+
+if ($config{LIBS} !~ /\-lm\b/) {
+    $config{LIBS} .= ' -lm';
+}
+
+if (!have_library("xml2")) {
     die <<DEATH;
-libxslt not found
+libxml2 not found
 Try setting LIBS and INC values on the command line
-Or get libxslt and libxml2 from 
+Or get libxml2 from 
   http://www.libxml.org/
 DEATH
 }
 
+# have_library("xml2", "ghttp_get_header_names");
+
 WriteMakefile(
-    'NAME'	=> 'XML::LibXSLT',
-    'VERSION_FROM' => 'LibXSLT.pm', # finds $VERSION
+    'NAME'	=> 'XML::LibXML',
+    'VERSION_FROM' => 'LibXML.pm', # finds $VERSION
     'AUTHOR'    => 'Matt Sergeant',
-    'ABSTRACT'  => 'Interface to Gnome libxslt library',
+    'ABSTRACT'  => 'Interface to Gnome libxml2 xml parsing and DOM library',
     %config,
 );
 

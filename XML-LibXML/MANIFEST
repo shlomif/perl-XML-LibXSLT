@@ -1,0 +1,12 @@
+Changes
+LibXML.pm
+LibXML.xs
+Makefile.PL
+MANIFEST
+README
+typemap
+example/dromeds.xml
+t/01basic.t
+t/02parsestring.t
+t/03parsefile.t
+t/04parsefh.t

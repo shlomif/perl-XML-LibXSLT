@@ -1,21 +1,17 @@
 # $Id$
 
-package XML::LibXSLT;
+package XML::LibXML;
 
 use strict;
 use vars qw($VERSION @ISA);
 
-use XML::LibXML;
-
-require Exporter;
-
-$VERSION = "0.91";
+$VERSION = "0.90";
 
 require DynaLoader;
 
 @ISA = qw(DynaLoader);
 
-bootstrap XML::LibXSLT $VERSION;
+bootstrap XML::LibXML $VERSION;
 
 sub new {
     my $class = shift;
@@ -30,16 +26,16 @@ __END__
 
 =head1 NAME
 
-XML::LibXSLT - Perl extension for blah blah blah
+XML::LibXML - Perl extension for blah blah blah
 
 =head1 SYNOPSIS
 
-  use XML::LibXSLT;
+  use XML::LibXML;
   blah blah blah
 
 =head1 DESCRIPTION
 
-Stub documentation for XML::LibXSLT was created by h2xs. It looks like the
+Stub documentation for XML::LibXML was created by h2xs. It looks like the
 author of the extension was negligent enough to leave the stub
 unedited.
 
