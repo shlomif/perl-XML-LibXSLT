@@ -313,23 +313,33 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
         (SvTYPE(SvRV(perl_result)) == SVt_PVMG ||
          SvTYPE(SvRV(perl_result)) == SVt_PVAV))
     {
-        if (sv_isa(perl_result, "XML::LibXML::NodeList")){
-            ret =  (xmlXPathObjectPtr)xmlXPathNewNodeSet(NULL);  
+        if (sv_isa(perl_result, "XML::LibXML::NodeList")) {
+            ret = xmlXPathNewNodeSet(NULL);
+            ret->boolval = 1; /* free children */
             array_result = (AV*)SvRV(perl_result);
             while (av_len(array_result) >= 0) {
-                    tmp_node1 = (xmlNodePtr)x_PmmSvNode(sv_2mortal(av_shift(array_result)));
-                    tmp_node = xmlDocCopyNode(tmp_node1, ctxt->context->doc, 1);
-                    xmlXPathNodeSetAdd(ret->nodesetval,tmp_node);
-                    xmlFreeNode(tmp_node);
+                tmp_node1 = (xmlNodePtr)x_PmmSvNode(sv_2mortal(av_shift(array_result)));
+                tmp_node = xmlDocCopyNode(tmp_node1, ctxt->context->doc, 1);
+                xmlXPathNodeSetAdd(ret->nodesetval, tmp_node);
+                if (ret->user == NULL) {
+                    ret->user = (void*)tmp_node;
+                }
+                else {
+                    xmlNodePtr old = (xmlNodePtr)(ret->user);
+                    old->prev = tmp_node;
+                    tmp_node->next = old;
+                    ret->user = (void*)tmp_node;
+                }
             }
             goto FINISH;
         } 
         else if (sv_isa(perl_result, "XML::LibXML::Node")) {
-            ret =  (xmlXPathObjectPtr)xmlXPathNewNodeSet(NULL);  
+            ret =  (xmlXPathObjectPtr)xmlXPathNewNodeSet(NULL);
+            ret->boolval = 1; /* free children */
             tmp_node1 = (xmlNodePtr)x_PmmSvNode(perl_result);
             tmp_node = xmlDocCopyNode(tmp_node1, ctxt->context->doc, 1);
             xmlXPathNodeSetAdd(ret->nodesetval,tmp_node);
-            xmlFreeNode(tmp_node);
+            ret->user = (void*)tmp_node;
             goto FINISH;
         }
         else if (sv_isa(perl_result, "XML::LibXML::Boolean")) {
