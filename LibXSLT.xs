@@ -3,15 +3,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#include "EXTERN.h"
-#include "perl.h"
-#include "XSUB.h"
-#include <libxml/xmlversion.h>
-#include <libxml/xmlmemory.h>
-#include <libxml/HTMLtree.h>
-#include <libxml/xmlIO.h>
-#include <libxml/tree.h>
-#include <libxml/parserInternals.h>
 #include <libxslt/xsltconfig.h>
 #include <libxslt/xslt.h>
 #include <libxslt/xsltInternals.h>
@@ -22,6 +13,15 @@ extern "C" {
 #include <libexslt/exslt.h>
 #include <libexslt/exsltconfig.h>
 #endif
+#include <libxml/xmlmemory.h>
+#include <libxml/HTMLtree.h>
+#include <libxml/xmlIO.h>
+#include <libxml/tree.h>
+#include <libxml/parserInternals.h>
+#include "EXTERN.h"
+#include "perl.h"
+#include "XSUB.h"
+#include "perl-libxml-mm.h"
 #ifdef __cplusplus
 }
 #endif
@@ -48,26 +48,6 @@ extern "C" {
 #define SET_CB2(cb, fld) cb=fld;
 
 static SV * LibXSLT_debug_cb = NULL;
-
-typedef struct _ProxyObject ProxyObject;
-
-struct _ProxyObject {
-    void * object;
-    SV * extra;
-};
-
-ProxyObject *
-LibXSLT_make_proxy_node (xmlDocPtr node)
-{
-    ProxyObject * proxy;
-    
-    proxy = (ProxyObject*)New(0, proxy, 1, ProxyObject);
-    if (proxy != NULL) {
-        proxy->object = (void*)node;
-        proxy->extra = NULL;
-    }
-    return proxy;
-}
 
 void
 LibXSLT_free_all_callbacks(void)
@@ -249,13 +229,18 @@ debug_callback(self, ...)
         RETVAL
 
 xsltStylesheetPtr
-_parse_stylesheet(self, doc)
+_parse_stylesheet(self, sv_doc)
         SV * self
-        xmlDocPtr doc
+        SV * sv_doc
     PREINIT:
         char * CLASS = "XML::LibXSLT::Stylesheet";
         xmlDocPtr doc_copy;
+        xmlDocPtr doc;
     CODE:
+        if (sv_doc == NULL) {
+            XSRETURN_UNDEF;
+        }
+        doc = (xmlDocPtr)PmmSvNode( sv_doc );
         if (doc == NULL) {
             XSRETURN_UNDEF;
         }
@@ -299,16 +284,21 @@ MODULE = XML::LibXSLT         PACKAGE = XML::LibXSLT::Stylesheet
 
 PROTOTYPES: DISABLE
 
-ProxyObject *
-transform(self, doc, ...)
+SV *
+transform(self, sv_doc, ...)
         xsltStylesheetPtr self
-        xmlDocPtr doc
+        SV * sv_doc
     PREINIT:
         char * CLASS = "XML::LibXML::Document";
         # note really only 254 entries here - last one is NULL
         const char *xslt_params[255];
         xmlDocPtr real_dom;
+        xmlDocPtr doc;
     CODE:
+        if (sv_doc == NULL) {
+            XSRETURN_UNDEF;
+        }
+        doc = (xmlDocPtr)PmmSvNode( sv_doc );
         if (doc == NULL) {
             XSRETURN_UNDEF;
         }
@@ -345,11 +335,11 @@ transform(self, doc, ...)
             self->method = xmlMalloc(5);
             strcpy(self->method, "html");
         }
-        RETVAL = LibXSLT_make_proxy_node(real_dom);
+        RETVAL = PmmNodeToSv((xmlNodePtr)real_dom, NULL);
     OUTPUT:
         RETVAL
 
-ProxyObject *
+SV *
 transform_file(self, filename, ...)
         xsltStylesheetPtr self
         char * filename
@@ -391,7 +381,7 @@ transform_file(self, filename, ...)
             self->method = xmlMalloc(5);
             strcpy(self->method, "html");
         }
-        RETVAL = LibXSLT_make_proxy_node(real_dom);
+        RETVAL = PmmNodeToSv((xmlNodePtr)real_dom, NULL);
     OUTPUT:
         RETVAL
 
@@ -405,14 +395,15 @@ DESTROY(self)
         xsltFreeStylesheet(self);
 
 SV *
-output_string(self, doc)
+output_string(self, sv_doc)
         xsltStylesheetPtr self
-        xmlDocPtr doc
+        SV * sv_doc
     PREINIT:
         xmlOutputBufferPtr output;
         SV * results = newSVpv("", 0);
         const xmlChar *encoding = NULL;
-	xmlCharEncodingHandlerPtr encoder = NULL;
+	    xmlCharEncodingHandlerPtr encoder = NULL;
+        xmlDocPtr doc = (xmlDocPtr)PmmSvNode( sv_doc );
     CODE:
         XSLT_GET_IMPORT_PTR(encoding, self, encoding)
         if (encoding != NULL) {
@@ -444,14 +435,15 @@ output_string(self, doc)
         RETVAL
 
 void
-output_fh(self, doc, fh)
+output_fh(self, sv_doc, fh)
         xsltStylesheetPtr self
-        xmlDocPtr doc
+        SV * sv_doc
         SV * fh
     PREINIT:
         xmlOutputBufferPtr output;
         const xmlChar *encoding = NULL;
-	xmlCharEncodingHandlerPtr encoder = NULL;
+        xmlCharEncodingHandlerPtr encoder = NULL;
+        xmlDocPtr doc = (xmlDocPtr)PmmSvNode( sv_doc );
     CODE:
         XSLT_GET_IMPORT_PTR(encoding, self, encoding)
         if (encoding != NULL) {
@@ -480,10 +472,12 @@ output_fh(self, doc, fh)
         xmlOutputBufferClose(output);
         
 void
-output_file(self, doc, filename)
+output_file(self, sv_doc, filename)
         xsltStylesheetPtr self
-        xmlDocPtr doc
+        SV * sv_doc
         char * filename
+    PREINIT:
+        xmlDocPtr doc = (xmlDocPtr)PmmSvNode( sv_doc );
     CODE:
         if (LibXSLT_debug_cb && SvTRUE(LibXSLT_debug_cb)) {
             xsltSetGenericDebugFunc(PerlIO_stderr(), (xmlGenericErrorFunc)LibXSLT_debug_handler);

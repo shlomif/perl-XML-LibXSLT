@@ -76,6 +76,7 @@ WriteMakefile(
     'AUTHOR'    => 'Matt Sergeant',
     'ABSTRACT'  => 'Interface to Gnome libxslt library',
     'PREREQ_PM' => { 'XML::LibXML' => "0.94", },
+    'OBJECT'     => '$(O_FILES)',
     %config,
 );
 
