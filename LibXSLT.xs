@@ -229,7 +229,7 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
     SAVETMPS;
     PUSHMARK(SP);
     
-    XPUSHs(sv_2mortal(*perl_function));
+    XPUSHs(*perl_function);
 
     /* set up call to perl dispatcher function */
     for (i = 0; i < nargs; i++) {

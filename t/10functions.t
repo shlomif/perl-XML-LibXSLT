@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan tests => 8 }
+BEGIN { plan tests => 9 }
 use XML::LibXSLT;
 
 my $parser = XML::LibXML->new();
