@@ -1,5 +1,8 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.52
+    - Perl extension functions (whee!)
+
 1.51
     - Mac OS X fixes
     - Cleaned up XPath quoting

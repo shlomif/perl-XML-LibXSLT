@@ -19,6 +19,7 @@ extern "C" {
 #include <libxml/xmlIO.h>
 #include <libxml/tree.h>
 #include <libxml/parserInternals.h>
+#include <libxml/xpathInternals.h>
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
@@ -49,6 +50,7 @@ extern "C" {
 #define SET_CB2(cb, fld) cb=fld;
 
 static SV * LibXSLT_debug_cb = NULL;
+static HV * LibXSLT_HV_allCallbacks = NULL;
 
 void
 LibXSLT_free_all_callbacks(void)
@@ -99,7 +101,7 @@ LibXSLT_iowrite_fh(void * context, const char * buffer, int len)
     PUSHs(sv_2mortal(tbuff));
     PUTBACK;
     
-    cnt = perl_call_method("print", G_SCALAR);
+    cnt = perl_call_method("print", G_SCALAR | G_EVAL);
     
     SPAGAIN;
     
@@ -170,7 +172,7 @@ LibXSLT_debug_handler(void * ctxt, const char * msg, ...)
         PUSHs(sv);
         PUTBACK;
 
-        cnt = perl_call_sv(LibXSLT_debug_cb, G_SCALAR);
+        cnt = perl_call_sv(LibXSLT_debug_cb, G_SCALAR | G_EVAL);
 
         SPAGAIN;
 
@@ -187,6 +189,73 @@ LibXSLT_debug_handler(void * ctxt, const char * msg, ...)
     SvREFCNT_dec(sv);
 }
 
+static void
+LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
+    SV *key;
+    STRLEN len;
+    char *strkey;
+    const char *function, *uri;
+    SV **perl_function;
+    dSP;
+    
+    function = ctxt->context->function;
+    uri = ctxt->context->functionURI;
+    
+    key = newSVpvn("",0);
+    sv_catpv(key, "{");
+    sv_catpv(key, uri);
+    sv_catpv(key, "}");
+    sv_catpv(key, function);
+    strkey = SvPV(key, len);
+    /* warn("Trying to get function '%s' in %d\n", strkey, LibXSLT_HV_allCallbacks); */
+    perl_function = hv_fetch(LibXSLT_HV_allCallbacks, strkey, len, 0);
+    SvREFCNT_dec(key);
+    
+    if (perl_function && *perl_function && SvTRUE(*perl_function)) {
+        int cnt = 0;
+        
+        ENTER;
+        SAVETMPS;
+        
+        PUSHMARK(SP);
+        for (cnt = 0; cnt < nargs; cnt++) {
+            XPUSHs(sv_2mortal(newSVpv((char*)xmlXPathPopString(ctxt), 0)));
+        }
+        PUTBACK;
+        
+        cnt = 0;
+        
+        cnt = perl_call_sv(*perl_function, G_SCALAR | G_EVAL);
+        
+        SPAGAIN;
+        
+        /* Check the eval first */
+        if (SvTRUE(ERRSV))
+        {
+            STRLEN n_a;
+            warn("Uh oh - %s\n", SvPV(ERRSV, n_a)) ;
+            POPs ;
+        }
+        else {
+            char *res;
+            if (cnt != 1) {
+                croak("debug handler call failed");
+            }
+            res = POPp;
+            /* warn("func returned: %s\n", res); */
+            xmlXPathReturnString(ctxt, xmlMemStrdup(res));
+        }
+        
+        PUTBACK;
+        
+        FREETMPS;
+        LEAVE;
+    }
+    else {
+        xmlXPathReturnEmptyString(ctxt);
+    }
+}
+
 MODULE = XML::LibXSLT         PACKAGE = XML::LibXSLT
 
 PROTOTYPES: DISABLE
@@ -194,6 +263,7 @@ PROTOTYPES: DISABLE
 BOOT:
     LIBXML_TEST_VERSION
     xsltMaxDepth = 250;
+    LibXSLT_HV_allCallbacks = newHV();
 #ifdef HAVE_EXSLT
     exsltRegisterAll();
 #endif
@@ -209,6 +279,33 @@ max_depth(self, ...)
         }
     OUTPUT:
         RETVAL
+
+void
+register_function(self, uri, name, callback)
+        SV * self
+        char * uri
+        char * name
+        SV *callback
+    PPCODE:
+    {
+        SV *key;
+        STRLEN len;
+        char *strkey;
+        
+        /* todo: Add checking of uri and name in here! */
+        xsltRegisterExtModuleFunction((const xmlChar *)name,
+                        (const xmlChar *)uri,
+                        LibXSLT_generic_function);
+        key = newSVpvn("",0);
+        sv_catpv(key, "{");
+        sv_catpv(key, uri);
+        sv_catpv(key, "}");
+        sv_catpv(key, name);
+        strkey = SvPV(key, len);
+        /* warn("Trying to store function '%s' in %d\n", strkey, LibXSLT_HV_allCallbacks); */
+        hv_store(LibXSLT_HV_allCallbacks, strkey, len, SvREFCNT_inc(callback), 0);
+        SvREFCNT_dec(key);
+    }
 
 SV *
 debug_callback(self, ...)
@@ -404,13 +501,13 @@ output_string(self, sv_doc)
         xmlOutputBufferPtr output;
         SV * results = newSVpv("", 0);
         const xmlChar *encoding = NULL;
-	    xmlCharEncodingHandlerPtr encoder = NULL;
+        xmlCharEncodingHandlerPtr encoder = NULL;
         xmlDocPtr doc = (xmlDocPtr)x_PmmSvNode( sv_doc );
     CODE:
         XSLT_GET_IMPORT_PTR(encoding, self, encoding)
         if (encoding != NULL) {
             encoder = xmlFindCharEncodingHandler((char *)encoding);
-	    if ((encoder != NULL) &&
+        if ((encoder != NULL) &&
                  (xmlStrEqual((const xmlChar *)encoder->name,
                               (const xmlChar *) "UTF-8")))
                 encoder = NULL;
@@ -450,7 +547,7 @@ output_fh(self, sv_doc, fh)
         XSLT_GET_IMPORT_PTR(encoding, self, encoding)
         if (encoding != NULL) {
             encoder = xmlFindCharEncodingHandler((char *)encoding);
-	    if ((encoder != NULL) &&
+        if ((encoder != NULL) &&
                  (xmlStrEqual((const xmlChar *)encoder->name,
                               (const xmlChar *) "UTF-8")))
                 encoder = NULL;
