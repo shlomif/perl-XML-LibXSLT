@@ -107,7 +107,7 @@ that document though (because I haven't written the code to do it yet!).
 
 LibXML options are global (unfortunately this is a limitation of the
 underlying implementation, not this interface). They can either be set
-using C<$parser->option(...)>, or C<XML::LibXML->option(...)>, both
+using C<$parser-E<gt>option(...)>, or C<XML::LibXML-E<gt>option(...)>, both
 are treated in the same manner. Note that even two forked processes
 will share some of the same options, so be careful out there!
 
@@ -218,21 +218,21 @@ Here, C<$fh> can be an IOREF, or a subclass of IO::Handle.
 
 The objects returned above have a few methods available to them:
 
-=head2 C<$doc->toString>
+=head2 C<$doc-E<gt>toString>
 
 Convert the document to a string.
 
-=head2 C<$doc->is_valid>
+=head2 C<$doc-E<gt>is_valid>
 
 Post parse validation. Returns true if the document is valid against the
 DTD specified in the DOCTYPE declaration
 
-=head2 C<$doc->is_valid($dtd)>
+=head2 C<$doc-E<gt>is_valid($dtd)>
 
 Same as the above, but allows you to pass in a DTD created from 
 L<"XML::LibXML::Dtd">.
 
-=head2 C<$doc->process_xinclude>
+=head2 C<$doc-E<gt>process_xinclude>
 
 Process any xinclude tags in the file.
 
