@@ -196,6 +196,8 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
     char *strkey;
     const char *function, *uri;
     SV **perl_function;
+    AV *arguments;
+    int cnt = 0;
     dSP;
     
     function = ctxt->context->function;
@@ -211,18 +213,25 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
     perl_function = hv_fetch(LibXSLT_HV_allCallbacks, strkey, len, 0);
     SvREFCNT_dec(key);
     
+    arguments = newAV();
+    av_unshift(arguments, nargs);
+    for (cnt = nargs; cnt > 0; cnt--) {
+        SV *arg = newSVpv((char*)xmlXPathPopString(ctxt), 0);
+        av_store(arguments, cnt - 1, arg);
+    }
+    
     if (perl_function && *perl_function && SvTRUE(*perl_function)) {
-        int cnt = 0;
-        
         ENTER;
         SAVETMPS;
         
         PUSHMARK(SP);
         for (cnt = 0; cnt < nargs; cnt++) {
-            XPUSHs(sv_2mortal(newSVpv((char*)xmlXPathPopString(ctxt), 0)));
+            SV *tmp = av_shift(arguments);
+            if (tmp) XPUSHs(tmp);
         }
         PUTBACK;
         
+        SvREFCNT_dec(arguments);
         cnt = 0;
         
         cnt = perl_call_sv(*perl_function, G_SCALAR | G_EVAL);
@@ -252,6 +261,7 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
         LEAVE;
     }
     else {
+        SvREFCNT_dec(arguments);
         xmlXPathReturnEmptyString(ctxt);
     }
 }

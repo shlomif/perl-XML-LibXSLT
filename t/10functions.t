@@ -1,12 +1,12 @@
 use Test;
-BEGIN { plan tests => 5 }
+BEGIN { plan tests => 6 }
 use XML::LibXSLT;
 
 my $parser = XML::LibXML->new();
 my $xslt = XML::LibXSLT->new();
 ok($parser); ok($xslt);
 
-$xslt->register_function('urn:foo' => 'test', sub { ok(1); "Foo!" });
+$xslt->register_function('urn:foo' => 'test', sub { ok(1); $_[0] . $_[1] });
 
 my $source = $parser->parse_string(<<'EOT');
 <?xml version="1.0" encoding="ISO-8859-1"?>
@@ -21,7 +21,7 @@ my $style = $parser->parse_string(<<'EOT');
 >
 
 <xsl:template match="/">
-  (( <xsl:value-of select="foo:test()"/> ))
+  (( <xsl:value-of select="foo:test('Foo', '!')"/> ))
 </xsl:template>
 
 </xsl:stylesheet>
@@ -32,5 +32,7 @@ my $stylesheet = $xslt->parse_stylesheet($style);
 
 my $results = $stylesheet->transform($source);
 ok($results);
+
+ok($stylesheet->output_string($results), qr(Foo!));
 
 print $stylesheet->output_string($results), "\n";
