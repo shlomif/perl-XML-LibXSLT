@@ -6,6 +6,11 @@ use strict;
 
 $|++;
 
+my @default_drivers = qw(
+    LibXSLT
+    Sablotron
+    );
+
 use vars qw(
         $component $iter $ms $kb_in $kb_out $kb_sec $result $ref_size
         );
@@ -16,6 +21,7 @@ my @getopt_args = (
         'd=s@', # drivers
         't', # only 1 iteration per test
         'v', # verbose
+        'h', # help
         );
 
 my %options;
@@ -26,11 +32,13 @@ unless (GetOptions(\%options, @getopt_args)) {
     usage();
 }
 
+usage() if $options{h};
+
 $options{c} ||= 'testcases/default.conf';
 
 my $basedir = dirname($options{c});
 
-$options{d} ||= ['LibXSLT', 'Sablotron'];
+$options{d} ||= [@default_drivers];
 
 $options{n} ||= 1;
 
@@ -213,9 +221,15 @@ usage: $0 [options]
                     is different to -n 1)
         
         -d <Driver> test <Driver>. Use multiple -d options to test
-                    more than one driver.
+                    more than one driver. Defaults are set in this
+                    script (the \@default_drivers variable).
          
         -v          be verbose.
+
+Copyright 2001 AxKit.com Ltd. This is free software, you may use it and
+distribute it under either the GNU GPL Version 2, or under the Perl
+Artistic License.
+
 EOT
     exit(0);
 }
