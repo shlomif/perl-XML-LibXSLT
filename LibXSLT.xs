@@ -236,50 +236,6 @@ LibXSLT_input_close(void * context)
     }
 }
 
-void
-LibXSLT_copy_callbacks(SV * self)
-{
-    SV ** cb;
-    HV * hv = (HV *)SvRV(self);
-    
-    cb = hv_fetch(hv, "XML_LIBXSLT_MATCH_CB", 20, 0);
-    if (cb && SvTRUE(*cb)) {
-        LibXSLT_match_cb = *cb;
-    }
-
-    cb = hv_fetch(hv, "XML_LIBXSLT_OPEN_CB", 19, 0);
-    if (cb && SvTRUE(*cb)) {
-        LibXSLT_open_cb = *cb;
-    }
-
-    cb = hv_fetch(hv, "XML_LIBXSLT_READ_CB", 19, 0);
-    if (cb && SvTRUE(*cb)) {
-        LibXSLT_read_cb = *cb;
-    }
-
-    cb = hv_fetch(hv, "XML_LIBXSLT_CLOSE_CB", 20, 0);
-    if (cb && SvTRUE(*cb)) {
-        LibXSLT_close_cb = *cb;
-    }
-
-    xmlRegisterInputCallbacks(LibXSLT_input_match,
-                    LibXSLT_input_open,
-                    LibXSLT_input_read,
-                    LibXSLT_input_close);
-}
-
-void
-LibXSLT_free_callbacks(SV * self)
-{
-    return;
-    LibXSLT_match_cb = NULL;
-    LibXSLT_open_cb = NULL;
-    LibXSLT_read_cb = NULL;
-    LibXSLT_close_cb = NULL;
-
-    xmlRegisterInputCallbacks(NULL, NULL, NULL, NULL);
-}
-
 int
 LibXSLT_iowrite_scalar(void * context, const char * buffer, int len)
 {
@@ -356,8 +312,8 @@ LibXSLT_error_handler(void * ctxt, const char * msg, ...)
     SV * sv;
     STRLEN n_a;
     
-    sv = NEWSV(0,0);
-    
+    sv = NEWSV(0,512);
+
     va_start(args, msg);
     sv_vsetpvfn(sv, msg, strlen(msg), &args, NULL, 0, NULL);
     va_end(args);
@@ -375,7 +331,7 @@ LibXSLT_debug_handler(void * ctxt, const char * msg, ...)
     SV * sv;
     STRLEN n_a;
     
-    sv = NEWSV(0,0);
+    sv = NEWSV(0,512);
 
     va_start(args, msg);
     sv_vsetpvfn(sv, msg, strlen(msg), &args, NULL, 0, NULL);
@@ -409,6 +365,27 @@ LibXSLT_debug_handler(void * ctxt, const char * msg, ...)
     SvREFCNT_dec(sv);
 }
 
+void
+LibXSLT_set_callbacks()
+{
+    xmlRegisterInputCallbacks(LibXSLT_input_match,
+                    LibXSLT_input_open,
+                    LibXSLT_input_read,
+                    LibXSLT_input_close);
+    if (LibXSLT_debug_cb) {
+        xsltSetGenericDebugFunc(PerlIO_stderr(), (xmlGenericErrorFunc)LibXSLT_debug_handler);
+    }
+    xsltSetGenericErrorFunc(PerlIO_stderr(), (xmlGenericErrorFunc)LibXSLT_error_handler);
+}
+
+void
+LibXSLT_unset_callbacks()
+{
+    xmlRegisterInputCallbacks(NULL, NULL, NULL, NULL);
+    xsltSetGenericDebugFunc(NULL, NULL);
+    xsltSetGenericErrorFunc(NULL, NULL);
+}
+
 MODULE = XML::LibXSLT         PACKAGE = XML::LibXSLT
 
 PROTOTYPES: DISABLE
@@ -417,8 +394,10 @@ BOOT:
     LIBXML_TEST_VERSION
     xsltMaxDepth = 250;
     LibXSLT_debug_cb = NULL;
-    xsltSetGenericErrorFunc(PerlIO_stderr(), (xmlGenericErrorFunc)LibXSLT_error_handler);
-    xsltSetGenericDebugFunc(NULL, NULL);
+    LibXSLT_match_cb = NULL;
+    LibXSLT_open_cb = NULL;
+    LibXSLT_read_cb = NULL;
+    LibXSLT_close_cb = NULL;
 
 void
 END()
@@ -444,14 +423,89 @@ debug_callback(self, ...)
             SV * debug_cb = ST(1);
             if (debug_cb && SvTRUE(debug_cb)) {
                 SET_CB(LibXSLT_debug_cb, ST(1));
-                xsltSetGenericDebugFunc(PerlIO_stderr(), (xmlGenericErrorFunc)LibXSLT_debug_handler);
             }
             else {
-                xsltSetGenericDebugFunc(NULL, NULL);
+                LibXSLT_debug_cb = NULL;
             }
         }
         else {
             RETVAL = LibXSLT_debug_cb ? sv_2mortal(LibXSLT_debug_cb) : &PL_sv_undef;
+        }
+    OUTPUT:
+        RETVAL
+
+SV *
+match_callback(self, ...)
+        SV * self
+    CODE:
+        if (items > 1) {
+            SV * match_cb = ST(1);
+            if (match_cb && SvTRUE(match_cb)) {
+                SET_CB(LibXSLT_match_cb, ST(1));
+            }
+            else {
+                LibXSLT_match_cb = NULL;
+            }
+        }
+        else {
+            RETVAL = LibXSLT_match_cb ? sv_2mortal(LibXSLT_match_cb) : &PL_sv_undef;
+        }
+    OUTPUT:
+        RETVAL
+
+SV *
+read_callback(self, ...)
+        SV * self
+    CODE:
+        if (items > 1) {
+            SV * read_cb = ST(1);
+            if (read_cb && SvTRUE(read_cb)) {
+                SET_CB(LibXSLT_read_cb, ST(1));
+            }
+            else {
+                LibXSLT_read_cb = NULL;
+            }
+        }
+        else {
+            RETVAL = LibXSLT_read_cb ? sv_2mortal(LibXSLT_read_cb) : &PL_sv_undef;
+        }
+    OUTPUT:
+        RETVAL
+
+SV *
+open_callback(self, ...)
+        SV * self
+    CODE:
+        if (items > 1) {
+            SV * open_cb = ST(1);
+            if (open_cb && SvTRUE(open_cb)) {
+                SET_CB(LibXSLT_open_cb, ST(1));
+            }
+            else {
+                LibXSLT_open_cb = NULL;
+            }
+        }
+        else {
+            RETVAL = LibXSLT_open_cb ? sv_2mortal(LibXSLT_open_cb) : &PL_sv_undef;
+        }
+    OUTPUT:
+        RETVAL
+
+SV *
+close_callback(self, ...)
+        SV * self
+    CODE:
+        if (items > 1) {
+            SV * close_cb = ST(1);
+            if (close_cb && SvTRUE(close_cb)) {
+                SET_CB(LibXSLT_close_cb, ST(1));
+            }
+            else {
+                LibXSLT_close_cb = NULL;
+            }
+        }
+        else {
+            RETVAL = LibXSLT_close_cb ? sv_2mortal(LibXSLT_close_cb) : &PL_sv_undef;
         }
     OUTPUT:
         RETVAL
@@ -469,9 +523,9 @@ parse_stylesheet(self, doc)
         }
         doc_copy = xmlCopyDoc(doc, 1);
         doc_copy->URL = xmlStrdup(doc->URL);
-        LibXSLT_copy_callbacks(self);
+        LibXSLT_set_callbacks();
         RETVAL = xsltParseStylesheetDoc(doc_copy);
-        LibXSLT_free_callbacks(self);
+        LibXSLT_unset_callbacks();
         if (RETVAL == NULL) {
             XSRETURN_UNDEF;
         }
@@ -485,9 +539,9 @@ parse_stylesheet_file(self, filename)
     PREINIT:
         char * CLASS = "XML::LibXSLT::Stylesheet";
     CODE:
-        LibXSLT_copy_callbacks(self);
+        LibXSLT_set_callbacks();
         RETVAL = xsltParseStylesheetFile(filename);
-        LibXSLT_free_callbacks(self);
+        LibXSLT_unset_callbacks();
         if (RETVAL == NULL) {
             XSRETURN_UNDEF;
         }
@@ -507,9 +561,7 @@ transform(self, doc, ...)
         # note really only 254 entries here - last one is NULL
         const char *xslt_params[255];
         xmlDocPtr real_dom;
-        SV * svself;
     CODE:
-        svself = ST(0);
         if (doc == NULL) {
             XSRETURN_UNDEF;
         }
@@ -528,9 +580,9 @@ transform(self, doc, ...)
             # set last entry to NULL
             xslt_params[i - 2] = 0;
         }
-        LibXSLT_copy_callbacks(svself);
+        LibXSLT_set_callbacks();
         real_dom = xsltApplyStylesheet(self, doc, xslt_params);
-        LibXSLT_free_callbacks(svself);
+        LibXSLT_unset_callbacks();
         if (real_dom == NULL) {
             XSRETURN_UNDEF;
         }
@@ -554,9 +606,7 @@ transform_file(self, filename, ...)
         # note really only 254 entries here - last one is NULL
         const char *xslt_params[255];
         xmlDocPtr real_dom;
-        SV * svself;
     CODE:
-        svself = ST(0);
         xslt_params[0] = 0;
         if (items > 256) {
             croak("Too many parameters in transform()");
@@ -572,9 +622,9 @@ transform_file(self, filename, ...)
             # set last entry to NULL
             xslt_params[i - 2] = 0;
         }
-        LibXSLT_copy_callbacks(svself);
+        LibXSLT_set_callbacks();
         real_dom = xsltApplyStylesheet(self, xmlParseFile(filename), xslt_params);
-        LibXSLT_free_callbacks(svself);
+        LibXSLT_unset_callbacks();
         if (real_dom == NULL) {
             XSRETURN_UNDEF;
         }
