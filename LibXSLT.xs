@@ -237,11 +237,16 @@ parse_stylesheet_file(self, filename)
 MODULE = XML::LibXSLT         PACKAGE = XML::LibXSLT::Stylesheet
 
 void
-add_param(self, param)
+add_param(self, pname, pvalue)
         xsltStylesheetPtr self
-        const char * param
+        const char * pname
+        const char * pvalue
     CODE:
-        xsltParseGlobalParam(self, xmlNewText(param));
+        xsltRegisterGlobalVariable(self, pname, 
+                                   NULL, 
+                                   NULL, 
+                                   xmlNewText(pvalue), 
+                                   1);
 
 xmlDocPtr
 transform(self, doc)
