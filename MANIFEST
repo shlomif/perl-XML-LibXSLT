@@ -13,6 +13,7 @@ t/03input.t
 t/04params.t
 t/05quick.t
 t/06output.t
+t/07blankdoc.t
 benchmark.pl
 Driver/LibXSLT.pm
 Driver/Sablotron.pm
