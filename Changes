@@ -1,5 +1,8 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.05
+    - More tests and fixes for media_type
+
 1.04
     - Fixed media_type method
 
