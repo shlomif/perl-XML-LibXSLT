@@ -190,7 +190,7 @@ LibXSLT_debug_handler(void * ctxt, const char * msg, ...)
 }
 
 static void
-LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
+__LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
     SV *key;
     STRLEN len;
     char *strkey;
@@ -264,6 +264,169 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
         SvREFCNT_dec(arguments);
         xmlXPathReturnEmptyString(ctxt);
     }
+}
+
+/* ido - perl external functions */
+static void
+LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
+    xmlXPathObjectPtr obj,ret;
+    xmlNodeSetPtr nodelist = NULL;
+    int count;
+    SV * perl_dispatch;
+    int i;
+    STRLEN len;
+    SV * perl_result;
+    ProxyNodePtr owner = NULL;
+    char * tmp_string;
+    STRLEN n_a;
+    double tmp_double;
+    int tmp_int;
+    AV * array_result;
+    xmlNodePtr tmp_node, tmp_node1;
+    SV *key;
+    char *strkey;
+    const char *function, *uri;
+    SV **perl_function;
+    AV *arguments;
+    int cnt = 0;
+    dSP;	
+    
+    function = ctxt->context->function;
+    uri = ctxt->context->functionURI;
+    
+    key = newSVpvn("",0);
+    sv_catpv(key, "{");
+    sv_catpv(key, uri);
+    sv_catpv(key, "}");
+    sv_catpv(key, function);
+    strkey = SvPV(key, len);
+    perl_function = hv_fetch(LibXSLT_HV_allCallbacks, strkey, len, 0);
+    SvREFCNT_dec(key);
+
+    ENTER;
+    SAVETMPS;
+    PUSHMARK(SP);
+    
+    XPUSHs(sv_2mortal(*perl_function));
+
+    /* set up call to perl dispatcher function */
+    for (i = 0; i < nargs; i++) {
+        obj = (xmlXPathObjectPtr)valuePop(ctxt);
+        switch (obj->type) {
+        case XPATH_NODESET:
+            nodelist = obj->nodesetval;
+            if ( nodelist ) {			
+                XPUSHs(sv_2mortal(newSVpv("XML::LibXML::NodeList", 0)));				
+                XPUSHs(sv_2mortal(newSViv(nodelist->nodeNr)));
+                if ( nodelist->nodeNr > 0 ) {
+                    int i = 0 ;
+                    const char * cls = "XML::LibXML::Node";
+                    xmlNodePtr tnode;
+                    SV * element;	
+                    len = nodelist->nodeNr;
+                    for( i ; i < len; i++){
+                        tnode = nodelist->nodeTab[i];
+                        if( tnode != NULL	&& tnode->doc != NULL) {
+                            owner = SvPROXYNODE(x_PmmNodeToSv((xmlNodePtr)(tnode->doc), NULL));
+                        }
+                        if (tnode->type == XML_NAMESPACE_DECL) {
+                            element = sv_newmortal();
+                            cls = x_PmmNodeTypeName( tnode );
+                            element = sv_setref_pv( element,
+                                                    (const char *)cls,
+                                                    (void *)xmlCopyNamespace((xmlNsPtr)tnode)
+                                                );
+                        }
+                        else {
+                            element = x_PmmNodeToSv(tnode, owner);
+                        }
+                        XPUSHs( sv_2mortal(element) );
+                    }
+                }
+                xmlXPathFreeNodeSet( obj->nodesetval );  
+                obj->nodesetval = NULL;
+            }
+            break;
+        case XPATH_BOOLEAN:
+            XPUSHs(sv_2mortal(newSVpv("XML::LibXML::Boolean", 0)));
+            XPUSHs(sv_2mortal(newSViv(obj->boolval)));
+            break;
+        case XPATH_NUMBER:
+            XPUSHs(sv_2mortal(newSVpv("XML::LibXML::Number", 0)));
+            XPUSHs(sv_2mortal(newSVnv(obj->floatval)));
+            break;
+        case XPATH_STRING:
+            XPUSHs(sv_2mortal(newSVpv("XML::LibXML::Literal", 0)));
+            XPUSHs(sv_2mortal(newSVpv(obj->stringval, 0)));
+            break;
+        default:
+            croak("Unknown XPath return type");
+        }
+        xmlXPathFreeObject(obj);
+    }
+
+    // call perl dispatcher
+    PUTBACK;
+
+    perl_dispatch = sv_2mortal(newSVpv("XML::LibXSLT::perl_dispatcher",0));
+    count = call_sv(perl_dispatch, G_SCALAR|G_EVAL);
+    
+    SPAGAIN;
+
+    if (SvTRUE(ERRSV)) {
+        POPs;
+        croak("LibXSLT: error coming back from perl-dispatcher in pm file. %s\n", SvPV(ERRSV, n_a));
+    } 
+
+    if (count != 1) croak("LibXSLT: perl-dispatcher in pm file returned more than one argument!\n");
+    
+    perl_result = POPs;
+
+    if (!SvOK(perl_result)) {
+        ret = (xmlXPathObjectPtr)xmlXPathNewCString("");		
+        goto FINISH;
+    }
+
+    // convert perl result structures to LibXML structures
+    if (sv_isobject(perl_result) && 
+        (SvTYPE(SvRV(perl_result)) == SVt_PVMG ||
+         SvTYPE(SvRV(perl_result)) == SVt_PVAV))
+    {
+        if (sv_isa(perl_result, "XML::LibXML::NodeList")){
+            ret =  (xmlXPathObjectPtr)xmlXPathNewNodeSet(NULL);  
+            array_result = (AV*)SvRV(perl_result);
+            while (av_len(array_result) >= 0) {
+                    // memory leak ??
+                    tmp_node1 = (xmlNodePtr)x_PmmSvNode(av_shift(array_result));
+                    tmp_node = xmlDocCopyNode(tmp_node1, ctxt->context->doc, 1);
+                    xmlXPathNodeSetAdd(ret->nodesetval,tmp_node);
+            }
+            goto FINISH;
+        } 
+        if (sv_isa(perl_result, "XML::LibXML::Boolean")) {
+            tmp_int = SvIV(SvRV(perl_result));
+            ret = (xmlXPathObjectPtr)xmlXPathNewBoolean(tmp_int);
+            goto FINISH;
+        }
+        if (sv_isa(perl_result, "XML::LibXML::Literal")) {
+            tmp_string = SvPV_nolen(SvRV(perl_result));
+            ret = (xmlXPathObjectPtr)xmlXPathNewCString(tmp_string);
+            goto FINISH;
+        }
+        if (sv_isa(perl_result, "XML::LibXML::Number")) {
+            tmp_double = SvNV(SvRV(perl_result));
+            ret = (xmlXPathObjectPtr)xmlXPathNewFloat(tmp_double);
+            goto FINISH;
+        }
+    }
+    ret = (xmlXPathObjectPtr)xmlXPathNewCString(SvPV(perl_result, len));
+
+FINISH:
+
+    valuePush(ctxt, ret);
+    PUTBACK;
+    FREETMPS;
+    LEAVE;	
 }
 
 MODULE = XML::LibXSLT         PACKAGE = XML::LibXSLT

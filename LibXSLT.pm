@@ -24,6 +24,35 @@ sub new {
     return $self;
 }
 
+# ido - perl dispatcher
+sub perl_dispatcher {
+    my $func = shift;
+    my @params = @_;
+    my @perlParams;
+    
+    my $i = 0;
+    while (@params) {
+        my $type = shift(@params);
+        if ($type eq 'XML::LibXML::Literal' or 
+            $type eq 'XML::LibXML::Number' or
+            $type eq 'XML::LibXML::Boolean')
+        {
+            unshift(@perlParams, $type->new(shift(@params)));
+        }
+        elsif ($type eq 'XML::LibXML::NodeList') {
+            my $node_count = shift(@params);
+            my @nodes = splice(@params, 0, $node_count);
+            unshift(@perlParams, $type->new(@nodes));
+        }
+    }
+    
+    $func = "main::$func" unless ref($func) || $func =~ /(.+)::/;
+    no strict 'refs';
+    my $res = $func->(@perlParams);
+    return $res;
+}
+
+
 sub xpath_to_string {
     my @results;
     while (@_) {
