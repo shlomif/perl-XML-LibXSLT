@@ -1,5 +1,8 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.31
+    - removed global callbacks
+
 1.30
     - Compatibility with XML::LibXML 1.30 (esp callbacks)
     - EXSLT support

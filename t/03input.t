@@ -40,6 +40,7 @@ EOT
 
 ok($stylesheet);
 
+# warn "transform!\n";
 my $results = $stylesheet->transform($doc);
 
 ok($results);
@@ -60,16 +61,17 @@ sub match_cb {
 
 sub open_cb {
     my $uri = shift;
-#    warn("open $uri\n");
+    # warn("open $uri\n");
     ok($uri, "foo.xml");
     return "<foo>Text here</foo>";
 }
 
 sub close_cb {
-#    warn("close\n");
+    # warn("close\n");
     ok(1);
 }
 
 sub read_cb {
+#    warn("read\n");
     return substr($_[0], 0, $_[1], "");
 }
