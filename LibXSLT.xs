@@ -19,8 +19,6 @@ extern "C" {
 }
 #endif
 
-#define PREFIX LibXSLT
-
 #define SET_CB(cb, fld) \
     RETVAL = cb ? newSVsv(cb) : &PL_sv_undef;\
     if (cb) {\
@@ -32,18 +30,18 @@ extern "C" {
         cb = newSVsv(fld);\
     }
 
-SV * PREFIX_debug_cb;
+SV * LibXSLT_debug_cb;
 
 void
-PREFIX_free_all_callbacks(void)
+LibXSLT_free_all_callbacks(void)
 {
-    if (PREFIX_debug_cb) {
-        SvREFCNT_dec(PREFIX_debug_cb);
+    if (LibXSLT_debug_cb) {
+        SvREFCNT_dec(LibXSLT_debug_cb);
     }
 }
 
 int
-PREFIX_iowrite_scalar(void * context, const char * buffer, int len)
+LibXSLT_iowrite_scalar(void * context, const char * buffer, int len)
 {
     SV * scalar;
     
@@ -55,13 +53,13 @@ PREFIX_iowrite_scalar(void * context, const char * buffer, int len)
 }
 
 int
-PREFIX_ioclose_scalar(void * context)
+LibXSLT_ioclose_scalar(void * context)
 {
     return 0;
 }
 
 int
-PREFIX_iowrite_fh(void * context, const char * buffer, int len)
+LibXSLT_iowrite_fh(void * context, const char * buffer, int len)
 {
     dSP;
     
@@ -106,13 +104,13 @@ PREFIX_iowrite_fh(void * context, const char * buffer, int len)
 }
 
 int
-PREFIX_ioclose_fh(void * context)
+LibXSLT_ioclose_fh(void * context)
 {
     return 0; /* we let Perl close the FH */
 }
 
 void
-PREFIX_error_handler(void * ctxt, const char * msg, ...)
+LibXSLT_error_handler(void * ctxt, const char * msg, ...)
 {
     va_list args;
     char buffer[50000];
@@ -127,7 +125,7 @@ PREFIX_error_handler(void * ctxt, const char * msg, ...)
 }
 
 void
-PREFIX_debug_handler(void * ctxt, const char * msg, ...)
+LibXSLT_debug_handler(void * ctxt, const char * msg, ...)
 {
     dSP;
     
@@ -135,12 +133,14 @@ PREFIX_debug_handler(void * ctxt, const char * msg, ...)
     char buffer[50000];
     
     buffer[0] = 0;
-    
+
+    /*    
     va_start(args, msg);
     vsprintf(&buffer[strlen(buffer)], msg, args);
     va_end(args);
+    */
 
-    if (PREFIX_debug_cb && SvTRUE(PREFIX_debug_cb)) {
+    if (LibXSLT_debug_cb && SvTRUE(LibXSLT_debug_cb)) {
         int cnt = 0;
         SV * tbuff = newSVpv((char*)buffer, 0);
     
@@ -152,7 +152,7 @@ PREFIX_debug_handler(void * ctxt, const char * msg, ...)
         PUSHs(tbuff);
         PUTBACK;
 
-        cnt = perl_call_sv(PREFIX_debug_cb, G_SCALAR);
+        cnt = perl_call_sv(LibXSLT_debug_cb, G_SCALAR);
 
         SPAGAIN;
 
@@ -174,14 +174,16 @@ PREFIX_debug_handler(void * ctxt, const char * msg, ...)
 MODULE = XML::LibXSLT         PACKAGE = XML::LibXSLT
 
 BOOT:
+    LIBXML_TEST_VERSION
     xsltMaxDepth = 250;
-    xsltSetGenericErrorFunc(PerlIO_stderr(), (xmlGenericErrorFunc)PREFIX_error_handler);
-    xsltSetGenericDebugFunc(PerlIO_stderr(), (xmlGenericErrorFunc)PREFIX_debug_handler);
+    LibXSLT_debug_cb = NULL;
+    xsltSetGenericErrorFunc(PerlIO_stderr(), (xmlGenericErrorFunc)LibXSLT_error_handler);
+    xsltSetGenericDebugFunc(PerlIO_stderr(), (xmlGenericErrorFunc)LibXSLT_debug_handler);
 
 void
 END()
     CODE:
-        PREFIX_free_all_callbacks();
+        LibXSLT_free_all_callbacks();
 
 int
 max_depth(self, ...)
@@ -199,10 +201,10 @@ debug_callback(self, ...)
         SV * self
     CODE:
         if (items > 1) {
-            SET_CB(PREFIX_debug_cb, ST(1));
+            SET_CB(LibXSLT_debug_cb, ST(1));
         }
         else {
-            RETVAL = PREFIX_debug_cb ? sv_2mortal(PREFIX_debug_cb) : &PL_sv_undef;
+            RETVAL = LibXSLT_debug_cb ? sv_2mortal(LibXSLT_debug_cb) : &PL_sv_undef;
         }
     OUTPUT:
         RETVAL
@@ -252,6 +254,7 @@ transform(self, doc, ...)
         if (doc == NULL) {
             XSRETURN_UNDEF;
         }
+        xslt_params[0] = 0;
         if (items > 2) {
             int i;
             for (i = 2; (i < items && i < 256); i++) {
@@ -273,6 +276,7 @@ transform_file(self, filename, ...)
         char * CLASS = "XML::LibXML::Document";
         const char *xslt_params[254];
     CODE:
+        xslt_params[0] = 0;
         if (items > 2) {
             int i;
             for (i = 2; (i < items && i < 256); i++) {
@@ -314,8 +318,8 @@ output_string(self, doc)
                 encoder = NULL;
         }
         output = xmlOutputBufferCreateIO( 
-            (xmlOutputWriteCallback) PREFIX_iowrite_scalar,
-            (xmlOutputCloseCallback) PREFIX_ioclose_scalar,
+            (xmlOutputWriteCallback) LibXSLT_iowrite_scalar,
+            (xmlOutputCloseCallback) LibXSLT_ioclose_scalar,
             (void*)results,
             encoder
             );
@@ -346,8 +350,8 @@ output_fh(self, doc, fh)
                 encoder = NULL;
         }
         output = xmlOutputBufferCreateIO( 
-            (xmlOutputWriteCallback) PREFIX_iowrite_fh,
-            (xmlOutputCloseCallback) PREFIX_ioclose_fh,
+            (xmlOutputWriteCallback) LibXSLT_iowrite_fh,
+            (xmlOutputCloseCallback) LibXSLT_ioclose_fh,
             (void*)fh,
             encoder
             );
