@@ -9,7 +9,7 @@ use XML::LibXML;
 
 require Exporter;
 
-$VERSION = "1.02";
+$VERSION = "1.03";
 
 require DynaLoader;
 
@@ -132,6 +132,14 @@ Outputs the result to the filehandle given in C<$fh>.
 =head2 output_file(result, filename)
 
 Outputs the result to the file named in C<$filename>.
+
+=head2 output_encoding
+
+Returns the output encoding of the results. Defaults to "UTF-8".
+
+=head2 media_type
+
+Returns the output media_type of the results. Defaults to "text/html".
 
 =head1 BENCHMARK
 
