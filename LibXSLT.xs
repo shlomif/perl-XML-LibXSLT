@@ -14,6 +14,7 @@ extern "C" {
 #include <libxslt/xsltInternals.h>
 #include <libxslt/transform.h>
 #include <libxslt/xsltutils.h>
+#include <libxslt/imports.h>
 #ifdef __cplusplus
 }
 #endif
@@ -301,12 +302,22 @@ output_string(self, doc)
     PREINIT:
         xmlOutputBufferPtr output;
         SV * results = newSVpv("", 0);
+        const xmlChar *encoding = NULL;
+	xmlCharEncodingHandlerPtr encoder = NULL;
     CODE:
+        XSLT_GET_IMPORT_PTR(encoding, self, encoding)
+        if (encoding != NULL) {
+            encoder = xmlFindCharEncodingHandler((char *)encoding);
+	    if ((encoder != NULL) &&
+                 (xmlStrEqual((const xmlChar *)encoder->name,
+                              (const xmlChar *) "UTF-8")))
+                encoder = NULL;
+        }
         output = xmlOutputBufferCreateIO( 
             (xmlOutputWriteCallback) PREFIX_iowrite_scalar,
             (xmlOutputCloseCallback) PREFIX_ioclose_scalar,
             (void*)results,
-            NULL
+            encoder
             );
         if (xsltSaveResultTo(output, doc, self) == -1) {
             croak("output to scalar failed");
@@ -323,12 +334,22 @@ output_fh(self, doc, fh)
         SV * fh
     PREINIT:
         xmlOutputBufferPtr output;
+        const xmlChar *encoding = NULL;
+	xmlCharEncodingHandlerPtr encoder = NULL;
     CODE:
+        XSLT_GET_IMPORT_PTR(encoding, self, encoding)
+        if (encoding != NULL) {
+            encoder = xmlFindCharEncodingHandler((char *)encoding);
+	    if ((encoder != NULL) &&
+                 (xmlStrEqual((const xmlChar *)encoder->name,
+                              (const xmlChar *) "UTF-8")))
+                encoder = NULL;
+        }
         output = xmlOutputBufferCreateIO( 
             (xmlOutputWriteCallback) PREFIX_iowrite_fh,
             (xmlOutputCloseCallback) PREFIX_ioclose_fh,
             (void*)fh,
-            NULL
+            encoder
             );
         if (xsltSaveResultTo(output, doc, self) == -1) {
             croak("output to fh failed");

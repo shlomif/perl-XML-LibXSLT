@@ -1,5 +1,16 @@
 Revision history for Perl extension XML::LibXSLT.
 
+0.98
+    - Fixed output encoding problems
+
+0.97
+    - Now needs libxslt 0.7.0
+    - Removed add_param() (now passed to transform())
+    - Makefile.PL works without gnome-config now
+
+0.95 & 0.96
+    - Various cleanups and code additions to make stable.
+
 0.94  Tue Mar 13 2001
     - First release to CPAN
 
