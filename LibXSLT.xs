@@ -57,6 +57,7 @@ LibXSLT_free_all_callbacks(void)
 {
     if (LibXSLT_debug_cb) {
         SvREFCNT_dec(LibXSLT_debug_cb);
+        LibXSLT_debug_cb = NULL;
     }
 }
 
@@ -136,14 +137,9 @@ LibXSLT_error_handler(void * ctxt, const char * msg, ...)
     SV * sv;
     STRLEN n_a;
     
-    sv = NEWSV(0,512);
-
     va_start(args, msg);
-    sv_vsetpvfn(sv, msg, strlen(msg), &args, NULL, 0, NULL);
+    sv_vcatpvfn(ERRSV, msg, strlen(msg), &args, NULL, 0, NULL);
     va_end(args);
-
-    sv_2mortal(sv);
-    croak(SvPV(sv, n_a));
 }
 
 void
@@ -211,7 +207,7 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
     SV **perl_function;
     AV *arguments;
     int cnt = 0;
-    dSP;	
+    dSP;
     
     function = ctxt->context->function;
     uri = ctxt->context->functionURI;
@@ -236,15 +232,16 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
         obj = (xmlXPathObjectPtr)valuePop(ctxt);
         switch (obj->type) {
         case XPATH_NODESET:
+        case XPATH_XSLT_TREE:
             nodelist = obj->nodesetval;
-            if ( nodelist ) {			
+            if ( nodelist ) {
                 XPUSHs(sv_2mortal(newSVpv("XML::LibXML::NodeList", 0)));				
                 XPUSHs(sv_2mortal(newSViv(nodelist->nodeNr)));
                 if ( nodelist->nodeNr > 0 ) {
                     int i = 0 ;
                     const char * cls = "XML::LibXML::Node";
                     xmlNodePtr tnode;
-                    SV * element;	
+                    SV * element;
                     len = nodelist->nodeNr;
                     for( i ; i < len; i++){
                         tnode = nodelist->nodeTab[i];
@@ -260,13 +257,13 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
                                                 );
                         }
                         else {
-                            element = x_PmmNodeToSv(tnode, owner);
+                            /* need to copy the node as libxml2 will free it */
+                            xmlNodePtr tnode_cpy = xmlCopyNode(tnode, 1);
+                            element = x_PmmNodeToSv(tnode_cpy, owner);
                         }
                         XPUSHs( sv_2mortal(element) );
                     }
                 }
-                xmlXPathFreeNodeSet( obj->nodesetval );  
-                obj->nodesetval = NULL;
             }
             break;
         case XPATH_BOOLEAN:
@@ -327,17 +324,17 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
             }
             goto FINISH;
         } 
-        if (sv_isa(perl_result, "XML::LibXML::Boolean")) {
+        else if (sv_isa(perl_result, "XML::LibXML::Boolean")) {
             tmp_int = SvIV(SvRV(perl_result));
             ret = (xmlXPathObjectPtr)xmlXPathNewBoolean(tmp_int);
             goto FINISH;
         }
-        if (sv_isa(perl_result, "XML::LibXML::Literal")) {
+        else if (sv_isa(perl_result, "XML::LibXML::Literal")) {
             tmp_string = SvPV(SvRV(perl_result), len);
             ret = (xmlXPathObjectPtr)xmlXPathNewCString(tmp_string);
             goto FINISH;
         }
-        if (sv_isa(perl_result, "XML::LibXML::Number")) {
+        else if (sv_isa(perl_result, "XML::LibXML::Number")) {
             tmp_double = SvNV(SvRV(perl_result));
             ret = (xmlXPathObjectPtr)xmlXPathNewFloat(tmp_double);
             goto FINISH;

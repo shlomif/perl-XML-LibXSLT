@@ -49,6 +49,7 @@ sub perl_dispatcher {
         elsif ($type eq 'XML::LibXML::NodeList') {
             my $node_count = shift(@params);
             my @nodes = splice(@params, 0, $node_count);
+            # warn($_->getName) for @nodes;
             unshift(@perlParams, $type->new(@nodes));
         }
     }

@@ -43,8 +43,10 @@ EOT
 ok($style);
 my $stylesheet = $xslt->parse_stylesheet($style);
 
+while (1) {
 my $results = $stylesheet->transform($source);
 ok($results);
+}
 
 ok($stylesheet->output_string($results), qr(Foo!));
 ok($stylesheet->output_string($results), qr(NodeList));
