@@ -14,8 +14,8 @@ while($_ = shift) {
 my $DEBUG = delete $config{DEBUG};
 
 require XML::LibXML;
-if ($XML::LibXML::VERSION < 1.30) {
-    die "XML::LibXML 1.30 or higher required\n";
+if ($XML::LibXML::VERSION < 1.49) {
+    die "XML::LibXML 1.49 or higher required\n";
 }
 
 # get libs and inc from gnome-config

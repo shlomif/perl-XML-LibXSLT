@@ -5,11 +5,11 @@ package XML::LibXSLT;
 use strict;
 use vars qw($VERSION @ISA);
 
-use XML::LibXML 1.31;
+use XML::LibXML 1.49;
 
 require Exporter;
 
-$VERSION = "1.31";
+$VERSION = "1.49";
 
 require DynaLoader;
 

@@ -1,5 +1,8 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.49
+    - Migrated to new XML::LibXML 1.49 (with new memory stuff)
+
 1.31
     - removed global callbacks
     - changed callbacks to using LibXML globals
