@@ -139,25 +139,25 @@ parse_stylesheet(self, doc)
         xmlDocPtr doc
     PREINIT:
         char * CLASS = "XML::LibXSLT::Stylesheet";
+        SV ** value;
     CODE:
         if (doc == NULL) {
             XSRETURN_UNDEF;
         }
         doc->standalone = 42;
+        value = hv_fetch((HV *)SvRV(self), "error_handler", 13, 0);
+        if (value && SvTRUE(*value)) {
+            xsltSetGenericErrorFunc((void*)self, (xmlGenericErrorFunc)error_handler);
+        }
+        else {
+            xsltSetGenericErrorFunc((void*)self, (xmlGenericErrorFunc)xsltGenericDebug);
+        }
         RETVAL = xsltParseStylesheetDoc(doc);
         if (RETVAL == NULL) {
             XSRETURN_UNDEF;
         }
     OUTPUT:
         RETVAL
-
-void
-set_error_handler(self, func)
-        SV * self
-        SV * func
-    CODE:
-        hv_store((HV *)SvRV(self), "_error_handler", 14, func, 0);
-        xsltSetGenericErrorFunc((void*)self, (xmlGenericErrorFunc)error_handler);
 
 
 MODULE = XML::LibXSLT         PACKAGE = XML::LibXSLT::Stylesheet
@@ -229,3 +229,10 @@ output_fh(self, doc, fh)
         }
         xmlOutputBufferClose(output);
         
+void
+output_file(self, doc, filename)
+        xsltStylesheetPtr self
+        xmlDocPtr doc
+        char * filename
+    CODE:
+        xsltSaveResultToFilename(filename, doc, self, 0);
