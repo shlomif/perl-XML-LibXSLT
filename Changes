@@ -1,5 +1,8 @@
 Revision history for Perl extension XML::LibXSLT.
 
+0.94  Tue Mar 13 2001
+    - First release to CPAN
+
 0.01  Sat Mar  3 17:08:00 2001
 	- original version; created by h2xs 1.19
 
