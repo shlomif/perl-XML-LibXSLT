@@ -50,6 +50,8 @@ sub load_input {
     }    
 }
 
+use Cwd;
+
 sub run_transform {
     my ($output) = @_;
     $handler->{show_error} = 1;
