@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan tests => 6 }
+BEGIN { plan tests => 8 }
 
 use XML::LibXSLT;
 use XML::LibXML;
@@ -46,11 +46,17 @@ my $stylesheet = $xslt->parse_stylesheet($style_doc);
 ok($stylesheet);
 
 my $results = $stylesheet->transform($source,
-        'incoming' => 'INCOMINGTEXT',
-#        'incoming' => 'INCOMINGTEXT2',
-        'outgoing' => 'OUTGOINGTEXT',
+        'incoming' => "'INCOMINGTEXT'",
+#        'incoming' => "'INCOMINGTEXT2'",
+        'outgoing' => "'OUTGOINGTEXT'",
         );
 
 ok($results);
 
 ok($stylesheet->output_string($results));
+
+my @params = XML::LibXSLT::xpath_to_string('empty' => undef);
+$results = $stylesheet->transform($source, @params);
+ok($results);
+ok($stylesheet->output_string($results));
+

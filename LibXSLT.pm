@@ -25,21 +25,24 @@ sub new {
 }
 
 sub xpath_to_string {
-    my %params = @_;
-    foreach my $key (keys %params) {
-        if ($params{$key} =~ /\'/) {
-            $params{$key} = join('', 
+    my @results;
+    while (@_) {
+        my $value = shift(@_); $value = '' unless defined $value;
+        push @results, $value;
+        next if @results % 2;
+        if ($value =~ /\'/) {
+            $results[-1] = join('', 
                 "concat(", 
                         join(', ', 
                                 map { "'$_', \"'\"" } 
-                                split /\'/, $params{$key}), 
+                                split /\'/, $value), 
                                 ")");
         }
         else {
-            $params{$key} = "'$params{$key}'";
+            $results[-1] = "'$results[-1]'";
         }
     }
-    return %params;
+    return @results;
 }
 
 sub callbacks {
@@ -83,6 +86,30 @@ sub close_callback {
     my $self = shift;
     $self->{XML_LIBXSLT_CLOSE} = shift if scalar @_;
     return $self->{XML_LIBXSLT_CLOSE};
+}
+
+sub parse_stylesheet {
+    my $self = shift;
+    if (!$self->{XML_LIBXSLT_MATCH}) {
+        return $self->_parse_stylesheet(@_);
+    }
+    local $XML::LibXML::match_cb = $self->{XML_LIBXSLT_MATCH};
+    local $XML::LibXML::open_cb = $self->{XML_LIBXSLT_OPEN};
+    local $XML::LibXML::read_cb = $self->{XML_LIBXSLT_READ};
+    local $XML::LibXML::close_cb = $self->{XML_LIBXSLT_CLOSE};
+    $self->_parse_stylesheet(@_);
+}
+
+sub parse_stylesheet_file {
+    my $self = shift;
+    if (!$self->{XML_LIBXSLT_MATCH}) {
+        return $self->_parse_stylesheet_file(@_);
+    }
+    local $XML::LibXML::match_cb = $self->{XML_LIBXSLT_MATCH};
+    local $XML::LibXML::open_cb = $self->{XML_LIBXSLT_OPEN};
+    local $XML::LibXML::read_cb = $self->{XML_LIBXSLT_READ};
+    local $XML::LibXML::close_cb = $self->{XML_LIBXSLT_CLOSE};
+    $self->_parse_stylesheet_file(@_);
 }
 
 1;
