@@ -3,6 +3,7 @@
 use ExtUtils::MakeMaker;
 use Config;
 use Symbol;
+use File::Spec;
 
 $|=0;
 
@@ -68,6 +69,7 @@ WriteMakefile(
     'VERSION_FROM' => 'LibXSLT.pm', # finds $VERSION
     'AUTHOR'    => 'Matt Sergeant',
     'ABSTRACT'  => 'Interface to Gnome libxslt library',
+    'PREREQ_PM' => { 'XML::LibXML' => "0.91", },
     %config,
 );
 
@@ -99,8 +101,8 @@ sub xsystem {
     }
     open(OLDOUT, ">&STDOUT");
     open(OLDERR, ">&STDERR");
-    open(STDOUT, ">/dev/null");
-    open(STDERR, ">/dev/null");
+    open(STDOUT, ">" . File::Spec->devnull);
+    open(STDERR, ">" . File::Spec->devnull);
     my $retval = system($command);
     open(STDOUT, ">&OLDOUT");
     open(STDERR, ">&OLDERR");
@@ -123,8 +125,8 @@ sub backtick {
     }
     open(OLDOUT, ">&STDOUT");
     open(OLDERR, ">&STDERR");
-    open(STDOUT, ">/dev/null");
-    open(STDERR, ">/dev/null");
+    open(STDOUT, ">" . File::Spec->devnull);
+    open(STDERR, ">" . File::Spec->devnull);
     my $results = `$command`;
     my $retval = $?;
     open(STDOUT, ">&OLDOUT");
