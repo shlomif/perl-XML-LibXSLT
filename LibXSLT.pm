@@ -42,6 +42,37 @@ sub xpath_to_string {
     return %params;
 }
 
+sub match_callback {
+    my $self = shift;
+    return $self->{XML_LIBXSLT_MATCH_CB} = shift;
+}
+
+sub read_callback {
+    my $self = shift;
+    return $self->{XML_LIBXSLT_READ_CB} = shift;
+}
+
+sub close_callback {
+    my $self = shift;
+    return $self->{XML_LIBXSLT_CLOSE_CB} = shift;
+}
+
+sub open_callback {
+    my $self = shift;
+    return $self->{XML_LIBXSLT_OPEN_CB} = shift;
+}
+
+sub callbacks {
+    my $self = shift;
+    if (@_) {
+        my ($match, $open, $read, $close) = @_;
+        @{$self}{qw(XML_LIBXSLT_MATCH_CB XML_LIBXSLT_OPEN_CB XML_LIBXSLT_READ_CB XML_LIBXSLT_CLOSE_CB)} = ($match, $open, $read, $close);
+    }
+    else {
+        return @{$self}{qw(XML_LIBXSLT_MATCH_CB XML_LIBXSLT_OPEN_CB XML_LIBXSLT_READ_CB XML_LIBXSLT_CLOSE_CB)};
+    }
+}
+
 1;
 __END__
 

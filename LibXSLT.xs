@@ -22,14 +22,28 @@ extern "C" {
 
 #define SET_CB(cb, fld) \
     RETVAL = cb ? newSVsv(cb) : &PL_sv_undef;\
-    if (cb) {\
-        if (cb != fld) {\
-            sv_setsv(cb, fld);\
+    if (SvOK(fld)) {\
+        if (cb) {\
+            if (cb != fld) {\
+                sv_setsv(cb, fld);\
+            }\
+        }\
+        else {\
+            cb = newSVsv(fld);\
         }\
     }\
     else {\
-        cb = newSVsv(fld);\
+        if (cb) {\
+            SvREFCNT_dec(cb);\
+            cb = NULL;\
+        }\
     }
+
+static SV * LibXSLT_match_cb = NULL;
+static SV * LibXSLT_read_cb = NULL;
+static SV * LibXSLT_open_cb = NULL;
+static SV * LibXSLT_close_cb = NULL;
+static SV * LibXSLT_debug_cb = NULL;
 
 typedef struct _ProxyObject ProxyObject;
 
@@ -51,14 +65,219 @@ make_proxy_node (xmlDocPtr node)
     return proxy;
 }
 
-static SV * LibXSLT_debug_cb = NULL;
-
 void
 LibXSLT_free_all_callbacks(void)
 {
     if (LibXSLT_debug_cb) {
         SvREFCNT_dec(LibXSLT_debug_cb);
     }
+}
+
+int 
+LibXSLT_input_match(char const * filename)
+{
+    int results = 0;
+    
+    if (LibXSLT_match_cb && SvTRUE(LibXSLT_match_cb)) {
+        int count;
+        SV * res;
+
+        dSP;
+
+        ENTER;
+        SAVETMPS;
+
+        PUSHMARK(SP);
+        EXTEND(SP, 1);
+        PUSHs(sv_2mortal(newSVpv((char*)filename, 0)));
+        PUTBACK;
+
+        count = perl_call_sv(LibXSLT_match_cb, G_SCALAR);
+
+        SPAGAIN;
+        
+        if (count != 1) {
+            croak("match callback must return a single value");
+        }
+        
+        res = POPs;
+
+        if (SvTRUE(res)) {
+            results = 1;
+        }
+        
+        PUTBACK;
+        FREETMPS;
+        LEAVE;
+    }
+    
+    return results;
+}
+
+void * 
+LibXSLT_input_open(char const * filename)
+{
+    SV * results;
+
+    if (LibXSLT_open_cb && SvTRUE(LibXSLT_open_cb)) {
+        int count;
+
+        dSP;
+
+        ENTER;
+        SAVETMPS;
+
+        PUSHMARK(SP);
+        EXTEND(SP, 1);
+        PUSHs(sv_2mortal(newSVpv((char*)filename, 0)));
+        PUTBACK;
+
+        count = perl_call_sv(LibXSLT_open_cb, G_SCALAR);
+
+        SPAGAIN;
+        
+        if (count != 1) {
+            croak("open callback must return a single value");
+        }
+
+        results = POPs;
+
+        SvREFCNT_inc(results);
+
+        PUTBACK;
+        FREETMPS;
+        LEAVE;
+    }
+    
+    return (void *)results;
+}
+
+int 
+LibXSLT_input_read(void * context, char * buffer, int len)
+{
+    SV * results = NULL;
+    STRLEN res_len = 0;
+    const char * output;
+    
+    SV * ctxt = (SV *)context;
+    
+    if (LibXSLT_read_cb && SvTRUE(LibXSLT_read_cb)) {
+        int count;
+
+        dSP;
+
+        ENTER;
+        SAVETMPS;
+
+        PUSHMARK(SP);
+        EXTEND(SP, 2);
+        PUSHs(ctxt);
+        PUSHs(sv_2mortal(newSViv(len)));
+        PUTBACK;
+
+        count = perl_call_sv(LibXSLT_read_cb, G_SCALAR);
+
+        SPAGAIN;
+        
+        if (count != 1) {
+            croak("read callback must return a single value");
+        }
+
+        output = POPp;
+        if (output != NULL) {
+            res_len = strlen(output);
+            if (res_len) {
+                strncpy(buffer, output, res_len);
+            }
+            else {
+                buffer[0] = 0;
+            }
+        }
+        
+        FREETMPS;
+        LEAVE;
+    }
+    
+    /* warn("read, asked for: %d, returning: [%d] %s\n", len, res_len, buffer); */
+    return res_len;
+}
+
+void 
+LibXSLT_input_close(void * context)
+{
+    SV * ctxt = (SV *)context;
+    
+    if (LibXSLT_close_cb && SvTRUE(LibXSLT_close_cb)) {
+        int count;
+
+        dSP;
+
+        ENTER;
+        SAVETMPS;
+
+        PUSHMARK(SP);
+        EXTEND(SP, 1);
+        PUSHs(ctxt);
+        PUTBACK;
+
+        count = perl_call_sv(LibXSLT_close_cb, G_SCALAR);
+
+        SPAGAIN;
+
+        SvREFCNT_dec(ctxt);
+        
+        if (!count) {
+            croak("close callback failed");
+        }
+
+        PUTBACK;
+        FREETMPS;
+        LEAVE;
+    }
+}
+
+void
+LibXSLT_copy_callbacks(SV * self)
+{
+    SV ** cb;
+    HV * hv = (HV *)SvRV(self);
+    
+    cb = hv_fetch(hv, "XML_LIBXSLT_MATCH_CB", 20, 0);
+    if (cb && SvTRUE(*cb)) {
+        LibXSLT_match_cb = *cb;
+    }
+
+    cb = hv_fetch(hv, "XML_LIBXSLT_OPEN_CB", 19, 0);
+    if (cb && SvTRUE(*cb)) {
+        LibXSLT_open_cb = *cb;
+    }
+
+    cb = hv_fetch(hv, "XML_LIBXSLT_READ_CB", 19, 0);
+    if (cb && SvTRUE(*cb)) {
+        LibXSLT_read_cb = *cb;
+    }
+
+    cb = hv_fetch(hv, "XML_LIBXSLT_CLOSE_CB", 20, 0);
+    if (cb && SvTRUE(*cb)) {
+        LibXSLT_close_cb = *cb;
+    }
+
+    xmlRegisterInputCallbacks(LibXSLT_input_match,
+                    LibXSLT_input_open,
+                    LibXSLT_input_read,
+                    LibXSLT_input_close);
+}
+
+void
+LibXSLT_free_callbacks(SV * self)
+{
+    return;
+    LibXSLT_match_cb = NULL;
+    LibXSLT_open_cb = NULL;
+    LibXSLT_read_cb = NULL;
+    LibXSLT_close_cb = NULL;
+
+    xmlRegisterInputCallbacks(NULL, NULL, NULL, NULL);
 }
 
 int
@@ -192,6 +411,8 @@ LibXSLT_debug_handler(void * ctxt, const char * msg, ...)
 
 MODULE = XML::LibXSLT         PACKAGE = XML::LibXSLT
 
+PROTOTYPES: DISABLE
+
 BOOT:
     LIBXML_TEST_VERSION
     xsltMaxDepth = 250;
@@ -248,7 +469,9 @@ parse_stylesheet(self, doc)
         }
         doc_copy = xmlCopyDoc(doc, 1);
         doc_copy->URL = xmlStrdup(doc->URL);
+        LibXSLT_copy_callbacks(self);
         RETVAL = xsltParseStylesheetDoc(doc_copy);
+        LibXSLT_free_callbacks(self);
         if (RETVAL == NULL) {
             XSRETURN_UNDEF;
         }
@@ -262,7 +485,9 @@ parse_stylesheet_file(self, filename)
     PREINIT:
         char * CLASS = "XML::LibXSLT::Stylesheet";
     CODE:
+        LibXSLT_copy_callbacks(self);
         RETVAL = xsltParseStylesheetFile(filename);
+        LibXSLT_free_callbacks(self);
         if (RETVAL == NULL) {
             XSRETURN_UNDEF;
         }
@@ -270,6 +495,8 @@ parse_stylesheet_file(self, filename)
         RETVAL
 
 MODULE = XML::LibXSLT         PACKAGE = XML::LibXSLT::Stylesheet
+
+PROTOTYPES: DISABLE
 
 ProxyObject *
 transform(self, doc, ...)
@@ -280,7 +507,9 @@ transform(self, doc, ...)
         # note really only 254 entries here - last one is NULL
         const char *xslt_params[255];
         xmlDocPtr real_dom;
+        SV * svself;
     CODE:
+        svself = ST(0);
         if (doc == NULL) {
             XSRETURN_UNDEF;
         }
@@ -299,7 +528,9 @@ transform(self, doc, ...)
             # set last entry to NULL
             xslt_params[i - 2] = 0;
         }
+        LibXSLT_copy_callbacks(svself);
         real_dom = xsltApplyStylesheet(self, doc, xslt_params);
+        LibXSLT_free_callbacks(svself);
         if (real_dom == NULL) {
             XSRETURN_UNDEF;
         }
@@ -323,7 +554,9 @@ transform_file(self, filename, ...)
         # note really only 254 entries here - last one is NULL
         const char *xslt_params[255];
         xmlDocPtr real_dom;
+        SV * svself;
     CODE:
+        svself = ST(0);
         xslt_params[0] = 0;
         if (items > 256) {
             croak("Too many parameters in transform()");
@@ -339,7 +572,9 @@ transform_file(self, filename, ...)
             # set last entry to NULL
             xslt_params[i - 2] = 0;
         }
+        LibXSLT_copy_callbacks(svself);
         real_dom = xsltApplyStylesheet(self, xmlParseFile(filename), xslt_params);
+        LibXSLT_free_callbacks(svself);
         if (real_dom == NULL) {
             XSRETURN_UNDEF;
         }
@@ -443,6 +678,7 @@ media_type(self)
             child = self->doc->children->children;
             while ( child != NULL && 
                     strcmp(child->name, "output") != 0 &&
+                    child->ns && child->ns->href &&
                     strcmp(child->ns->href, 
                     "http://www.w3.org/1999/XSL/Transform") != 0) {
                 child = child->next;

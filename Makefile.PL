@@ -60,6 +60,10 @@ RPMs, as this is where the headers (.h files) are.
 DEATH
 }
 
+if (have_library("exslt")) {
+    $config{LIBS} =~ s/-lxslt/-lxslt -lexslt/;
+}
+
 WriteMakefile(
     'NAME'	=> 'XML::LibXSLT',
     'VERSION_FROM' => 'LibXSLT.pm', # finds $VERSION

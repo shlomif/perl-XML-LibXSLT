@@ -6,11 +6,6 @@ use XML::LibXML;
 my $parser = XML::LibXML->new();
 ok($parser);
 
-$parser->match_callback(\&match_cb);
-$parser->open_callback(\&open_cb);
-$parser->close_callback(\&close_cb);
-$parser->read_callback(\&read_cb);
-
 my $doc = $parser->parse_string(<<'EOT');
 <xml>random contents</xml>
 EOT
@@ -19,6 +14,11 @@ ok($doc);
 
 my $xslt = XML::LibXSLT->new();
 ok($xslt);
+
+$xslt->match_callback(\&match_cb);
+$xslt->open_callback(\&open_cb);
+$xslt->close_callback(\&close_cb);
+$xslt->read_callback(\&read_cb);
 
 my $stylesheet = $xslt->parse_stylesheet($parser->parse_string(<<'EOT'));
 <xsl:stylesheet version="1.0"
@@ -50,9 +50,12 @@ my $output = $stylesheet->output_string($results);
 ok($output);
 
 sub match_cb {
-#    warn("match\n");
-    ok(1);
-    return 1;
+    my $uri = shift;
+    if ($uri eq "foo.xml") {
+        ok(1);
+        return 1;
+    }
+    return 0;
 }
 
 sub open_cb {
