@@ -57,7 +57,7 @@ struct _ProxyObject {
 };
 
 ProxyObject *
-make_proxy_node (xmlDocPtr node)
+LibXSLT_make_proxy_node (xmlDocPtr node)
 {
     ProxyObject * proxy;
     
@@ -600,7 +600,7 @@ transform(self, doc, ...)
             self->method = xmlMalloc(5);
             strcpy(self->method, "html");
         }
-        RETVAL = make_proxy_node(real_dom);
+        RETVAL = LibXSLT_make_proxy_node(real_dom);
     OUTPUT:
         RETVAL
 
@@ -642,7 +642,7 @@ transform_file(self, filename, ...)
             self->method = xmlMalloc(5);
             strcpy(self->method, "html");
         }
-        RETVAL = make_proxy_node(real_dom);
+        RETVAL = LibXSLT_make_proxy_node(real_dom);
     OUTPUT:
         RETVAL
 
