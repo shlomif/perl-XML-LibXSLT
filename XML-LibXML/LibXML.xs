@@ -461,6 +461,8 @@ BOOT:
     xmlSetExternalEntityLoader((xmlExternalEntityLoader)LibXML_load_external_entity);
     xmlSetGenericErrorFunc(PerlIO_stderr(), (xmlGenericErrorFunc)LibXML_error_handler);
     LibXML_error = newSVpv("", 0);
+    xmlGetWarningsDefaultValue = 0;
+    xmlLoadExtDtdDefaultValue = 1;
 
 void
 END()
@@ -720,7 +722,7 @@ toString(self)
 	if (result == NULL) {
 	    croak("Failed to convert doc to string");
 	} else {
-            RETVAL = newSVpvn(result, len);
+            RETVAL = newSVpvn((char *)result, (STRLEN)len);
 	    xmlFree(result);
 	}
     OUTPUT:
@@ -776,6 +778,6 @@ new(CLASS, external, system)
         char * external
         char * system
     CODE:
-        RETVAL = xmlParseDTD(external, system);
+        RETVAL = xmlParseDTD((const xmlChar*)external, (const xmlChar*)system);
     OUTPUT:
         RETVAL
