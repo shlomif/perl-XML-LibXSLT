@@ -390,11 +390,13 @@ media_type(self)
         if (RETVAL == NULL) {
             /* this below is rather simplistic, but should work for most cases */
             RETVAL = "text/html";
-            if (strcmp(self->method, "xml") == 0) {
-                RETVAL = "text/xml";
-            }
-            else if (strcmp(self->method, "text") == 0) {
-                RETVAL = "text/plain";
+            if (self->method != NULL) {
+                if (strcmp(self->method, "xml") == 0) {
+                    RETVAL = "text/xml";
+                }
+                else if (strcmp(self->method, "text") == 0) {
+                    RETVAL = "text/plain";
+                }
             }
         }
     OUTPUT:

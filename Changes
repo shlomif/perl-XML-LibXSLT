@@ -4,7 +4,7 @@ Revision history for Perl extension XML::LibXSLT.
     - Added output_encoding and media_type methods
 
 1.02
-    - Segfault fixes
+    - Fixed Makefile.PL to work with libxslt 0.10
 
 1.01
     - Removed hack where we set dom->standalone = 42 to prevent
