@@ -149,6 +149,7 @@ output_string(self, doc)
         if (xsltSaveResultTo(output, doc, self) == -1) {
             croak("output to scalar failed");
         }
+        xmlOutputBufferClose(output);
         RETVAL = results;
     OUTPUT:
         RETVAL
@@ -170,3 +171,5 @@ output_fh(self, doc, fh)
         if (xsltSaveResultTo(output, doc, self) == -1) {
             croak("output to fh failed");
         }
+        xmlOutputBufferClose(output);
+        

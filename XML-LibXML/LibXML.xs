@@ -335,6 +335,17 @@ setup_parser(SV * self)
                 (xmlInputCloseCallback)input_close
             );
     }
+    
+    /* lose blanks */
+    value = hv_fetch(real_obj, "lose_blanks", 11, 0);
+    if (value && SvTRUE(*value)) {
+        /* warn("setting keepBlanksDefault(0)\n"); */
+        xmlKeepBlanksDefault(0);
+    }
+    else {
+        /* warn("setting keepBlanksDefault(1)\n"); */
+        xmlKeepBlanksDefault(1);
+    }
 }
 
 xmlDocPtr
@@ -497,14 +508,24 @@ parse_file(self, filename)
             ctxt->_private = (void*)self;
 	    res = fread(chars, 1, 4, f);
 	    if (res > 0) {
-                xmlParseChunk(ctxt, chars, res, 0);
+                if (xmlParseChunk(ctxt, chars, res, 0)) {
+                    xmlFreeParserCtxt(ctxt);
+                    croak("parse failed");
+                }
 		while ((res = fread(chars, 1, BUFSIZE, f)) > 0) {
-		    xmlParseChunk(ctxt, chars, res, 0);
+		    if (xmlParseChunk(ctxt, chars, res, 0)) {
+                        xmlFreeParserCtxt(ctxt);
+                        croak("parse failed");
+                    }
 		}
-		xmlParseChunk(ctxt, chars, 0, 1);
+                if (xmlParseChunk(ctxt, chars, 0, 1)) {
+                    xmlFreeParserCtxt(ctxt);
+                    croak("parse failed");
+                }
 		RETVAL = ctxt->myDoc;
 		ret = ctxt->wellFormed;
 		if (!ret) {
+                    xmlFreeParserCtxt(ctxt);
 		    xmlFreeDoc(RETVAL);
                     fclose(f);
 		    XSRETURN_UNDEF;
