@@ -494,18 +494,20 @@ media_type(self)
         RETVAL = (char *)self->mediaType;
         if (RETVAL == NULL) {
             /* OK, that was borked. Try finding xsl:output tag manually... */
-            xmlNodePtr child;
-            child = self->doc->children->children;
-            while ( child != NULL && 
-                    strcmp(child->name, "output") != 0 &&
-                    child->ns && child->ns->href &&
-                    strcmp(child->ns->href, 
-                    "http://www.w3.org/1999/XSL/Transform") != 0) {
-                child = child->next;
+            xmlNodePtr root = xmlDocGetRootElement(self->doc);
+            xmlNodePtr cld = root->children;
+            while ( cld != NULL ) {
+                if ( xmlStrcmp( "output", cld->name ) == 0
+                     && cld->ns != NULL
+                     && xmlStrcmp( "http://www.w3.org/1999/XSL/Transform", cld->ns->href ) == 0  )
+                {
+                    break;
+                }
+                cld = cld->next;
             }
-            
-            if (child != NULL) {
-                 RETVAL = xmlGetProp(child, "media-type");
+
+            if (cld != NULL) {
+                 RETVAL = xmlGetProp(cld, "media-type");
             }
             
             if (RETVAL == NULL) {
