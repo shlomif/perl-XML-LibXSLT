@@ -106,20 +106,16 @@ stylesheet object which you call the transform() method passing in a
 document to transform. This allows you to have multiple transformations
 happen with one stylesheet without requiring a reparse.
 
-=head2 transform(doc)
+=head2 transform(doc, %params)
 
-  my $results = $stylesheet->transform($doc);
+  my $results = $stylesheet->transform($doc, foo => "value);
 
 Transforms the passed in XML::LibXML::Document object, and returns a
-new XML::LibXML::Document.
+new XML::LibXML::Document. Extra hash entries are used as parameters.
 
-=head2 transform_file(filename)
+=head2 transform_file(filename, %params)
 
-  my $results = $stylesheet->transform_file($filename);
-
-=head2 add_param(paramname, paramvalue)
-
-Add a string as a parameter passed to the stylesheet (for xsl:param).
+  my $results = $stylesheet->transform_file($filename, bar => "value");
 
 =head2 output_string(result)
 

@@ -17,13 +17,18 @@ my $DEBUG = delete $config{DEBUG};
 
 # get libs and inc from gnome-config
 eval {
-    print "running gnome-config... ";
+    print "running xslt-config... ";
+    my $ver = backtick('xslt-config --version');
+    die "VERSION" unless $ver >= 0.7;
     $config{LIBS} ||= backtick('xslt-config --libs');
     $config{INC} ||= backtick('xslt-config --cflags');
     print "ok\n";
 };
 if ($@) {
     print "failed\n";
+    if ($@ =~ /^VERSION/) { 
+        die "XML::LibXSLT needs libxslt version 0.7.0 or higher\n";
+    }
     warn "*** ", $@ if $DEBUG;
     warn "using fallback values for LIBS and INC\n";
     # backtick fails if gnome-config didn't exist...

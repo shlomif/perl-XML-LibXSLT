@@ -48,11 +48,11 @@ my $stylesheet = $xslt->parse_stylesheet($style_doc);
 
 ok($stylesheet);
 
-$stylesheet->add_param('incoming', 'INCOMINGTEXT');
-$stylesheet->add_param('incoming', 'INCOMINGTEXT2');
-$stylesheet->add_param('outgoing', 'OUTGOINGTEXT');
-
-my $results = $stylesheet->transform($source);
+my $results = $stylesheet->transform($source,
+        'incoming' => 'INCOMINGTEXT',
+        'incoming' => 'INCOMINGTEXT2',
+        'outgoing' => 'OUTGOINGTEXT',
+        );
 
 ok($results);
 

@@ -17,7 +17,7 @@ my $DEBUG = delete $config{DEBUG};
 
 # get libs and inc from gnome-config
 eval {
-    print "running gnome-config... ";
+    print "running xml2-config... ";
     $config{LIBS} ||= backtick('xml2-config --libs');
     $config{INC} ||= backtick('xml2-config --cflags');
     print "ok\n";
