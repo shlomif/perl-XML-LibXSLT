@@ -134,11 +134,9 @@ LibXSLT_debug_handler(void * ctxt, const char * msg, ...)
     
     buffer[0] = 0;
 
-    /*    
     va_start(args, msg);
     vsprintf(&buffer[strlen(buffer)], msg, args);
     va_end(args);
-    */
 
     if (LibXSLT_debug_cb && SvTRUE(LibXSLT_debug_cb)) {
         int cnt = 0;
@@ -164,9 +162,6 @@ LibXSLT_debug_handler(void * ctxt, const char * msg, ...)
 
         FREETMPS;
         LEAVE;
-    }
-    else {
-        xmlGenericError(ctxt, buffer);
     }
     
 }
@@ -249,17 +244,26 @@ transform(self, doc, ...)
         xmlDocPtr doc
     PREINIT:
         char * CLASS = "XML::LibXML::Document";
-        const char *xslt_params[254];
+        # note really only 254 entries here - last one is NULL
+        const char *xslt_params[255];
     CODE:
         if (doc == NULL) {
             XSRETURN_UNDEF;
         }
         xslt_params[0] = 0;
+        if (items > 256) {
+            croak("Too many parameters in transform()");
+        }
+        if (items % 2) {
+            croak("Odd number of parameters");
+        }
         if (items > 2) {
             int i;
             for (i = 2; (i < items && i < 256); i++) {
                 xslt_params[i - 2] = (char *)SvPV(ST(i), PL_na);
             }
+            # set last entry to NULL
+            xslt_params[i - 2] = 0;
         }
         RETVAL = xsltApplyStylesheet(self, doc, xslt_params);
         if (RETVAL == NULL) {
@@ -274,14 +278,23 @@ transform_file(self, filename, ...)
         char * filename
     PREINIT:
         char * CLASS = "XML::LibXML::Document";
-        const char *xslt_params[254];
+        # note really only 254 entries here - last one is NULL
+        const char *xslt_params[255];
     CODE:
         xslt_params[0] = 0;
+        if (items > 256) {
+            croak("Too many parameters in transform()");
+        }
+        if (items % 2) {
+            croak("Odd number of parameters");
+        }
         if (items > 2) {
             int i;
             for (i = 2; (i < items && i < 256); i++) {
                 xslt_params[i - 2] = (char *)SvPV(ST(i), PL_na);
             }
+            # set last entry to NULL
+            xslt_params[i - 2] = 0;
         }
         RETVAL = xsltApplyStylesheet(self, xmlParseFile(filename), xslt_params);
         if (RETVAL == NULL) {

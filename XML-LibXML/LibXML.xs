@@ -22,8 +22,6 @@ extern "C" {
 
 #define BUFSIZE 32768
 
-#define PREFIX LibXML
-
 #ifdef VMS
 extern int xmlDoValidityCheckingDefaultVal;
 #define xmlDoValidityCheckingDefaultValue xmlDoValidityCheckingDefaultVal
@@ -49,35 +47,35 @@ extern int xmlPedanticParserDefaultValue;
         cb = newSVsv(fld);\
     }
 
-SV * PREFIX_match_cb;
-SV * PREFIX_read_cb;
-SV * PREFIX_open_cb;
-SV * PREFIX_close_cb;
-SV * PREFIX_error;
+SV * LibXML_match_cb = NULL;
+SV * LibXML_read_cb = NULL;
+SV * LibXML_open_cb = NULL;
+SV * LibXML_close_cb = NULL;
+SV * LibXML_error = NULL;
 
 void
-PREFIX_free_all_callbacks(void)
+LibXML_free_all_callbacks(void)
 {
-    if (PREFIX_match_cb) {
-        SvREFCNT_dec(PREFIX_match_cb);
+    if (LibXML_match_cb) {
+        SvREFCNT_dec(LibXML_match_cb);
     }
     
-    if (PREFIX_read_cb) {
-        SvREFCNT_dec(PREFIX_read_cb);
+    if (LibXML_read_cb) {
+        SvREFCNT_dec(LibXML_read_cb);
     }
     
-    if (PREFIX_open_cb) {
-        SvREFCNT_dec(PREFIX_open_cb);
+    if (LibXML_open_cb) {
+        SvREFCNT_dec(LibXML_open_cb);
     }
     
-    if (PREFIX_close_cb) {
-        SvREFCNT_dec(PREFIX_close_cb);
+    if (LibXML_close_cb) {
+        SvREFCNT_dec(LibXML_close_cb);
     }
 
 }
 
 xmlParserInputPtr
-PREFIX_load_external_entity(
+LibXML_load_external_entity(
         const char * URL, 
         const char * ID, 
         xmlParserCtxtPtr ctxt)
@@ -138,11 +136,11 @@ PREFIX_load_external_entity(
 }
 
 int 
-PREFIX_input_match(char const * filename)
+LibXML_input_match(char const * filename)
 {
     int results = 0;
     
-    if (PREFIX_match_cb && SvTRUE(PREFIX_match_cb)) {
+    if (LibXML_match_cb && SvTRUE(LibXML_match_cb)) {
         int count;
         SV * res;
 
@@ -156,7 +154,7 @@ PREFIX_input_match(char const * filename)
         PUSHs(sv_2mortal(newSVpv((char*)filename, 0)));
         PUTBACK;
 
-        count = perl_call_sv(PREFIX_match_cb, G_SCALAR);
+        count = perl_call_sv(LibXML_match_cb, G_SCALAR);
 
         SPAGAIN;
         
@@ -179,11 +177,11 @@ PREFIX_input_match(char const * filename)
 }
 
 void * 
-PREFIX_input_open(char const * filename)
+LibXML_input_open(char const * filename)
 {
     SV * results;
     
-    if (PREFIX_open_cb && SvTRUE(PREFIX_open_cb)) {
+    if (LibXML_open_cb && SvTRUE(LibXML_open_cb)) {
         int count;
 
         dSP;
@@ -196,7 +194,7 @@ PREFIX_input_open(char const * filename)
         PUSHs(sv_2mortal(newSVpv((char*)filename, 0)));
         PUTBACK;
 
-        count = perl_call_sv(PREFIX_open_cb, G_SCALAR);
+        count = perl_call_sv(LibXML_open_cb, G_SCALAR);
 
         SPAGAIN;
         
@@ -217,7 +215,7 @@ PREFIX_input_open(char const * filename)
 }
 
 int 
-PREFIX_input_read(void * context, char * buffer, int len)
+LibXML_input_read(void * context, char * buffer, int len)
 {
     SV * results = NULL;
     STRLEN res_len = 0;
@@ -225,7 +223,7 @@ PREFIX_input_read(void * context, char * buffer, int len)
     
     SV * ctxt = (SV *)context;
     
-    if (PREFIX_read_cb && SvTRUE(PREFIX_read_cb)) {
+    if (LibXML_read_cb && SvTRUE(LibXML_read_cb)) {
         int count;
 
         dSP;
@@ -239,7 +237,7 @@ PREFIX_input_read(void * context, char * buffer, int len)
         PUSHs(sv_2mortal(newSViv(len)));
         PUTBACK;
 
-        count = perl_call_sv(PREFIX_read_cb, G_SCALAR);
+        count = perl_call_sv(LibXML_read_cb, G_SCALAR);
 
         SPAGAIN;
         
@@ -267,11 +265,11 @@ PREFIX_input_read(void * context, char * buffer, int len)
 }
 
 void 
-PREFIX_input_close(void * context)
+LibXML_input_close(void * context)
 {
     SV * ctxt = (SV *)context;
     
-    if (PREFIX_close_cb && SvTRUE(PREFIX_close_cb)) {
+    if (LibXML_close_cb && SvTRUE(LibXML_close_cb)) {
         int count;
 
         dSP;
@@ -284,7 +282,7 @@ PREFIX_input_close(void * context)
         PUSHs(ctxt);
         PUTBACK;
 
-        count = perl_call_sv(PREFIX_close_cb, G_SCALAR);
+        count = perl_call_sv(LibXML_close_cb, G_SCALAR);
 
         SPAGAIN;
 
@@ -301,7 +299,7 @@ PREFIX_input_close(void * context)
 }
 
 void
-PREFIX_error_handler(void * ctxt, const char * msg, ...)
+LibXML_error_handler(void * ctxt, const char * msg, ...)
 {
     va_list args;
     char buffer[50000];
@@ -312,12 +310,12 @@ PREFIX_error_handler(void * ctxt, const char * msg, ...)
     vsprintf(&buffer[strlen(buffer)], msg, args);
     va_end(args);
     
-    sv_catpv(PREFIX_error, buffer);
+    sv_catpv(LibXML_error, buffer);
 /*    croak(buffer); */
 }
 
 void
-PREFIX_validity_error(void * ctxt, const char * msg, ...)
+LibXML_validity_error(void * ctxt, const char * msg, ...)
 {
     va_list args;
     char buffer[50000];
@@ -328,12 +326,12 @@ PREFIX_validity_error(void * ctxt, const char * msg, ...)
     vsprintf(&buffer[strlen(buffer)], msg, args);
     va_end(args);
     
-    sv_catpv(PREFIX_error, buffer);
+    sv_catpv(LibXML_error, buffer);
 /*    croak(buffer); */
 }
 
 void
-PREFIX_validity_warning(void * ctxt, const char * msg, ...)
+LibXML_validity_warning(void * ctxt, const char * msg, ...)
 {
     va_list args;
     char buffer[50000];
@@ -348,7 +346,7 @@ PREFIX_validity_warning(void * ctxt, const char * msg, ...)
 }
 
 xmlParserCtxtPtr
-PREFIX_get_context(SV * self)
+LibXML_get_context(SV * self)
 {
     SV ** ctxt_sv;
     ctxt_sv = hv_fetch((HV *)SvRV(self), "_context", 8, 0);
@@ -359,7 +357,7 @@ PREFIX_get_context(SV * self)
 }
 
 xmlDocPtr
-PREFIX_parse_stream(SV * self, SV * ioref)
+LibXML_parse_stream(SV * self, SV * ioref)
 {
     dSP;
     
@@ -378,7 +376,7 @@ PREFIX_parse_stream(SV * self, SV * ioref)
     tbuff = newSV(0);
     tsize = newSViv(BUFSIZE);
     
-    ctxt = PREFIX_get_context(self);
+    ctxt = LibXML_get_context(self);
     
     while (!done) {
         int cnt;
@@ -450,35 +448,36 @@ MODULE = XML::LibXML         PACKAGE = XML::LibXML
 PROTOTYPES: DISABLE
 
 BOOT:
+    LIBXML_TEST_VERSION
     xmlInitParser();
     xmlRegisterInputCallbacks(
-            (xmlInputMatchCallback)PREFIX_input_match,
-            (xmlInputOpenCallback)PREFIX_input_open,
-            (xmlInputReadCallback)PREFIX_input_read,
-            (xmlInputCloseCallback)PREFIX_input_close
+            (xmlInputMatchCallback)LibXML_input_match,
+            (xmlInputOpenCallback)LibXML_input_open,
+            (xmlInputReadCallback)LibXML_input_read,
+            (xmlInputCloseCallback)LibXML_input_close
         );
     xmlSubstituteEntitiesDefaultValue = 1;
     xmlKeepBlanksDefaultValue = 1;
-    xmlSetExternalEntityLoader((xmlExternalEntityLoader)PREFIX_load_external_entity);
-    xmlSetGenericErrorFunc(PerlIO_stderr(), (xmlGenericErrorFunc)PREFIX_error_handler);
-    PREFIX_error = newSVpv("", 0);
+    xmlSetExternalEntityLoader((xmlExternalEntityLoader)LibXML_load_external_entity);
+    xmlSetGenericErrorFunc(PerlIO_stderr(), (xmlGenericErrorFunc)LibXML_error_handler);
+    LibXML_error = newSVpv("", 0);
 
 void
 END()
     CODE:
-        PREFIX_free_all_callbacks();
+        LibXML_free_all_callbacks();
         xmlCleanupParser();
-        SvREFCNT_dec(PREFIX_error);
+        SvREFCNT_dec(LibXML_error);
 
 SV *
 match_callback(self, ...)
         SV * self
     CODE:
         if (items > 1) {
-            SET_CB(PREFIX_match_cb, ST(1));
+            SET_CB(LibXML_match_cb, ST(1));
         }
         else {
-            RETVAL = PREFIX_match_cb ? sv_2mortal(PREFIX_match_cb) : &PL_sv_undef;
+            RETVAL = LibXML_match_cb ? sv_2mortal(LibXML_match_cb) : &PL_sv_undef;
         }
     OUTPUT:
         RETVAL
@@ -488,10 +487,10 @@ open_callback(self, ...)
         SV * self
     CODE:
         if (items > 1) {
-            SET_CB(PREFIX_open_cb, ST(1));
+            SET_CB(LibXML_open_cb, ST(1));
         }
         else {
-            RETVAL = PREFIX_open_cb ? sv_2mortal(PREFIX_open_cb) : &PL_sv_undef;
+            RETVAL = LibXML_open_cb ? sv_2mortal(LibXML_open_cb) : &PL_sv_undef;
         }
     OUTPUT:
         RETVAL
@@ -501,10 +500,10 @@ read_callback(self, ...)
         SV * self
     CODE:
         if (items > 1) {
-            SET_CB(PREFIX_read_cb, ST(1));
+            SET_CB(LibXML_read_cb, ST(1));
         }
         else {
-            RETVAL = PREFIX_read_cb ? sv_2mortal(PREFIX_read_cb) : &PL_sv_undef;
+            RETVAL = LibXML_read_cb ? sv_2mortal(LibXML_read_cb) : &PL_sv_undef;
         }
     OUTPUT:
         RETVAL
@@ -514,10 +513,10 @@ close_callback(self, ...)
         SV * self
     CODE:
         if (items > 1) {
-            SET_CB(PREFIX_close_cb, ST(1));
+            SET_CB(LibXML_close_cb, ST(1));
         }
         else {
-            RETVAL = PREFIX_close_cb ? sv_2mortal(PREFIX_close_cb) : &PL_sv_undef;
+            RETVAL = LibXML_close_cb ? sv_2mortal(LibXML_close_cb) : &PL_sv_undef;
         }
     OUTPUT:
         RETVAL
@@ -584,7 +583,7 @@ _prepare(self)
         xmlParserCtxtPtr ctxt;
         SV * ctxt_sv;
     CODE:
-        sv_setpvn(PREFIX_error, "", 0);
+        sv_setpvn(LibXML_error, "", 0);
         ctxt = xmlCreatePushParserCtxt(NULL, NULL, "", 0, NULL);
         ctxt->_private = (void*)self;
         ctxt_sv = NEWSV(0, 0);
@@ -609,7 +608,7 @@ get_last_error(CLASS)
     PREINIT:
         STRLEN len;
     CODE:
-        RETVAL = SvPV(PREFIX_error, len);
+        RETVAL = SvPV(LibXML_error, len);
     OUTPUT:
         RETVAL
 
@@ -625,14 +624,14 @@ _parse_string(self, string)
         int well_formed;
     CODE:
         ptr = SvPV(string, len);
-        ctxt = PREFIX_get_context(self);
+        ctxt = LibXML_get_context(self);
         xmlParseChunk(ctxt, ptr, len, 0);
         xmlParseChunk(ctxt, ptr, 0, 1);
         well_formed = ctxt->wellFormed;
         RETVAL = ctxt->myDoc;
         if (!well_formed) {
             xmlFreeDoc(RETVAL);
-            croak(SvPV(PREFIX_error, len));
+            croak(SvPV(LibXML_error, len));
         }
     OUTPUT:
         RETVAL
@@ -645,9 +644,9 @@ _parse_fh(self, fh)
         char * CLASS = "XML::LibXML::Document";
         STRLEN len;
     CODE:
-        RETVAL = PREFIX_parse_stream(self, fh);
+        RETVAL = LibXML_parse_stream(self, fh);
         if (RETVAL == NULL) {
-            croak(SvPV(PREFIX_error, len));
+            croak(SvPV(LibXML_error, len));
         }
     OUTPUT:
         RETVAL
@@ -671,7 +670,7 @@ _parse_file(self, filename)
 	    f = PerlIO_open(filename, "r");
 	}
 	if (f != NULL) {
-            ctxt = PREFIX_get_context(self);
+            ctxt = LibXML_get_context(self);
 	    res = PerlIO_read(f, chars, 4);
 	    if (res > 0) {
                 xmlParseChunk(ctxt, chars, res, 0);
@@ -684,7 +683,7 @@ _parse_file(self, filename)
 		if (!ret) {
                     PerlIO_close(f);
 		    xmlFreeDoc(RETVAL);
-		    croak(SvPV(PREFIX_error, len));
+		    croak(SvPV(LibXML_error, len));
 		}
 	    }
             PerlIO_close(f);
@@ -744,8 +743,8 @@ is_valid(self, ...)
                 croak("is_valid: argument must be a DTD object");
             }
             cvp.userData = (void*)PerlIO_stderr();
-            cvp.error = (xmlValidityErrorFunc)PREFIX_validity_error;
-            cvp.warning = (xmlValidityWarningFunc)PREFIX_validity_warning;
+            cvp.error = (xmlValidityErrorFunc)LibXML_validity_error;
+            cvp.warning = (xmlValidityWarningFunc)LibXML_validity_warning;
             RETVAL = xmlValidateDtd(&cvp, self, dtd);
         }
         else {
