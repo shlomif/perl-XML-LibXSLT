@@ -9,6 +9,7 @@ extern "C" {
 #include <libxslt/transform.h>
 #include <libxslt/xsltutils.h>
 #include <libxslt/imports.h>
+#include <libxslt/extensions.h>
 #ifdef HAVE_EXSLT
 #include <libexslt/exslt.h>
 #include <libexslt/exsltconfig.h>

@@ -1,5 +1,8 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.50
+    - Cleaned up media_type method so it doesn't segfault.
+
 1.49
     - Migrated to new XML::LibXML 1.49 (with new memory stuff)
 
