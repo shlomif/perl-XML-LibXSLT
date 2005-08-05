@@ -3,6 +3,7 @@ LibXSLT.pm
 LibXSLT.xs
 perl-libxml-mm.c
 perl-libxml-mm.h
+ppport.h
 Makefile.PL
 MANIFEST
 README
