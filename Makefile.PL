@@ -13,11 +13,6 @@ while($_ = shift) {
 
 my $DEBUG = delete $config{DEBUG};
 
-require XML::LibXML;
-if ($XML::LibXML::VERSION < 1.57) {
-    die "XML::LibXML 1.57 or higher required\n";
-}
-
 # get libs and inc from gnome-config
 eval {
     print "running xslt-config... ";
@@ -75,7 +70,7 @@ WriteMakefile(
     'VERSION_FROM' => 'LibXSLT.pm', # finds $VERSION
     'AUTHOR'    => 'Matt Sergeant',
     'ABSTRACT'  => 'Interface to Gnome libxslt library',
-    'PREREQ_PM' => { 'XML::LibXML' => "1.57", },
+    'PREREQ_PM' => { 'XML::LibXML' => "1.58", },
     'OBJECT'     => '$(O_FILES)',
     %config,
 );

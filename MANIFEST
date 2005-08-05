@@ -21,6 +21,7 @@ t/07blankdoc.t
 t/08literal.t
 t/09exslt.t
 t/10functions.t
+t/11utf8.t
 benchmark.pl
 Driver/LibXSLT.pm
 Driver/Sablotron.pm
