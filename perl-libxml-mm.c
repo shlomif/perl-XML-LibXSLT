@@ -130,8 +130,7 @@ x_PmmNewNode(xmlNodePtr node)
     ProxyNodePtr proxy;
 
     if ( node->_private == NULL ) {
-        proxy = (ProxyNodePtr)malloc(sizeof(ProxyNode));
-        /* proxy = (ProxyNodePtr)Newz(0, proxy, 0, ProxyNode); */
+        Newc(0, proxy, 1, ProxyNode, ProxyNode);
         if (proxy != NULL) {
             proxy->node  = node;
             proxy->owner   = NULL;
@@ -238,7 +237,7 @@ x_PmmREFCNT_dec( ProxyNodePtr node )
                 xs_warn( "STANDALONE REAL DELETE" );
                 x_PmmFreeNode( libnode );
             }
-            free( node );
+            Safefree( node );
         }
     }
     return retval;
