@@ -6,7 +6,7 @@ my $parser = XML::LibXML->new();
 my $xslt = XML::LibXSLT->new();
 ok($parser); ok($xslt);
 
-$xslt->register_function('urn:foo' => 'test', sub { ok(1); $_[0] . $_[1] });
+$xslt->register_function('urn:foo' => 'test', sub { ok(1); defined $_[1] ? return $_[0] . $_[1] : return $_[0] });
 $xslt->register_function('urn:foo' => 'test2', sub { ok(ref($_[0]), 'XML::LibXML::NodeList'); ref($_[0]) });
 $xslt->register_function('urn:foo' => 'test3', sub { ok(@_ == 0); return; });
 
