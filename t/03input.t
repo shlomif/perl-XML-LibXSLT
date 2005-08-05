@@ -19,10 +19,10 @@ print "# xslt\n";
 ok($xslt);
 
 print "# setting callbacks\n";
-local $XML::LibXSLT::match_cb = \&match_cb;
-local $XML::LibXSLT::open_cb = \&open_cb;
-local $XML::LibXSLT::close_cb = \&close_cb;
-local $XML::LibXSLT::read_cb = \&read_cb;
+local $XML::LibXML::match_cb = \&match_cb;
+local $XML::LibXML::open_cb = \&open_cb;
+local $XML::LibXML::close_cb = \&close_cb;
+local $XML::LibXML::read_cb = \&read_cb;
 
 my $stylesheet = $xslt->parse_stylesheet($parser->parse_string(<<'EOT'));
 <xsl:stylesheet version="1.0"
@@ -57,7 +57,7 @@ my $output = $stylesheet->output_string($results);
 print "# output\n";
 ok($output);
 
-$XML::LibXSLT::open_cb = \&dying_open_cb;
+$XML::LibXML::open_cb = \&dying_open_cb;
 
 # check transform throws exception
 eval {
