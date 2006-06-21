@@ -65,13 +65,13 @@ sub match_cb {
 
 sub open_cb {
     my $uri = shift;
-    return $foodoc;
+    return \$foodoc;
 }
 
 sub close_cb {
 }
 
 sub read_cb {
-    return substr($_[0], 0, $_[1], "");
+    return substr(${$_[0]}, 0, $_[1], "");
 }
 

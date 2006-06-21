@@ -2,17 +2,19 @@
 package XML::LibXSLT;
 
 use strict;
-use vars qw($VERSION @ISA $USE_LIBXML_DATA_TYPES);
+use vars qw($VERSION @ISA $USE_LIBXML_DATA_TYPES $MatchCB $ReadCB $OpenCB $CloseCB);
 
-use XML::LibXML 1.58;
+use XML::LibXML 1.59;
 use XML::LibXML::Literal;
 use XML::LibXML::Boolean;
 use XML::LibXML::Number;
 use XML::LibXML::NodeList;
 
+use Carp;
+
 require Exporter;
 
-$VERSION = "1.58";
+$VERSION = "1.59";
 
 require DynaLoader;
 
@@ -81,77 +83,184 @@ sub xpath_to_string {
     return @results;
 }
 
-sub callbacks {
-    my $self = shift;
-    if (@_) {
-        my ($match, $open, $read, $close) = @_;
+#-------------------------------------------------------------------------#
+# callback functions                                                      #
+#-------------------------------------------------------------------------#
 
-        $self->{XML_LIBXSLT_MATCH} = $match ;
-        $self->{XML_LIBXSLT_OPEN} = $open ;
-        $self->{XML_LIBXSLT_READ} = $read ;
-        $self->{XML_LIBXSLT_CLOSE} = $close ;
+sub input_callbacks {
+    my $self = shift;
+    my $icbclass = shift;
+
+    if ( defined $icbclass ) {
+        $self->{XML_LIBXSLT_CALLBACK_STACK} = $icbclass;
     }
-    else {
-        return
-            $self->{XML_LIBXSLT_MATCH},
-            $self->{XML_LIBXSLT_OPEN},
-            $self->{XML_LIBXSLT_READ},
-            $self->{XML_LIBXSLT_CLOSE};
-    }
+    return $self->{XML_LIBXSLT_CALLBACK_STACK};
 }
 
 sub match_callback {
     my $self = shift;
-    $self->{XML_LIBXSLT_MATCH} = shift if scalar @_;
-    return $self->{XML_LIBXSLT_MATCH};
-}
-
-sub open_callback {
-    my $self = shift;
-    $self->{XML_LIBXSLT_OPEN} = shift if scalar @_;
-    return $self->{XML_LIBXSLT_OPEN};
+    if ( ref $self ) {
+        if ( scalar @_ ) {
+            $self->{XML_LIBXSLT_MATCH_CB} = shift;
+            $self->{XML_LIBXSLT_CALLBACK_STACK} = undef;
+        }
+        return $self->{XML_LIBXSLT_MATCH_CB};
+    }
+    else {
+        $MatchCB = shift if scalar @_;
+        return $MatchCB;
+    }
 }
 
 sub read_callback {
     my $self = shift;
-    $self->{XML_LIBXSLT_READ} = shift if scalar @_;
-    return $self->{XML_LIBXSLT_READ};
+    if ( ref $self ) {
+        if ( scalar @_ ) {
+            $self->{XML_LIBXSLT_READ_CB} = shift;
+            $self->{XML_LIBXSLT_CALLBACK_STACK} = undef;
+        }
+        return $self->{XML_LIBXSLT_READ_CB};
+    }
+    else {
+        $ReadCB = shift if scalar @_;
+        return $ReadCB;
+    }
 }
 
 sub close_callback {
     my $self = shift;
-    $self->{XML_LIBXSLT_CLOSE} = shift if scalar @_;
-    return $self->{XML_LIBXSLT_CLOSE};
+    if ( ref $self ) {
+        if ( scalar @_ ) {
+            $self->{XML_LIBXSLT_CLOSE_CB} = shift;
+            $self->{XML_LIBXSLT_CALLBACK_STACK} = undef;
+        }
+        return $self->{XML_LIBXSLT_CLOSE_CB};
+    }
+    else {
+        $CloseCB = shift if scalar @_;
+        return $CloseCB;
+    }
+}
+
+sub open_callback {
+    my $self = shift;
+    if ( ref $self ) {
+        if ( scalar @_ ) {
+            $self->{XML_LIBXSLT_OPEN_CB} = shift;
+            $self->{XML_LIBXSLT_CALLBACK_STACK} = undef;
+        }
+        return $self->{XML_LIBXSLT_OPEN_CB};
+    }
+    else {
+        $OpenCB = shift if scalar @_;
+        return $OpenCB;
+    }
+}
+
+sub callbacks {
+    my $self = shift;
+    if ( ref $self ) {
+        if (@_) {
+            my ($match, $open, $read, $close) = @_;
+            @{$self}{qw(XML_LIBXSLT_MATCH_CB XML_LIBXSLT_OPEN_CB XML_LIBXSLT_READ_CB XML_LIBXSLT_CLOSE_CB)} = ($match, $open, $read, $close);
+            $self->{XML_LIBXSLT_CALLBACK_STACK} = undef;
+        }
+        else {
+            return @{$self}{qw(XML_LIBXSLT_MATCH_CB XML_LIBXSLT_OPEN_CB XML_LIBXSLT_READ_CB XML_LIBXSLT_CLOSE_CB)};
+        }
+    }
+    else {
+        if (@_) {
+            ( $MatchCB, $OpenCB, $ReadCB, $CloseCB ) = @_;
+        }
+        else {
+            return ( $MatchCB, $OpenCB, $ReadCB, $CloseCB );
+        }
+    }
+}
+
+sub _init_callbacks {
+    my $self = shift;
+    my $icb = $self->{XML_LIBXSLT_CALLBACK_STACK};
+
+    unless ( defined $icb ) {
+        $self->{XML_LIBXSLT_CALLBACK_STACK} = XML::LibXML::InputCallback->new();
+        $icb = $self->{XML_LIBXSLT_CALLBACK_STACK};
+    }
+
+    my $mcb = $self->match_callback();
+    my $ocb = $self->open_callback();
+    my $rcb = $self->read_callback();
+    my $ccb = $self->close_callback();
+
+    if ( defined $mcb and defined $ocb and defined $rcb and defined $ccb ) {
+        $icb->register_callbacks( [$mcb, $ocb, $rcb, $ccb] );
+    }
+
+    $icb->init_callbacks();
+}
+
+sub _cleanup_callbacks {
+    my $self = shift;
+    $self->{XML_LIBXSLT_CALLBACK_STACK}->cleanup_callbacks();
+    my $mcb = $self->match_callback();
+    if ( defined $mcb ) {
+        $self->{XML_LIBXSLT_CALLBACK_STACK}->unregister_callbacks( [$mcb] );
+    }
 }
 
 sub parse_stylesheet {
     my $self = shift;
-    if (!ref($self) || !$self->{XML_LIBXSLT_MATCH}) {
-        #warn "callbacks: $XML::LibXML::match_cb $XML::LibXML::open_cb $XML::LibXML::read_cb $XML::LibXML::close_cb";
-        return $self->_parse_stylesheet(@_);
-    }
-    local $XML::LibXML::match_cb = $self->{XML_LIBXSLT_MATCH};
-    local $XML::LibXML::open_cb = $self->{XML_LIBXSLT_OPEN};
-    local $XML::LibXML::read_cb = $self->{XML_LIBXSLT_READ};
-    local $XML::LibXML::close_cb = $self->{XML_LIBXSLT_CLOSE};
 
-    #warn "localised callbacks: $XML::LibXML::match_cb $XML::LibXML::open_cb $XML::LibXML::read_cb $XML::LibXML::close_cb";
-    $self->_parse_stylesheet(@_);
+    $self->_init_callbacks();
+
+    my $stylesheet;
+    eval { $stylesheet = $self->_parse_stylesheet(@_); };
+
+    $self->_cleanup_callbacks();
+
+    my $err = $@;
+    if ($err) {
+        croak $err;
+    }
+
+    my $rv = {
+               XML_LIBXSLT_STYLESHEET => $stylesheet,
+               XML_LIBXSLT_CALLBACK_STACK => $self->{XML_LIBXSLT_CALLBACK_STACK},
+               XML_LIBXSLT_MATCH_CB => $self->{XML_LIBXSLT_MATCH_CB},
+               XML_LIBXSLT_OPEN_CB => $self->{XML_LIBXSLT_OPEN_CB},
+               XML_LIBXSLT_READ_CB => $self->{XML_LIBXSLT_READ_CB},
+               XML_LIBXSLT_CLOSE_CB => $self->{XML_LIBXSLT_CLOSE_CB},
+             };
+
+    return bless $rv, "XML::LibXSLT::StylesheetWrapper";
 }
 
 sub parse_stylesheet_file {
     my $self = shift;
-    if (!ref($self) || !$self->{XML_LIBXSLT_MATCH}) {
-        #warn "callbacks: $XML::LibXML::match_cb $XML::LibXML::open_cb $XML::LibXML::read_cb $XML::LibXML::close_cb";
-        return $self->_parse_stylesheet_file(@_);
-    }
-    local $XML::LibXML::match_cb = $self->{XML_LIBXSLT_MATCH};
-    local $XML::LibXML::open_cb = $self->{XML_LIBXSLT_OPEN};
-    local $XML::LibXML::read_cb = $self->{XML_LIBXSLT_READ};
-    local $XML::LibXML::close_cb = $self->{XML_LIBXSLT_CLOSE};
 
-    #warn "localised callbacks: $XML::LibXML::match_cb $XML::LibXML::open_cb $XML::LibXML::read_cb $XML::LibXML::close_cb";
-    $self->_parse_stylesheet_file(@_);
+    $self->_init_callbacks();
+
+    my $stylesheet;
+    eval { $stylesheet = $self->_parse_stylesheet_file(@_); };
+
+    $self->_cleanup_callbacks();
+
+    my $err = $@;
+    if ($err) {
+        croak $err;
+    }
+
+    my $rv = {
+               XML_LIBXSLT_STYLESHEET => $stylesheet,
+               XML_LIBXSLT_CALLBACK_STACK => $self->{XML_LIBXSLT_CALLBACK_STACK},
+               XML_LIBXSLT_MATCH_CB => $self->{XML_LIBXSLT_MATCH_CB},
+               XML_LIBXSLT_OPEN_CB => $self->{XML_LIBXSLT_OPEN_CB},
+               XML_LIBXSLT_READ_CB => $self->{XML_LIBXSLT_READ_CB},
+               XML_LIBXSLT_CLOSE_CB => $self->{XML_LIBXSLT_CLOSE_CB},
+             };
+
+    return bless $rv, "XML::LibXSLT::StylesheetWrapper";
 }
 
 sub register_xslt_module {
@@ -159,6 +268,176 @@ sub register_xslt_module {
     my $module = shift;
     # Not implemented
 }
+
+1;
+
+package XML::LibXSLT::StylesheetWrapper;
+
+use strict;
+use vars qw($MatchCB $ReadCB $OpenCB $CloseCB);
+
+use XML::LibXML;
+use Carp;
+
+sub input_callbacks {
+    my $self     = shift;
+    my $icbclass = shift;
+
+    if ( defined $icbclass ) {
+        $self->{XML_LIBXSLT_CALLBACK_STACK} = $icbclass;
+    }
+    return $self->{XML_LIBXSLT_CALLBACK_STACK};
+}
+
+sub match_callback {
+    my $self = shift;
+    if ( ref $self ) {
+        if ( scalar @_ ) {
+            $self->{XML_LIBXSLT_MATCH_CB} = shift;
+            $self->{XML_LIBXSLT_CALLBACK_STACK} = undef;
+        }
+        return $self->{XML_LIBXSLT_MATCH_CB};
+    }
+    else {
+        $MatchCB = shift if scalar @_;
+        return $MatchCB;
+    }
+}
+
+sub read_callback {
+    my $self = shift;
+    if ( ref $self ) {
+        if ( scalar @_ ) {
+            $self->{XML_LIBXSLT_READ_CB} = shift;
+            $self->{XML_LIBXSLT_CALLBACK_STACK} = undef;
+        }
+        return $self->{XML_LIBXSLT_READ_CB};
+    }
+    else {
+        $ReadCB = shift if scalar @_;
+        return $ReadCB;
+    }
+}
+
+sub close_callback {
+    my $self = shift;
+    if ( ref $self ) {
+        if ( scalar @_ ) {
+            $self->{XML_LIBXSLT_CLOSE_CB} = shift;
+            $self->{XML_LIBXSLT_CALLBACK_STACK} = undef;
+        }
+        return $self->{XML_LIBXSLT_CLOSE_CB};
+    }
+    else {
+        $CloseCB = shift if scalar @_;
+        return $CloseCB;
+    }
+}
+
+sub open_callback {
+    my $self = shift;
+    if ( ref $self ) {
+        if ( scalar @_ ) {
+            $self->{XML_LIBXSLT_OPEN_CB} = shift;
+            $self->{XML_LIBXSLT_CALLBACK_STACK} = undef;
+        }
+        return $self->{XML_LIBXSLT_OPEN_CB};
+    }
+    else {
+        $OpenCB = shift if scalar @_;
+        return $OpenCB;
+    }
+}
+
+sub callbacks {
+    my $self = shift;
+    if ( ref $self ) {
+        if (@_) {
+            my ($match, $open, $read, $close) = @_;
+            @{$self}{qw(XML_LIBXSLT_MATCH_CB XML_LIBXSLT_OPEN_CB XML_LIBXSLT_READ_CB XML_LIBXSLT_CLOSE_CB)} = ($match, $open, $read, $close);
+            $self->{XML_LIBXSLT_CALLBACK_STACK} = undef;
+        }
+        else {
+            return @{$self}{qw(XML_LIBXSLT_MATCH_CB XML_LIBXSLT_OPEN_CB XML_LIBXSLT_READ_CB XML_LIBXSLT_CLOSE_CB)};
+        }
+    }
+    else {
+        if (@_) {
+            ( $MatchCB, $OpenCB, $ReadCB, $CloseCB ) = @_;
+        }
+        else {
+            return ( $MatchCB, $OpenCB, $ReadCB, $CloseCB );
+        }
+    }
+}
+
+sub _init_callbacks {
+    my $self = shift;
+    my $icb = $self->{XML_LIBXSLT_CALLBACK_STACK};
+
+    unless ( defined $icb ) {
+        $self->{XML_LIBXSLT_CALLBACK_STACK} = XML::LibXML::InputCallback->new();
+        $icb = $self->{XML_LIBXSLT_CALLBACK_STACK};
+    }
+
+    my $mcb = $self->match_callback();
+    my $ocb = $self->open_callback();
+    my $rcb = $self->read_callback();
+    my $ccb = $self->close_callback();
+
+    if ( defined $mcb and defined $ocb and defined $rcb and defined $ccb ) {
+        $icb->register_callbacks( [$mcb, $ocb, $rcb, $ccb] );
+    }
+
+    $icb->init_callbacks();
+}
+
+sub _cleanup_callbacks {
+    my $self = shift;
+    $self->{XML_LIBXSLT_CALLBACK_STACK}->cleanup_callbacks();
+    my $mcb = $self->match_callback();
+    if ( defined $mcb ) {
+        $self->{XML_LIBXSLT_CALLBACK_STACK}->unregister_callbacks( [$mcb] );
+    }
+}
+
+sub transform {
+    my $self = shift;
+    my $doc;
+
+    $self->_init_callbacks();
+    eval { $doc = $self->{XML_LIBXSLT_STYLESHEET}->transform(@_); };
+    $self->_cleanup_callbacks();
+
+    my $err = $@;
+    if ($err) {
+        croak $err;
+    }
+
+    return $doc;
+}
+
+sub transform_file {
+    my $self = shift;
+    my $doc;
+
+    $self->_init_callbacks();
+    eval { $doc = $self->{XML_LIBXSLT_STYLESHEET}->transform_file(@_); };
+    $self->_cleanup_callbacks();
+
+    my $err = $@;
+    if ($err) {
+        croak $err;
+    }
+
+    return $doc;
+}
+
+sub output_string { shift->{XML_LIBXSLT_STYLESHEET}->output_string(@_) }
+sub output_fh { shift->{XML_LIBXSLT_STYLESHEET}->output_fh(@_) }
+sub output_file { shift->{XML_LIBXSLT_STYLESHEET}->output_file(@_) }
+sub media_type { shift->{XML_LIBXSLT_STYLESHEET}->media_type(@_) }
+sub output_encoding { shift->{XML_LIBXSLT_STYLESHEET}->output_encoding(@_) }
 
 1;
 __END__
@@ -266,8 +545,9 @@ Exactly the same as the above, but parses the given filename directly.
 
 =head2 Input Callbacks
 
-To define XML::LibXSLT specific input callbacks, reuse the XML::LibXML
-input callback API as described in L<XML::LibXML::Document(3)/"Input Callbacks">.
+To define XML::LibXSLT or XML::LibXSLT::Stylesheet specific input
+callbacks, reuse the XML::LibXML input callback API as described in
+L<XML::LibXML::InputCallback(3)>.
 
 =head1 XML::LibXSLT::Stylesheet
 

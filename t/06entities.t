@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan tests => 1 }
+BEGIN { plan tests => 2 }
 
 use XML::LibXML;
 use XML::LibXSLT;
@@ -18,7 +18,7 @@ my $xslt = XML::LibXSLT->new();
 
 my $source = $parser->parse_string(qq{<?xml version="1.0" encoding="UTF-8"?>
 <root>foo</root>});
-my $style_doc = $parser->parse_string('<?xml version="1.0" encoding="UTF-8"?>
+my $style_doc = $parser->parse_string('<?xml version="1.0" encoding="ISO-8859-1"?>
 <!DOCTYPE stylesheet [
 <!ENTITY ouml   "&#246;">
 ]>
@@ -41,11 +41,14 @@ my $stylesheet = $xslt->parse_stylesheet($style_doc);
 
 my $results = $stylesheet->transform($source);
 
-print $results->toString;
+my $tostring = $results->toString;
+print $tostring;
+
+ok($tostring, qr/foo(?:.|&#xF6;)bar/i);
 
 my $content = $stylesheet->output_string($results);
 
 print $content, "\n";
 
-ok($content, qr/foo(?:.|&#xF6;)bar/i);
+ok($content, qr/foo\xC3\xB6bar/i);
 
