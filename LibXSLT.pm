@@ -179,7 +179,7 @@ sub callbacks {
     }
 }
 
-sub _init_callbacks {
+sub _init_callbacks{
     my $self = shift;
     my $icb = $self->{XML_LIBXSLT_CALLBACK_STACK};
 
@@ -197,6 +197,7 @@ sub _init_callbacks {
         $icb->register_callbacks( [$mcb, $ocb, $rcb, $ccb] );
     }
 
+    $self->lib_init_callbacks();
     $icb->init_callbacks();
 }
 
@@ -388,7 +389,7 @@ sub _init_callbacks {
     if ( defined $mcb and defined $ocb and defined $rcb and defined $ccb ) {
         $icb->register_callbacks( [$mcb, $ocb, $rcb, $ccb] );
     }
-
+    $self->XML::LibXSLT::lib_init_callbacks();
     $icb->init_callbacks();
 }
 

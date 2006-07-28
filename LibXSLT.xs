@@ -372,6 +372,186 @@ FINISH:
     LEAVE;	
 }
 
+int
+LibXSLT_input_match(char const * filename)
+{
+    int results;
+    int count;
+    SV * res;
+
+    results = 0;
+
+    {
+        dTHX;
+        dSP;
+
+        ENTER;
+        SAVETMPS;
+
+        PUSHMARK(SP);
+        EXTEND(SP, 1);
+        PUSHs(sv_2mortal(newSVpv((char*)filename, 0)));
+        PUTBACK;
+
+        count = call_pv("XML::LibXML::InputCallback::_callback_match", 
+                             G_SCALAR | G_EVAL);
+
+        SPAGAIN;
+
+        if (count != 1) {
+            croak("match callback must return a single value");
+        }
+
+        if (SvTRUE(ERRSV)) {
+            croak("input match callback died: %s", SvPV_nolen(ERRSV));
+            POPs ;
+        }
+
+        res = POPs;
+
+        if (SvTRUE(res)) {
+            results = 1;
+        }
+
+        PUTBACK;
+        FREETMPS;
+        LEAVE;
+    }
+    return results;
+}
+
+void *
+LibXSLT_input_open(char const * filename)
+{
+    SV * results;
+    int count;
+
+    dTHX;
+    dSP;
+
+    ENTER;
+    SAVETMPS;
+
+    PUSHMARK(SP);
+    EXTEND(SP, 1);
+    PUSHs(sv_2mortal(newSVpv((char*)filename, 0)));
+    PUTBACK;
+
+    count = call_pv("XML::LibXML::InputCallback::_callback_open", 
+                              G_SCALAR | G_EVAL);
+
+    SPAGAIN;
+
+    if (count != 1) {
+        croak("open callback must return a single value");
+    }
+
+    if (SvTRUE(ERRSV)) {
+        croak("input callback died: %s", SvPV_nolen(ERRSV));
+        POPs ;
+    }
+
+    results = POPs;
+
+    SvREFCNT_inc(results);
+
+    PUTBACK;
+    FREETMPS;
+    LEAVE;
+
+    return (void *)results;
+}
+
+int
+LibXSLT_input_read(void * context, char * buffer, int len)
+{
+    STRLEN res_len;
+    const char * output;
+    SV * ctxt;
+
+    res_len = 0;
+    ctxt = (SV *)context;
+
+    {
+        int count;
+
+        dTHX;
+        dSP;
+
+        ENTER;
+        SAVETMPS;
+
+        PUSHMARK(SP);
+        EXTEND(SP, 2);
+        PUSHs(ctxt);
+        PUSHs(sv_2mortal(newSViv(len)));
+        PUTBACK;
+
+        count = call_pv("XML::LibXML::InputCallback::_callback_read", 
+                             G_SCALAR | G_EVAL);
+
+        SPAGAIN;
+
+        if (count != 1) {
+            croak("read callback must return a single value");
+        }
+
+        if (SvTRUE(ERRSV)) {
+            croak("read callback died: %s", SvPV_nolen(ERRSV));
+            POPs ;
+        }
+
+        output = POPp;
+        if (output != NULL) {
+            res_len = strlen(output);
+            if (res_len) {
+                strncpy(buffer, output, res_len);
+            }
+            else {
+                buffer[0] = 0;
+            }
+        }
+
+	PUTBACK;
+        FREETMPS;
+        LEAVE;
+    }
+    return res_len;
+}
+
+void
+LibXSLT_input_close(void * context)
+{
+    SV * ctxt;
+
+    ctxt = (SV *)context;
+
+    {
+        dTHX;
+        dSP;
+
+        ENTER;
+        SAVETMPS;
+
+        PUSHMARK(SP);
+        EXTEND(SP, 1);
+        PUSHs(ctxt);
+        PUTBACK;
+
+        call_pv("XML::LibXML::InputCallback::_callback_close", 
+                             G_SCALAR | G_EVAL | G_DISCARD);
+
+        SvREFCNT_dec(ctxt);
+
+        if (SvTRUE(ERRSV)) {
+            croak("close callback died: %s", SvPV_nolen(ERRSV));
+        }
+
+        FREETMPS;
+        LEAVE;
+    }
+}
+
 MODULE = XML::LibXSLT         PACKAGE = XML::LibXSLT
 
 PROTOTYPES: DISABLE
@@ -512,6 +692,22 @@ _parse_stylesheet_file(self, filename)
         }
     OUTPUT:
         RETVAL
+
+void
+lib_init_callbacks( self )
+        SV * self
+    CODE:
+        xmlRegisterInputCallbacks((xmlInputMatchCallback) LibXSLT_input_match,
+                                  (xmlInputOpenCallback) LibXSLT_input_open,
+                                  (xmlInputReadCallback) LibXSLT_input_read,
+                                  (xmlInputCloseCallback) LibXSLT_input_close);
+
+void
+lib_cleanup_callbacks( self )
+        SV * self
+    CODE:
+        xmlCleanupInputCallbacks();
+        xmlRegisterDefaultInputCallbacks();
 
 MODULE = XML::LibXSLT         PACKAGE = XML::LibXSLT::Stylesheet
 
