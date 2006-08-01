@@ -4,8 +4,35 @@ that you can find at http://www.xmlsoft.org/XSLT/
 Performance is currently about twice that of XML::Sablotron (based on 
 XSLTMark tests converted to Perl).
 
-The libxslt processor is also highly standards compliant, with practically
-all of XSLT 1.0 being supported in version 0.9 of libxslt.
+The libxslt processor is also highly standards compliant
+implementation of XSLT 1.0.
+
+A NOTE ON INSTALLATION
+----------------------
+
+Note that if you want any global data to be shared between the libxml2
+libraries used by this module and XML-LibXML, e.g. the input callback
+table, then each module must link dynamically against libxml2 so that
+they both use the same shared library (this is in fact default on most
+UNIX/POSIX platforms).
+
+WIN32 BUILDING ISSUES
+---------------------
+
+It is recommended that when building this module on Win32 you also
+link dynamically against libxslt and libexslt, since linking
+statically against these libraries but dynamically against libxml2 may
+cause some "unresolved symbol" linker errors.
+
+Dynamic linking, however, causes a name clash between the name of this
+module's DLL (LibXSLT.dll) and that of libxslt (libxslt.dll) on
+Win32's case-insensitive filesystem. So, if you link dynamically then
+you'll probably have to build your libxslt DLL as, say,
+libxslt_win32.dll and then make the appropriate changes to this
+module's build process to look for that instead of libxslt.dll.
+
+COPYRIGHT AND LICENSE
+---------------------
 
 This is free software, you may use it and distribute it under the same
 terms as Perl itself. Copyright 2001 AxKit.com Ltd, All rights reserved.
