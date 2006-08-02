@@ -1,5 +1,10 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.59
+    - (revision bumped to match XML::LibXML)
+    - adapted for new XML::LibXML::InputCallback API
+    - support for static linking against libxml2
+
 1.57
     - (revision bumped to match XML::LibXML)
     - Some minor fixes to perl extension functions support
