@@ -84,7 +84,7 @@ WriteMakefile(
     'VERSION_FROM' => 'LibXSLT.pm', # finds $VERSION
     'AUTHOR'    => 'Matt Sergeant',
     'ABSTRACT'  => 'Interface to Gnome libxslt library',
-    'PREREQ_PM' => { 'XML::LibXML' => "1.58", },
+    'PREREQ_PM' => { 'XML::LibXML' => "1.59", },
     'OBJECT'     => '$(O_FILES)',
     %config,
 );
