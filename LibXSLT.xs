@@ -133,16 +133,41 @@ LibXSLT_ioclose_fh(void * context)
 }
 
 void
-LibXSLT_error_handler(void * ctxt, const char * msg, ...)
+LibXSLT_error_handler_ctx(void * ctxt, const char * msg, ...)
 {
-    va_list args;
-    SV * sv;
-    STRLEN n_a;
-    
-    va_start(args, msg);
-    sv_vcatpvfn(ERRSV, msg, strlen(msg), &args, NULL, 0, NULL);
-    va_end(args);
+	va_list args;
+	SV * saved_error = (SV *) ctxt;
+
+	/* If saved_error is null we croak with the error */
+	if( saved_error == NULL ) {
+		SV * sv = sv_2mortal(newSV(0));
+		va_start(args, msg);
+   		sv_vsetpvfn(sv, msg, strlen(msg), &args, NULL, 0, NULL);
+   		va_end(args);
+		croak("%s", SvPV_nolen(sv));
+	/* Otherwise, save the error */
+	} else {
+		va_start(args, msg);
+   		sv_vcatpvfn(saved_error, msg, strlen(msg), &args, NULL, 0, NULL);
+		va_end(args);
+	}
 }
+
+static void
+LibXSLT_init_error_ctx(SV * saved_error)
+{
+  xmlSetGenericErrorFunc((void *) saved_error, (xmlGenericErrorFunc) LibXSLT_error_handler_ctx);
+  xsltSetGenericErrorFunc((void *) saved_error, (xmlGenericErrorFunc) LibXSLT_error_handler_ctx);
+}
+
+static void
+LibXSLT_report_error_ctx(SV * saved_error)
+{
+	if( 0 < SvCUR( saved_error ) ) {
+             croak("%s", SvPV_nolen(saved_error));
+	}
+}
+
 
 void
 LibXSLT_debug_handler(void * ctxt, const char * msg, ...)
@@ -640,6 +665,7 @@ _parse_stylesheet(self, sv_doc)
         char * CLASS = "XML::LibXSLT::Stylesheet";
         xmlDocPtr doc_copy;
         xmlDocPtr doc;
+        SV * saved_error = sv_2mortal(newSVpv("",0));
     CODE:
         if (sv_doc == NULL) {
             XSRETURN_UNDEF;
@@ -660,8 +686,9 @@ _parse_stylesheet(self, sv_doc)
             xsltSetGenericDebugFunc(NULL, NULL);
         }
 
+        LibXSLT_init_error_ctx(saved_error);
         RETVAL = xsltParseStylesheetDoc(doc_copy);
-
+        LibXSLT_report_error_ctx(saved_error);
         if (RETVAL == NULL) {
             XSRETURN_UNDEF;
         }
@@ -674,6 +701,7 @@ _parse_stylesheet_file(self, filename)
         const char * filename
     PREINIT:
         char * CLASS = "XML::LibXSLT::Stylesheet";
+        SV * saved_error = sv_2mortal(newSVpv("",0));
     CODE:
 
         if (LibXSLT_debug_cb && SvTRUE(LibXSLT_debug_cb)) {
@@ -683,8 +711,9 @@ _parse_stylesheet_file(self, filename)
             xsltSetGenericDebugFunc(NULL, NULL);
         }
 
+        LibXSLT_init_error_ctx(saved_error);
         RETVAL = xsltParseStylesheetFile((const xmlChar *)filename);
-
+        LibXSLT_report_error_ctx(saved_error);
         if (RETVAL == NULL) {
             XSRETURN_UNDEF;
         }
@@ -722,6 +751,7 @@ transform(self, sv_doc, ...)
         xmlDocPtr real_dom;
         xmlDocPtr doc;
         STRLEN len;
+        SV * saved_error = sv_2mortal(newSVpv("",0));
     CODE:
         if (sv_doc == NULL) {
             XSRETURN_UNDEF;
@@ -753,13 +783,11 @@ transform(self, sv_doc, ...)
             xsltSetGenericDebugFunc(NULL, NULL);
         }
 
+        LibXSLT_init_error_ctx(saved_error);
         real_dom = xsltApplyStylesheet(self, doc, xslt_params);
-
+        LibXSLT_report_error_ctx(saved_error);
         if (real_dom == NULL) {
-            if (SvTRUE(ERRSV)) {
-                croak("Exception occurred while applying stylesheet: %s", SvPV(ERRSV, len));
-            }
-            croak("Error applying stylesheet: %s", "(get error out of libxslt)");
+            croak("Unknown error applying stylesheet");
         }
         if (real_dom->type == XML_HTML_DOCUMENT_NODE) {
             if (self->method != NULL) {
@@ -782,6 +810,7 @@ transform_file(self, filename, ...)
         xmlDocPtr real_dom;
         xmlDocPtr source_dom;
         STRLEN len;
+        SV * saved_error = sv_2mortal(newSVpv("",0));
     CODE:
         xslt_params[0] = 0;
         if (items > 256) {
@@ -804,22 +833,19 @@ transform_file(self, filename, ...)
         else {
             xsltSetGenericDebugFunc(NULL, NULL);
         }
+        LibXSLT_init_error_ctx(saved_error);
         source_dom = xmlParseFile(filename);
         if ( source_dom == NULL ) {
-            if (SvTRUE(ERRSV)) {
-                croak("Error loading source document: %s", SvPV(ERRSV, len));
-            }
-            croak("Error loading source document: %s", "(get error out of libxml)");
+            LibXSLT_report_error_ctx(saved_error);
+            croak("Unknown error loading source document");
         } else {
+           real_dom = xsltApplyStylesheet(self, source_dom, xslt_params);
 	   xmlFreeDoc( source_dom );
+           LibXSLT_report_error_ctx(saved_error);
         }
-        real_dom = xsltApplyStylesheet(self, source_dom, xslt_params);
         
         if (real_dom == NULL) {
-            if (SvTRUE(ERRSV)) {
-                croak("Error applying stylesheet: %s", SvPV(ERRSV, len));
-            }
-            croak("Error applying stylesheet: %s", "(get error out of libxslt)");
+            croak("Unknown error applying stylesheet");
         }
         if (real_dom->type == XML_HTML_DOCUMENT_NODE) {
             if (self->method != NULL) {
