@@ -572,11 +572,18 @@ new XML::LibXML::Document. Extra hash entries are used as parameters.
 
 =head2 output_string(result)
 
-Returns a scalar that is the XSLT rendering of the XML::LibXML::Document
-object using the desired output format (specified in the xsl:output tag
-in the stylesheet). Note that you can also call $result->toString, but
-that will *always* output the document in XML format, and in UTF8, which
-may not be what you asked for in the xsl:output tag.
+Returns a scalar that is the XSLT rendering of the
+XML::LibXML::Document object using the desired output format
+(specified in the xsl:output tag in the stylesheet). Note that you can
+also call $result->toString, but that will *always* output the
+document in XML format, and in UTF8, which may not be what you asked
+for in the xsl:output tag.
+
+Note that the returned scalar is always bytes not characters, i.e. it
+is *not* marked with the UTF8 flag even if the desired output encoding
+was in fact UTF-8. If the output encoding was UTF-8 and you wish the
+scalar to be treated by Perl as characters, apply
+Encode::_utf8_on($result) on the returned scalar.
 
 =head2 output_fh(result, fh)
 

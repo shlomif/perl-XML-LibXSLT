@@ -44,7 +44,6 @@ x_PmmNodeTypeName( xmlNodePtr elem ){
     const char *name = "XML::LibXML::Node";
 
     if ( elem != NULL ) {
-        char * ptrHlp;
         switch ( elem->type ) {
         case XML_ELEMENT_NODE:
             name = "XML::LibXML::Element";   

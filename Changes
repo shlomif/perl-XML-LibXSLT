@@ -1,5 +1,15 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.60pre
+     - fix a huge memory leak in transform_file (bug #1314)
+     - make it clear from the docs that output_string returns bytes (bug #8875)
+     - added missing type-casting to fix compile-time warnings (bug #18508)
+     - using call_* instead of perl_call_* (perl_ variants are obsolete)
+     - in callbacks, POPs on error before croaking, otherwise it has no
+       effect (and we probably leak)
+     - added test case which used to fail (provided in rt #15723)
+     - apply patch for Makefile.PL for non-standard libxslt paths (bug #16224)
+
 1.59
     - (revision bumped to match XML::LibXML)
     - adapted for new XML::LibXML::InputCallback API
