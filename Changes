@@ -9,6 +9,7 @@ Revision history for Perl extension XML::LibXSLT.
        effect (and we probably leak)
      - added test case which used to fail (provided in rt #15723)
      - apply patch for Makefile.PL for non-standard libxslt paths (bug #16224)
+     - error reporting
 
 1.59
     - (revision bumped to match XML::LibXML)

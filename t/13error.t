@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan tests => 12 };
+BEGIN { plan tests => 19 };
 
 use warnings;
 use strict;
@@ -55,4 +55,36 @@ ok($xslt);
   undef $@;
   eval { $parsed->transform( $dom ); };
   ok( $@ );
+}
+
+{
+my $parser = XML::LibXML->new();
+ok( $parser );
+
+my $doc = $parser->parse_string(<<XML);
+<doc/>
+XML
+ok( $doc );
+
+my $xslt = XML::LibXSLT->new();
+my $style_doc = $parser->parse_string(<<XSLT);
+<xsl:stylesheet version="1.0"
+  xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+  <xsl:template match="/">
+    <xsl:value-of select="\$foo"/>
+  </xsl:template>
+</xsl:stylesheet>
+XSLT
+ok( $style_doc );
+
+my $stylesheet = $xslt->parse_stylesheet($style_doc);
+ok( $stylesheet );
+
+my $results;
+eval { $results = $stylesheet->transform($doc); };
+ok( $@ );
+
+ok( $@ =~ /unregistered variable foo/ );
+ok( $@ =~ /element value-of/ );
+
 }
