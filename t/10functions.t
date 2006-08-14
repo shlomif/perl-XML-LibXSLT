@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan tests => 14 }
+BEGIN { plan tests => 18 }
 use XML::LibXSLT;
 
 my $parser = XML::LibXML->new();
@@ -48,5 +48,42 @@ ok($results);
 
 ok($stylesheet->output_string($results), qr(Foo!));
 ok($stylesheet->output_string($results), qr(NodeList));
+
+print $stylesheet->output_string($results), "\n";
+
+
+$xslt->register_function('urn:foo' => 'get_list', \&get_nodelist );
+
+our @words = qw( one two three );
+
+sub get_nodelist {
+  my $nl = XML::LibXML::NodeList->new();
+  $nl -> push( map { XML::LibXML::Text->new($_) } @words );
+  return $nl;
+}
+
+$style = $parser->parse_string(<<'EOT');
+<xsl:stylesheet version="1.0"
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns:foo="urn:foo">
+
+  <xsl:template match="/">
+    <xsl:for-each select='foo:get_list()'>
+      <li><xsl:value-of select='.'/></li>
+    </xsl:for-each>
+  </xsl:template>
+
+</xsl:stylesheet>
+EOT
+
+ok($style);
+
+$stylesheet = $xslt->parse_stylesheet($style);
+$results = $stylesheet->transform($source);
+
+ok($results);
+
+ok($stylesheet->output_string($results), qr(<li>one</li>));
+ok($stylesheet->output_string($results), qr(<li>one</li><li>two</li><li>three</li>));
 
 print $stylesheet->output_string($results), "\n";

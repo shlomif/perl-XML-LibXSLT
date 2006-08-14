@@ -350,15 +350,22 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
                 tmp_node1 = (xmlNodePtr)x_PmmSvNode(sv_2mortal(av_shift(array_result)));
                 tmp_node = xmlDocCopyNode(tmp_node1, ctxt->context->doc, 1);
                 xmlXPathNodeSetAdd(ret->nodesetval, tmp_node);
-                if (ret->user == NULL) {
-                    ret->user = (void*)tmp_node;
-                }
-                else {
-                    xmlNodePtr old = (xmlNodePtr)(ret->user);
-                    old->prev = tmp_node;
-                    tmp_node->next = old;
-                    ret->user = (void*)tmp_node;
-                }
+                /*
+                 * this seems unnecessary with recent libxslt versions
+                 *
+		    if (ret->user == NULL) {
+		      ret->user = (void*)tmp_node;
+		    }
+		 *
+                 * this even causes segmentation faults:
+                 *
+                   else {
+                      xmlNodePtr old = (xmlNodePtr)(ret->user);
+                      old->prev = tmp_node;
+                      tmp_node->next = old;
+                      ret->user = (void*)tmp_node;
+		    }
+                */
             }
             goto FINISH;
         } 
@@ -368,7 +375,11 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
             tmp_node1 = (xmlNodePtr)x_PmmSvNode(perl_result);
             tmp_node = xmlDocCopyNode(tmp_node1, ctxt->context->doc, 1);
             xmlXPathNodeSetAdd(ret->nodesetval,tmp_node);
-            ret->user = (void*)tmp_node;
+            /*
+             * this seems unnecessary with recent libxslt versions
+             *
+                ret->user = (void*)tmp_node; 
+            */
             goto FINISH;
         }
         else if (sv_derived_from(perl_result, "XML::LibXML::Boolean")) {
@@ -674,9 +685,10 @@ _parse_stylesheet(self, sv_doc)
         if (doc == NULL) {
             XSRETURN_UNDEF;
         }
-
         doc_copy = xmlCopyDoc(doc, 1);
-        doc_copy->URL = xmlStrdup(doc->URL);
+        if (doc_copy->URL == NULL) {
+          doc_copy->URL = xmlStrdup(doc->URL);
+        }
         /* xmlNodeSetBase((xmlNodePtr)doc_copy, doc_copy->URL); */
 
         if (LibXSLT_debug_cb && SvTRUE(LibXSLT_debug_cb)) {
@@ -688,6 +700,9 @@ _parse_stylesheet(self, sv_doc)
 
         LibXSLT_init_error_ctx(saved_error);
         RETVAL = xsltParseStylesheetDoc(doc_copy);
+        if (RETVAL == NULL) {
+            xmlFreeDoc(doc_copy);
+        }
         LibXSLT_report_error_ctx(saved_error);
         if (RETVAL == NULL) {
             XSRETURN_UNDEF;
