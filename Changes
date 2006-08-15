@@ -9,6 +9,8 @@ Revision history for Perl extension XML::LibXSLT.
        effect (and we probably leak)
      - added test case which used to fail (provided in rt #15723)
      - apply patch for Makefile.PL for non-standard libxslt paths (bug #16224)
+     - fix segfault with registered functions returning nodes
+     - fix leaks in parse_stylesheet
      - error reporting
 
 1.59
