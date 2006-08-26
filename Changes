@@ -1,6 +1,6 @@
 Revision history for Perl extension XML::LibXSLT.
 
-1.60pre
+1.60
      - fix a huge memory leak in transform_file (bug #1314)
      - make it clear from the docs that output_string returns bytes (bug #8875)
      - added missing type-casting to fix compile-time warnings (bug #18508)

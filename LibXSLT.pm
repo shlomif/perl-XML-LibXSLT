@@ -4,7 +4,7 @@ package XML::LibXSLT;
 use strict;
 use vars qw($VERSION @ISA $USE_LIBXML_DATA_TYPES $MatchCB $ReadCB $OpenCB $CloseCB);
 
-use XML::LibXML 1.59;
+use XML::LibXML 1.60;
 use XML::LibXML::Literal;
 use XML::LibXML::Boolean;
 use XML::LibXML::Number;
@@ -14,7 +14,7 @@ use Carp;
 
 require Exporter;
 
-$VERSION = "1.59";
+$VERSION = "1.60";
 
 require DynaLoader;
 
