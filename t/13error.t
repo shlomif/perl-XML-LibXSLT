@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan tests => 19 };
+BEGIN { plan tests => 28 };
 
 use warnings;
 use strict;
@@ -11,6 +11,8 @@ ok(1);
 my $bad_xsl1 = 'example/bad1.xsl';
 my $bad_xsl2 = 'example/bad2.xsl';
 my $bad_xsl3 = 'example/bad3.xsl';
+my $fatal_xsl = 'example/fatal.xsl';
+my $nonfatal_xsl = 'example/nonfatal.xsl';
 my $good_xsl = 'example/1.xsl';
 my $good_xml = 'example/1.xml';
 my $bad_xml  = 'example/bad2.xsl';
@@ -42,8 +44,37 @@ ok($xslt);
 }
 
 {
+  my $stylesheet = XML::LibXML->new->parse_file($nonfatal_xsl);
+  ok( $stylesheet );
+  my $parsed = $xslt->parse_stylesheet( $stylesheet );
+  ok( $parsed );
+  undef $@;
+  my $warn;
+  local $SIG{__WARN__} = sub { $warn = shift; };
+  eval { $parsed->transform_file( $good_xml ); };
+  ok( !$@ );
+  ok( $warn , "Non-fatal message.\n" );
+}
+
+{
   my $parser = XML::LibXML->new;
   my $stylesheet = $parser->parse_file($bad_xsl3);
+  ok( $stylesheet );
+  my $parsed = $xslt->parse_stylesheet( $stylesheet );
+  ok( $parsed );
+  undef $@;
+  eval { $parsed->transform_file( $good_xml ); };
+  ok( $@ );
+  my $dom = $parser->parse_file( $good_xml );
+  ok( $dom );
+  undef $@;
+  eval { $parsed->transform( $dom ); };
+  ok( $@ );
+}
+
+{
+  my $parser = XML::LibXML->new;
+  my $stylesheet = $parser->parse_file($fatal_xsl);
   ok( $stylesheet );
   my $parsed = $xslt->parse_stylesheet( $stylesheet );
   ok( $parsed );

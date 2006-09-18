@@ -161,13 +161,16 @@ LibXSLT_init_error_ctx(SV * saved_error)
 }
 
 static void
-LibXSLT_report_error_ctx(SV * saved_error)
+LibXSLT_report_error_ctx(SV * saved_error, int warn_only)
 {
-	if( 0 < SvCUR( saved_error ) ) {
-             croak("%s", SvPV_nolen(saved_error));
-	}
+    if( 0 < SvCUR( saved_error ) ) {
+      if ( warn_only ) {
+	warn("%s", SvPV_nolen(saved_error));
+      } else {
+	croak("%s", SvPV_nolen(saved_error));
+      }
+    }
 }
-
 
 void
 LibXSLT_debug_handler(void * ctxt, const char * msg, ...)
@@ -176,7 +179,6 @@ LibXSLT_debug_handler(void * ctxt, const char * msg, ...)
     
     va_list args;
     SV * sv;
-    STRLEN n_a;
     
     sv = NEWSV(0,512);
 
@@ -233,7 +235,6 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
     const char *function, *uri;
     SV **perl_function;
     AV *arguments;
-    int cnt = 0;
     dSP;
     
     function = (const char *) ctxt->context->function;
@@ -702,11 +703,10 @@ _parse_stylesheet(self, sv_doc)
         RETVAL = xsltParseStylesheetDoc(doc_copy);
         if (RETVAL == NULL) {
             xmlFreeDoc(doc_copy);
-        }
-        LibXSLT_report_error_ctx(saved_error);
-        if (RETVAL == NULL) {
+	    LibXSLT_report_error_ctx(saved_error,0);
             XSRETURN_UNDEF;
         }
+	LibXSLT_report_error_ctx(saved_error,1);
     OUTPUT:
         RETVAL
 
@@ -728,10 +728,11 @@ _parse_stylesheet_file(self, filename)
 
         LibXSLT_init_error_ctx(saved_error);
         RETVAL = xsltParseStylesheetFile((const xmlChar *)filename);
-        LibXSLT_report_error_ctx(saved_error);
         if (RETVAL == NULL) {
+            LibXSLT_report_error_ctx(saved_error,0);
             XSRETURN_UNDEF;
         }
+        LibXSLT_report_error_ctx(saved_error,1);
     OUTPUT:
         RETVAL
 
@@ -760,13 +761,12 @@ transform(self, sv_doc, ...)
         xsltStylesheetPtr self
         SV * sv_doc
     PREINIT:
-        char * CLASS = "XML::LibXML::Document";
         # note really only 254 entries here - last one is NULL
         const char *xslt_params[255];
         xmlDocPtr real_dom;
         xmlDocPtr doc;
-        STRLEN len;
         SV * saved_error = sv_2mortal(newSVpv("",0));
+        xsltTransformContextPtr ctxt;
     CODE:
         if (sv_doc == NULL) {
             XSRETURN_UNDEF;
@@ -799,9 +799,28 @@ transform(self, sv_doc, ...)
         }
 
         LibXSLT_init_error_ctx(saved_error);
-        real_dom = xsltApplyStylesheet(self, doc, xslt_params);
-        LibXSLT_report_error_ctx(saved_error);
+
+        /* we need own context to distinguish
+         * <xsl:message terminate="no">
+         * from those with terminate="yes" and fatal errors */
+	ctxt = xsltNewTransformContext(self, doc);
+        if (ctxt == NULL) {
+	    croak("Could not create transformation context");
+	}
+        ctxt->xinclude = 1;
+	real_dom = xsltApplyStylesheetUser(self, doc, xslt_params,
+					   NULL, NULL, ctxt);
+        if ((real_dom != NULL) && (ctxt->state != XSLT_STATE_OK)) {
+          /* fatal error */
+             xmlFreeDoc(real_dom);
+             real_dom = NULL;
+	}
+	xsltFreeTransformContext(ctxt);
+
+        /* real_dom = xsltApplyStylesheet(self, doc, xslt_params); */
         if (real_dom == NULL) {
+            if ( real_dom != NULL ) xmlFreeDoc( real_dom );
+            LibXSLT_report_error_ctx(saved_error,0);
             croak("Unknown error applying stylesheet");
         }
         if (real_dom->type == XML_HTML_DOCUMENT_NODE) {
@@ -811,6 +830,8 @@ transform(self, sv_doc, ...)
             self->method = (xmlChar *) xmlMalloc(5);
             strcpy((char *) self->method, "html");
         }
+        /* non-fatal: probably just a message from the stylesheet */
+        LibXSLT_report_error_ctx(saved_error,1);
         RETVAL = x_PmmNodeToSv((xmlNodePtr)real_dom, NULL);
     OUTPUT:
         RETVAL
@@ -824,8 +845,8 @@ transform_file(self, filename, ...)
         const char *xslt_params[255];
         xmlDocPtr real_dom;
         xmlDocPtr source_dom;
-        STRLEN len;
         SV * saved_error = sv_2mortal(newSVpv("",0));
+        xsltTransformContextPtr ctxt;
     CODE:
         xslt_params[0] = 0;
         if (items > 256) {
@@ -851,17 +872,34 @@ transform_file(self, filename, ...)
         LibXSLT_init_error_ctx(saved_error);
         source_dom = xmlParseFile(filename);
         if ( source_dom == NULL ) {
-            LibXSLT_report_error_ctx(saved_error);
+            LibXSLT_report_error_ctx(saved_error,0);
             croak("Unknown error loading source document");
         } else {
-           real_dom = xsltApplyStylesheet(self, source_dom, xslt_params);
+	  /*real_dom = xsltApplyStylesheet(self, source_dom, xslt_params);*/
+
+	   ctxt = xsltNewTransformContext(self, source_dom);
+	   if (ctxt == NULL) {
+	     croak("Could not create transformation context");
+	   }
+	   ctxt->xinclude = 1;
+	   real_dom = xsltApplyStylesheetUser(self, source_dom, xslt_params,
+					      NULL, NULL, ctxt);
+	   if ((ctxt->state != XSLT_STATE_OK) && real_dom) {
+               /* fatal error */
+               xmlFreeDoc(real_dom);
+               real_dom = NULL;
+           }
+	   xsltFreeTransformContext(ctxt);
+
 	   xmlFreeDoc( source_dom );
-           LibXSLT_report_error_ctx(saved_error);
         }
         
         if (real_dom == NULL) {
+            LibXSLT_report_error_ctx(saved_error,0);
             croak("Unknown error applying stylesheet");
         }
+        /* non-fatal: probably just a message from the stylesheet */
+        LibXSLT_report_error_ctx(saved_error,1);
         if (real_dom->type == XML_HTML_DOCUMENT_NODE) {
             if (self->method != NULL) {
                 xmlFree(self->method);
