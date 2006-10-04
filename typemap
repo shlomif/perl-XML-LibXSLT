@@ -2,6 +2,7 @@ TYPEMAP
 const char *        T_PV
 xmlDocPtr           PROXY_OBJECT
 xsltStylesheetPtr   O_OBJECT
+xsltTransformContextPtr O_OBJECT
 ProxyObject *       O_OBJECT
 
 

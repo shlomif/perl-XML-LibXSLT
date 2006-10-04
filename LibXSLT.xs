@@ -10,6 +10,7 @@ extern "C" {
 #include <libxslt/xsltutils.h>
 #include <libxslt/imports.h>
 #include <libxslt/extensions.h>
+#include <libxslt/security.h>
 #ifdef HAVE_EXSLT
 #include <libexslt/exslt.h>
 #include <libexslt/exsltconfig.h>
@@ -589,6 +590,125 @@ LibXSLT_input_close(void * context)
     }
 }
 
+int
+LibXSLT_security_check(xsltSecurityOption option,
+                       xsltSecurityPrefsPtr sec,
+                       xsltTransformContextPtr ctxt,
+                       const char * value)
+{
+   int result = 0;
+
+   {
+      int count;
+
+      dTHX;
+      dSP;
+
+      ENTER;
+      SAVETMPS;
+
+      PUSHMARK(SP);
+      EXTEND(SP, 3);
+      PUSHs(sv_2mortal(newSViv(option)));
+      PUSHs(sv_setref_pv(sv_newmortal(), "XML::LibXSLT::TransformContext",
+                         (void*)ctxt));
+      PUSHs(sv_2mortal(newSVpv((char*)value, 0)));
+      PUTBACK;
+
+      count = call_pv("XML::LibXSLT::Security::_security_check",
+                      G_SCALAR | G_EVAL);
+
+      SPAGAIN;
+
+      if (count != 1) {
+         croak("security callbacks must return a single value");
+      }
+
+      if (SvTRUE(ERRSV)) {
+         POPs;
+         croak("security callback died: %s", SvPV_nolen(ERRSV));
+      }
+
+      result = POPi;
+
+      PUTBACK;
+      FREETMPS;
+      LEAVE;
+   }
+
+   return result;
+}
+
+int
+LibXSLT_security_read_file(xsltSecurityPrefsPtr sec,
+                           xsltTransformContextPtr ctxt,
+                           const char * value)
+{
+   return LibXSLT_security_check(XSLT_SECPREF_READ_FILE, sec, ctxt, value);
+}
+
+int
+LibXSLT_security_write_file(xsltSecurityPrefsPtr sec,
+                           xsltTransformContextPtr ctxt,
+                           const char * value)
+{
+   return LibXSLT_security_check(XSLT_SECPREF_WRITE_FILE, sec, ctxt, value);
+}
+
+int
+LibXSLT_security_create_dir(xsltSecurityPrefsPtr sec,
+                            xsltTransformContextPtr ctxt,
+                            const char * value)
+{
+   return LibXSLT_security_check(XSLT_SECPREF_CREATE_DIRECTORY, sec, ctxt, value);
+}
+
+int
+LibXSLT_security_read_net(xsltSecurityPrefsPtr sec,
+                          xsltTransformContextPtr ctxt,
+                          const char * value)
+{
+   return LibXSLT_security_check(XSLT_SECPREF_READ_NETWORK, sec, ctxt, value);
+}
+
+int
+LibXSLT_security_write_net(xsltSecurityPrefsPtr sec,
+                           xsltTransformContextPtr ctxt,
+                           const char * value)
+{
+   return LibXSLT_security_check(XSLT_SECPREF_WRITE_NETWORK, sec, ctxt, value);
+}
+
+xsltSecurityPrefsPtr
+LibXSLT_init_security_prefs(xsltTransformContextPtr ctxt)
+{
+   xsltSecurityPrefsPtr sec = NULL;
+   sec = xsltNewSecurityPrefs();
+
+   xsltSetSecurityPrefs(sec, XSLT_SECPREF_READ_FILE,
+                        LibXSLT_security_read_file);
+   xsltSetSecurityPrefs(sec, XSLT_SECPREF_WRITE_FILE,
+                        LibXSLT_security_write_file);
+   xsltSetSecurityPrefs(sec, XSLT_SECPREF_CREATE_DIRECTORY,
+                        LibXSLT_security_create_dir);
+   xsltSetSecurityPrefs(sec, XSLT_SECPREF_READ_NETWORK,
+                        LibXSLT_security_read_net);
+   xsltSetSecurityPrefs(sec, XSLT_SECPREF_WRITE_NETWORK,
+                        LibXSLT_security_write_net);
+
+   xsltSetCtxtSecurityPrefs(sec, ctxt);
+
+   return sec;
+}
+
+void
+LibXSLT_free_security_prefs(xsltSecurityPrefsPtr sec,
+                            xsltTransformContextPtr ctxt)
+{
+   xsltFreeSecurityPrefs(sec);
+}
+
+
 MODULE = XML::LibXSLT         PACKAGE = XML::LibXSLT
 
 PROTOTYPES: DISABLE
@@ -757,8 +877,9 @@ MODULE = XML::LibXSLT         PACKAGE = XML::LibXSLT::Stylesheet
 PROTOTYPES: DISABLE
 
 SV *
-transform(self, sv_doc, ...)
+transform(self, wrapper, sv_doc, ...)
         xsltStylesheetPtr self
+        SV * wrapper
         SV * sv_doc
     PREINIT:
         # note really only 254 entries here - last one is NULL
@@ -767,6 +888,7 @@ transform(self, sv_doc, ...)
         xmlDocPtr doc;
         SV * saved_error = sv_2mortal(newSVpv("",0));
         xsltTransformContextPtr ctxt;
+        xsltSecurityPrefsPtr sec;
     CODE:
         if (sv_doc == NULL) {
             XSRETURN_UNDEF;
@@ -779,16 +901,16 @@ transform(self, sv_doc, ...)
         if (items > 256) {
             croak("Too many parameters in transform()");
         }
-        if (items % 2) {
+        if ((items - 3) % 2) {
             croak("Odd number of parameters");
         }
-        if (items > 2) {
+        if (items > 3) {
             int i;
-            for (i = 2; (i < items && i < 256); i++) {
-                xslt_params[i - 2] = (char *)SvPV(ST(i), PL_na);
+            for (i = 3; (i < items && i < 256); i++) {
+                xslt_params[i - 3] = (char *)SvPV(ST(i), PL_na);
             }
             # set last entry to NULL
-            xslt_params[i - 2] = 0;
+            xslt_params[i - 3] = 0;
         }
 
         if (LibXSLT_debug_cb && SvTRUE(LibXSLT_debug_cb)) {
@@ -808,6 +930,8 @@ transform(self, sv_doc, ...)
 	    croak("Could not create transformation context");
 	}
         ctxt->xinclude = 1;
+        ctxt->_private = (void *) wrapper;
+        sec = LibXSLT_init_security_prefs(ctxt);
 	real_dom = xsltApplyStylesheetUser(self, doc, xslt_params,
 					   NULL, NULL, ctxt);
         if ((real_dom != NULL) && (ctxt->state != XSLT_STATE_OK)) {
@@ -815,6 +939,7 @@ transform(self, sv_doc, ...)
              xmlFreeDoc(real_dom);
              real_dom = NULL;
 	}
+        LibXSLT_free_security_prefs(sec, ctxt);
 	xsltFreeTransformContext(ctxt);
 
         /* real_dom = xsltApplyStylesheet(self, doc, xslt_params); */
@@ -837,8 +962,9 @@ transform(self, sv_doc, ...)
         RETVAL
 
 SV *
-transform_file(self, filename, ...)
+transform_file(self, wrapper, filename, ...)
         xsltStylesheetPtr self
+        SV * wrapper
         char * filename
     PREINIT:
         # note really only 254 entries here - last one is NULL
@@ -847,21 +973,22 @@ transform_file(self, filename, ...)
         xmlDocPtr source_dom;
         SV * saved_error = sv_2mortal(newSVpv("",0));
         xsltTransformContextPtr ctxt;
+        xsltSecurityPrefsPtr sec;
     CODE:
         xslt_params[0] = 0;
         if (items > 256) {
             croak("Too many parameters in transform()");
         }
-        if (items % 2) {
+        if ((items - 3) % 2) {
             croak("Odd number of parameters");
         }
-        if (items > 2) {
+        if (items > 3) {
             int i;
-            for (i = 2; (i < items && i < 256); i++) {
-                xslt_params[i - 2] = (char *)SvPV(ST(i), PL_na);
+            for (i = 3; (i < items && i < 256); i++) {
+                xslt_params[i - 3] = (char *)SvPV(ST(i), PL_na);
             }
             # set last entry to NULL
-            xslt_params[i - 2] = 0;
+            xslt_params[i - 3] = 0;
         }
         if (LibXSLT_debug_cb && SvTRUE(LibXSLT_debug_cb)) {
             xsltSetGenericDebugFunc(PerlIO_stderr(), (xmlGenericErrorFunc)LibXSLT_debug_handler);
@@ -882,6 +1009,8 @@ transform_file(self, filename, ...)
 	     croak("Could not create transformation context");
 	   }
 	   ctxt->xinclude = 1;
+           ctxt->_private = (void *) wrapper;
+           sec = LibXSLT_init_security_prefs(ctxt);
 	   real_dom = xsltApplyStylesheetUser(self, source_dom, xslt_params,
 					      NULL, NULL, ctxt);
 	   if ((ctxt->state != XSLT_STATE_OK) && real_dom) {
@@ -889,6 +1018,7 @@ transform_file(self, filename, ...)
                xmlFreeDoc(real_dom);
                real_dom = NULL;
            }
+           LibXSLT_free_security_prefs(sec, ctxt);
 	   xsltFreeTransformContext(ctxt);
 
 	   xmlFreeDoc( source_dom );
@@ -1063,3 +1193,14 @@ output_encoding(self)
         }
     OUTPUT:
         RETVAL
+
+
+MODULE = XML::LibXSLT         PACKAGE = XML::LibXSLT::TransformContext
+
+SV *
+stylesheet(self)
+      xsltTransformContextPtr self
+   CODE:
+      RETVAL = SvREFCNT_inc((SV *) self->_private);
+   OUTPUT:
+      RETVAL

@@ -1,5 +1,8 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.62pre
+     - security callback interface contributed by Shane Corgatelli
+
 1.61
      - fixed error reporting: die on fatal errors, warn otherwise
        (in particular, warn rather than die on <xsl:message terminate="no">)

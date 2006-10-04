@@ -34,5 +34,6 @@ t/10functions.t
 t/11utf8.t
 t/12import.t
 t/13error.t
+t/14security.t
 testcases/default.conf
 typemap

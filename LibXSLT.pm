@@ -87,6 +87,16 @@ sub xpath_to_string {
 # callback functions                                                      #
 #-------------------------------------------------------------------------#
 
+sub security_callbacks {
+   my $self = shift;
+   my $scbclass = shift;
+
+   if ( defined $scbclass ) {
+      $self->{XML_LIBXSLT_SECPREFS} = $scbclass;
+   }
+   return $self->{XML_LIBXSLT_SECPREFS};
+}
+
 sub input_callbacks {
     my $self = shift;
     my $icbclass = shift;
@@ -232,6 +242,7 @@ sub parse_stylesheet {
                XML_LIBXSLT_OPEN_CB => $self->{XML_LIBXSLT_OPEN_CB},
                XML_LIBXSLT_READ_CB => $self->{XML_LIBXSLT_READ_CB},
                XML_LIBXSLT_CLOSE_CB => $self->{XML_LIBXSLT_CLOSE_CB},
+               XML_LIBXSLT_SECPREFS => $self->{XML_LIBXSLT_SECPREFS},
              };
 
     return bless $rv, "XML::LibXSLT::StylesheetWrapper";
@@ -259,6 +270,7 @@ sub parse_stylesheet_file {
                XML_LIBXSLT_OPEN_CB => $self->{XML_LIBXSLT_OPEN_CB},
                XML_LIBXSLT_READ_CB => $self->{XML_LIBXSLT_READ_CB},
                XML_LIBXSLT_CLOSE_CB => $self->{XML_LIBXSLT_CLOSE_CB},
+               XML_LIBXSLT_SECPREFS => $self->{XML_LIBXSLT_SECPREFS},
              };
 
     return bless $rv, "XML::LibXSLT::StylesheetWrapper";
@@ -279,6 +291,16 @@ use vars qw($MatchCB $ReadCB $OpenCB $CloseCB);
 
 use XML::LibXML;
 use Carp;
+
+sub security_callbacks {
+   my $self = shift;
+   my $scbclass = shift;
+
+   if ( defined $scbclass ) {
+      $self->{XML_LIBXSLT_SECPREFS} = $scbclass;
+   }
+   return $self->{XML_LIBXSLT_SECPREFS};
+}
 
 sub input_callbacks {
     my $self     = shift;
@@ -391,6 +413,11 @@ sub _init_callbacks {
     }
     $self->XML::LibXSLT::lib_init_callbacks();
     $icb->init_callbacks();
+
+    my $scb = $self->{XML_LIBXSLT_SECPREFS};
+    if ( $scb ) {
+       $scb->init_callbacks();
+    }
 }
 
 sub _cleanup_callbacks {
@@ -400,6 +427,11 @@ sub _cleanup_callbacks {
     if ( defined $mcb ) {
         $self->{XML_LIBXSLT_CALLBACK_STACK}->unregister_callbacks( [$mcb] );
     }
+
+    my $scb = $self->{XML_LIBXSLT_SECPREFS};
+    if ( $scb ) {
+       $scb->cleanup_callbacks();
+    }
 }
 
 sub transform {
@@ -407,7 +439,7 @@ sub transform {
     my $doc;
 
     $self->_init_callbacks();
-    eval { $doc = $self->{XML_LIBXSLT_STYLESHEET}->transform(@_); };
+    eval { $doc = $self->{XML_LIBXSLT_STYLESHEET}->transform($self,@_); };
     $self->_cleanup_callbacks();
 
     my $err = $@;
@@ -423,7 +455,7 @@ sub transform_file {
     my $doc;
 
     $self->_init_callbacks();
-    eval { $doc = $self->{XML_LIBXSLT_STYLESHEET}->transform_file(@_); };
+    eval { $doc = $self->{XML_LIBXSLT_STYLESHEET}->transform_file($self,@_); };
     $self->_cleanup_callbacks();
 
     my $err = $@;
@@ -441,6 +473,110 @@ sub media_type { shift->{XML_LIBXSLT_STYLESHEET}->media_type(@_) }
 sub output_encoding { shift->{XML_LIBXSLT_STYLESHEET}->output_encoding(@_) }
 
 1;
+
+# XML::LibXSLT::Security Interface                                        #
+#-------------------------------------------------------------------------#
+package XML::LibXSLT::Security;
+
+use strict;
+use Carp;
+
+use vars qw(%OPTION_MAP %_GLOBAL_CALLBACKS);
+
+# Maps the option names used in the perl interface to the numeric values
+# used by libxslt.
+my %OPTION_MAP = (
+   read_file  => 1,
+   write_file => 2,
+   create_dir => 3,
+   read_net   => 4,
+   write_net  => 5,
+);
+
+%_GLOBAL_CALLBACKS = ();
+
+
+#-------------------------------------------------------------------------#
+# global callback                                                         #
+#-------------------------------------------------------------------------#
+sub _security_check {
+    my $option = shift;
+    my $retval = 1;
+
+    if ($option == 3) {
+       $retval = 0;             # Default create_dir to no access
+    }
+
+    if (exists $_GLOBAL_CALLBACKS{$option}) {
+       $retval = $_GLOBAL_CALLBACKS{$option}->(@_);
+    }
+
+    return $retval;
+}
+
+#-------------------------------------------------------------------------#
+# member functions and methods                                            #
+#-------------------------------------------------------------------------#
+
+sub new {
+    my $class = shift;
+    return bless {'_CALLBACKS' => {}}, $class;
+}
+
+# Add a callback for the given security option (read_file, write_file,
+# create_dir, read_net, write_net).
+#
+# To register a callback that handle network read requests:
+#   $scb->register_callback( read_net => \&callback );
+sub register_callback {
+   my $self = shift;
+   my $option = shift;
+   my $callback = shift;
+
+   unless ( exists $OPTION_MAP{$option} ) {
+      croak "Invalid security option '$option'. Must be one of: " .
+            join(', ', keys %OPTION_MAP) . ".";
+   }
+
+   if ( ref $callback eq 'CODE' ) {
+      $self->{_CALLBACKS}{ $OPTION_MAP{$option} } = $callback;
+   }
+   else {
+      croak "Invalid argument. The callback must be a reference to a subroutine";
+   }
+}
+
+# Removes the callback for the given security option. Causes the given option
+# to use the default security handler (which always allows the action).
+sub unregister_callback {
+   my $self = shift;
+   my $option = shift;
+
+   unless ( exists $OPTION_MAP{$option} ) {
+      croak "Invalid security option '$option'. Must be one of: " .
+            join(', ', keys %OPTION_MAP) . ".";
+   }
+
+   delete $self->{_CALLBACKS}{ $OPTION_MAP{$option} };
+}
+
+
+# make it so libxslt can use the callbacks
+sub init_callbacks {
+    my $self = shift;
+
+    %_GLOBAL_CALLBACKS = %{ $self->{_CALLBACKS} };
+}
+
+# reset libxslt callbacks
+sub cleanup_callbacks {
+    my $self = shift;
+
+    %_GLOBAL_CALLBACKS = ();
+}
+
+1;
+
 __END__
 
 =head1 NAME
@@ -550,6 +686,13 @@ To define XML::LibXSLT or XML::LibXSLT::Stylesheet specific input
 callbacks, reuse the XML::LibXML input callback API as described in
 L<XML::LibXML::InputCallback(3)>.
 
+=head2 Security Callbacks
+
+To create security preferences for the transformation see
+L<XML::LibXSLT::Security>. Once the security preferences have been defined you
+can apply them to an XML::LibXSLT or XML::LibXSLT::Stylesheet instance using
+the C<security_callbacks()> method.
+
 =head1 XML::LibXSLT::Stylesheet
 
 The main API is on the stylesheet, though it is fairly minimal.
@@ -620,6 +763,110 @@ Obviously this isn't much fun, so you can make it easy on yourself:
 The utility function does the right thing with respect to strings in XPath,
 including when you have quotes already embedded within your string.
 
+
+=head1 XML::LibXSLT::Security
+
+Provides an interface to the libxslt security framework by allowing callbacks
+to be defined that can restrict access to various resources (files or URLs)
+during a transformation.
+
+The libxslt security framework allows callbacks to be defined for certain
+actions that a stylesheet may attempt during a transformation. It may be
+desirable to restrict some of these actions (for example, writing a new file
+using exsl:document). The actions that may be restricted are:
+
+=over
+
+=item read_file
+
+Called when the stylesheet attempts to open a local file (ie: when using the
+document() function).
+
+=item write_file
+
+Called when an attempt is made to write a local file (ie: when using the
+exsl:document element).
+
+=item create_dir
+
+Called when a directory needs to be created in order to write a file.
+
+NOTE: By default, create_dir is not allowed. To enable it a callback must be
+registered.
+
+=item read_net
+
+Called when the stylesheet attempts to read from the network.
+
+=item write_net
+
+Called when the stylesheet attempts to write to the network.
+
+=back
+
+
+=head2 Using XML::LibXSLT::Security
+
+The interface for this module is similar to XML::LibXML::InputCallback. After
+creating a new instance you may register callbacks for each of the security
+options listed above. Then you apply the security preferences to the
+XML::LibXSLT or XML::LibXSLT::Stylesheet object using C<security_callbacks()>.
+
+  my $security = XML::LibXSLT::Security->new();
+  $security->register_callback( read_file  => $read_cb );
+  $security->register_callback( write_file => $write_cb );
+  $security->register_callback( create_dir => $create_cb );
+  $security->register_callback( read_net   => $read_net_cb );
+  $security->register_callback( write_net  => $write_net_cb );
+
+  $xslt->security_callbacks( $security );
+   -OR-
+  $stylesheet->security_callbacks( $security );
+
+
+The registered callback functions are called when access to a resource is
+requested. If the access should be allowed the callback should return 1, if
+not it should return 0. The callback functions should accept the following
+arguments:
+
+=over
+
+=item $tctxt
+
+This is the transform context (XML::LibXSLT::TransformContext). You can use
+this to get the current XML::LibXSLT::Stylesheet object by calling
+C<stylesheet()>.
+
+  my $stylesheet = $tctxt->stylesheet();
+
+The stylesheet object can then be used to share contextual information between
+different calls to the security callbacks.
+
+=item $value
+
+This is the name of the resource (file or URI) that has been requested.
+
+=back
+
+If a particular option (except for C<create_dir>) doesn't have a registered
+callback, then the stylesheet will have full access for that action.
+
+=head2 Interface
+
+=head3 new()
+
+Creates a new XML::LIbXSLT::Security object.
+
+=head3 register_callback( $option, $callback )
+
+Registers a callback function for the given security option (listed above).
+
+=head3 unregister_callback( $option )
+
+Removes the callback for the given option. This has the effect of allowing all
+access for the given option (except for C<create_dir>).
+
+
 =head1 BENCHMARK
 
 Included in the distribution is a simple benchmark script, which has two
@@ -647,6 +894,8 @@ those Redmond boys!
 =head1 AUTHOR
 
 Matt Sergeant, matt@sergeant.org
+
+Security callbacks implementation contributed by Shane Corgatelli.
 
 Copyright 2001-2006, AxKit.com Ltd. All rights reserved.
 
