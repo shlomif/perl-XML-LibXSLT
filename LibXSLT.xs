@@ -715,6 +715,10 @@ PROTOTYPES: DISABLE
 
 BOOT:
     LIBXML_TEST_VERSION
+    if (xsltLibxsltVersion < LIBXSLT_VERSION) {
+      warn("Warning: XML::LibXSLT compiled against libxslt %d, "
+           "but runtime libxslt is older %d\n", LIBXSLT_VERSION, xsltLibxsltVersion);
+    }
     xsltMaxDepth = 250;
     xsltSetXIncludeDefault(1);
     LibXSLT_HV_allCallbacks = newHV();
@@ -722,6 +726,27 @@ BOOT:
     exsltRegisterAll();
 #endif
 
+char *
+LIBXSLT_DOTTED_VERSION()
+    CODE:
+        RETVAL = LIBXSLT_DOTTED_VERSION;
+    OUTPUT:
+        RETVAL
+
+
+int
+LIBXSLT_VERSION()
+    CODE:
+        RETVAL = LIBXSLT_VERSION;
+    OUTPUT:
+        RETVAL
+
+int
+LIBXSLT_RUNTIME_VERSION()
+    CODE:
+        RETVAL = xsltLibxsltVersion;
+    OUTPUT:
+        RETVAL
 
 int
 xinclude_default(self, ...)
@@ -1050,9 +1075,10 @@ DESTROY(self)
         xsltFreeStylesheet(self);
 
 SV *
-output_string(self, sv_doc)
+_output_string(self, sv_doc, bytes_vs_chars=0)
         xsltStylesheetPtr self
         SV * sv_doc
+        int bytes_vs_chars
     PREINIT:
         xmlOutputBufferPtr output;
         SV * results = newSVpv("", 0);
@@ -1079,14 +1105,17 @@ output_string(self, sv_doc)
             (xmlOutputWriteCallback) LibXSLT_iowrite_scalar,
             (xmlOutputCloseCallback) LibXSLT_ioclose_scalar,
             (void*)results,
-            encoder
-            );
+            (bytes_vs_chars == 2) ? NULL : encoder
+	    );
         if (xsltSaveResultTo(output, doc, self) == -1) {
             croak("output to scalar failed");
         }
         xmlOutputBufferClose(output);
-        if (xmlStrEqual(encoding, (const xmlChar *) "UTF-8"))
-            SvUTF8_on( results );
+
+        if ((bytes_vs_chars == 2) ||
+            (bytes_vs_chars == 0) && xmlStrEqual(encoding, (const xmlChar *) "UTF-8")) {
+	  SvUTF8_on( results );
+	}
         RETVAL = results;
     OUTPUT:
         RETVAL

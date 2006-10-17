@@ -50,5 +50,7 @@ my $content = $stylesheet->output_string($results);
 
 print $content, "\n";
 
-ok($content, qr/foo\xC3\xB6bar/i);
+# libxml2-2.6.16/libxslt-1.1.9 will produce a character entity
+# latest versions give a UTF-8 encoded character
 
+ok($content, qr/foo(?:&#xF6;|\xC3\xB6)bar/i);

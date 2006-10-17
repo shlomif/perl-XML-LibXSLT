@@ -466,7 +466,9 @@ sub transform_file {
     return $doc;
 }
 
-sub output_string { shift->{XML_LIBXSLT_STYLESHEET}->output_string(@_) }
+sub output_string { shift->{XML_LIBXSLT_STYLESHEET}->_output_string($_[0],0) }
+sub output_as_bytes { shift->{XML_LIBXSLT_STYLESHEET}->_output_string($_[0],1) }
+sub output_as_chars { shift->{XML_LIBXSLT_STYLESHEET}->_output_string($_[0],2) }
 sub output_fh { shift->{XML_LIBXSLT_STYLESHEET}->output_fh(@_) }
 sub output_file { shift->{XML_LIBXSLT_STYLESHEET}->output_file(@_) }
 sub media_type { shift->{XML_LIBXSLT_STYLESHEET}->media_type(@_) }
@@ -616,7 +618,9 @@ methods. However either way you call them, it still sets global options.
 Each of the option methods returns its previous value, and can be called
 without a parameter to retrieve the current value.
 
-=head2 max_depth
+=over
+
+=item max_depth
 
   XML::LibXSLT->max_depth(1000);
 
@@ -626,14 +630,14 @@ recursion and detecting it. If your stylesheet or XML file requires
 seriously deep recursion, this is the way to set it. Default value is
 250.
 
-=head2 debug_callback
+=item debug_callback
 
   XML::LibXSLT->debug_callback($subref);
 
 Sets a callback to be used for debug messages. If you don't set this,
 debug messages will be ignored.
 
-=head2 register_function
+=item register_function
 
   XML::LibXSLT->register_function($uri, $name, $subref);
 
@@ -664,11 +668,15 @@ be a nodelist or a plain value - the code will just do the right thing.
 But only a single return value is supported (a list is not converted to
 a nodelist).
 
+=back
+
 =head1 API
 
 The following methods are available on the new XML::LibXSLT object:
 
-=head2 parse_stylesheet($doc)
+=over
+
+=item parse_stylesheet($doc)
 
 C<$doc> here is an XML::LibXML::Document object (see L<XML::LibXML>)
 representing an XSLT file. This method will return a 
@@ -676,17 +684,19 @@ XML::LibXSLT::Stylesheet object, or undef on failure. If the XSLT is
 invalid, an exception will be thrown, so wrap the call to 
 parse_stylesheet in an eval{} block to trap this.
 
-=head2 parse_stylesheet_file($filename)
+=item parse_stylesheet_file($filename)
 
 Exactly the same as the above, but parses the given filename directly.
 
-=head2 Input Callbacks
+=back
+
+=head1 Input Callbacks
 
 To define XML::LibXSLT or XML::LibXSLT::Stylesheet specific input
 callbacks, reuse the XML::LibXML input callback API as described in
 L<XML::LibXML::InputCallback(3)>.
 
-=head2 Security Callbacks
+=head1 Security Callbacks
 
 To create security preferences for the transformation see
 L<XML::LibXSLT::Security>. Once the security preferences have been defined you
@@ -702,47 +712,61 @@ stylesheet object which you call the transform() method passing in a
 document to transform. This allows you to have multiple transformations
 happen with one stylesheet without requiring a reparse.
 
-=head2 transform(doc, %params)
+=over
+
+=item transform(doc, %params)
 
   my $results = $stylesheet->transform($doc, foo => "value);
 
 Transforms the passed in XML::LibXML::Document object, and returns a
 new XML::LibXML::Document. Extra hash entries are used as parameters.
 
-=head2 transform_file(filename, %params)
+=item transform_file(filename, %params)
 
   my $results = $stylesheet->transform_file($filename, bar => "value");
 
-=head2 output_string(result)
+=item output_string(result)
 
 Returns a scalar that is the XSLT rendering of the
 XML::LibXML::Document object using the desired output format
 (specified in the xsl:output tag in the stylesheet). Note that you can
 also call $result->toString, but that will *always* output the
-document in XML format, and in UTF8, which may not be what you asked
-for in the xsl:output tag.
+document in XML format which may not be what you asked for in the
+xsl:output tag.
 
-Note that the returned scalar is always bytes not characters, i.e. it
-is *not* marked with the UTF8 flag even if the desired output encoding
-was in fact UTF-8. If the output encoding was UTF-8 and you wish the
-scalar to be treated by Perl as characters, apply
-Encode::_utf8_on($result) on the returned scalar.
+Important note: The string returned by this function appears to Perl
+as characters if the output encoding was specified as UTF-8 and as
+bytes if no output encoding was specified or if the output encoding
+was different from UTF-8. See also C<output_as_bytes(result)> and
+C<output_as_chars(result)>.
 
-=head2 output_fh(result, fh)
+=item output_as_bytes(result)
+
+Like C<output_string(result)>, but always return the output as a byte
+string encoded in the output encoding specified in the stylesheet.
+
+=item output_as_chars(result)
+
+Like C<output_string(result)>, but always return the output as (UTF-8
+encoded) string of characters.
+
+=item output_fh(result, fh)
 
 Outputs the result to the filehandle given in C<$fh>.
 
-=head2 output_file(result, filename)
+=item output_file(result, filename)
 
 Outputs the result to the file named in C<$filename>.
 
-=head2 output_encoding
+=item output_encoding()
 
 Returns the output encoding of the results. Defaults to "UTF-8".
 
-=head2 media_type
+=item media_type()
 
 Returns the output media_type of the results. Defaults to "text/html".
+
+=back
 
 =head1 Parameters
 
@@ -804,7 +828,6 @@ Called when the stylesheet attempts to write to the network.
 
 =back
 
-
 =head2 Using XML::LibXSLT::Security
 
 The interface for this module is similar to XML::LibXML::InputCallback. After
@@ -853,19 +876,22 @@ callback, then the stylesheet will have full access for that action.
 
 =head2 Interface
 
-=head3 new()
+=over
 
-Creates a new XML::LIbXSLT::Security object.
+=item new()
 
-=head3 register_callback( $option, $callback )
+Creates a new XML::LibXSLT::Security object.
+
+=item register_callback( $option, $callback )
 
 Registers a callback function for the given security option (listed above).
 
-=head3 unregister_callback( $option )
+=item unregister_callback( $option )
 
 Removes the callback for the given option. This has the effect of allowing all
 access for the given option (except for C<create_dir>).
 
+=back
 
 =head1 BENCHMARK
 
@@ -890,6 +916,35 @@ I would love to get drivers for XML::XSLT and XML::Transformiix, if you
 would like to contribute them. Also if you get this running on Win32, I'd
 love to get a driver for MSXSLT via OLE, to see what we can do against
 those Redmond boys!
+
+=head1 LIBRARY VERSIONS
+
+For debugging purposes, XML::LibXSLT provides version information
+about the libxslt C library (but do not confuse it with the version
+number of XML::LibXSLT module itself, i.e. with
+C<$XML::LibXSLT::VERSION>). XML::LibXSLT issues a warning if the
+runtime version of the library is less then the compile-time version.
+
+=over 
+
+=item XML::LibXSLT::LIBXSLT_VERSION()
+
+Returns version number of libxslt library which was used to compile
+XML::LibXSLT as an integer. For example, for libxslt-1.1.15, it will
+return 10115.
+
+=item XML::LibXSLT::LIBXSLT_DOTTED_VERSION()
+
+Returns version number of libxslt library which was used to compile
+XML::LibXSLT as a string, e.g. "1.1.15".
+
+=item XML::LibXSLT::LIBXSLT_RUNTIME_VERSION()
+
+Returns version number of libxslt library to which XML::LibXSLT is
+linked at runtime (either dynamically or statically). For example, for
+example, for libxslt.so.1.1.15, it will return 10115.
+
+=back
 
 =head1 AUTHOR
 

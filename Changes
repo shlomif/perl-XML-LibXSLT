@@ -2,6 +2,13 @@ Revision history for Perl extension XML::LibXSLT.
 
 1.62pre
      - security callback interface contributed by Shane Corgatelli
+     - check libxslt version
+     - added XML::LibXML-like API to retrieve libxslt version
+     - added output_as_bytes() and output_as_chars()
+     - added regression tests for output_as_* to 11utf8.t 
+     - output_as_string documentation fixed to match reality
+     - make 06entities.t to pass with older libxml2/libxslt
+     - POD uses items instead of headings
 
 1.61
      - fixed error reporting: die on fatal errors, warn otherwise
