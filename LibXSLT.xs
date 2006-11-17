@@ -1176,47 +1176,40 @@ output_file(self, sv_doc, filename)
 char *
 media_type(self)
         xsltStylesheetPtr self
+    PREINIT:
+    	xmlChar *mediaType;
+    	xmlChar *method;
     CODE:
-        RETVAL = (char *)self->mediaType;
-        if (RETVAL == NULL) {
-            /* OK, that was borked. Try finding xsl:output tag manually... */
-            xmlNodePtr root = xmlDocGetRootElement(self->doc);
-            xmlNodePtr cld = root->children;
-            while ( cld != NULL ) {
-	        if ( xmlStrcmp( (const xmlChar *) "output", cld->name ) == 0
-                     && cld->ns != NULL
-                     && xmlStrcmp((const xmlChar*) "http://www.w3.org/1999/XSL/Transform", cld->ns->href ) == 0  )
-                {
-                    break;
-                }
-                cld = cld->next;
-            }
-
-            if (cld != NULL) {
-	        RETVAL = (char *) xmlGetProp(cld, (const xmlChar*)"media-type");
-            }
-            
-            if (RETVAL == NULL) {
-                RETVAL = "text/xml";
-                /* this below is rather simplistic, but should work for most cases */
-                if (self->method != NULL) {
-		    if (strcmp((const char *)self->method, "html") == 0) {
-                        RETVAL = "text/html";
-                    }
-                    else if (strcmp((const char *)self->method, "text") == 0) {
-                        RETVAL = "text/plain";
-                    }
-                }
+    	XSLT_GET_IMPORT_PTR(mediaType, self, mediaType);
+	
+	if(mediaType == NULL) {
+    	    XSLT_GET_IMPORT_PTR(method, self, method);
+            RETVAL = "text/xml";
+            /* this below is rather simplistic, but should work for most cases */
+            if (method != NULL) {
+        	if (strcmp(method, "html") == 0) {
+                    RETVAL = "text/html";
+        	}
+        	else if (strcmp(method, "text") == 0) {
+                    RETVAL = "text/plain";
+        	}
             }
         }
+	else {
+	    RETVAL = mediaType;
+	}
     OUTPUT:
         RETVAL
 
 char *
 output_encoding(self)
         xsltStylesheetPtr self
+    PREINIT:
+    	xmlChar *encoding;
     CODE:
-        RETVAL = (char *)self->encoding;
+    	XSLT_GET_IMPORT_PTR(encoding, self, encoding)
+	
+        RETVAL = encoding;
         if (RETVAL == NULL) {
             RETVAL = "UTF-8";
         }

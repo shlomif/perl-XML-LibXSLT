@@ -9,6 +9,7 @@ Revision history for Perl extension XML::LibXSLT.
      - output_as_string documentation fixed to match reality
      - make 06entities.t to pass with older libxml2/libxslt
      - POD uses items instead of headings
+     - fixed media_type and output_encoding for imported stylesheets [rt.cpan.org #23440]
 
 1.61
      - fixed error reporting: die on fatal errors, warn otherwise
