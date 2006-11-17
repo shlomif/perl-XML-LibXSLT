@@ -115,7 +115,7 @@ my $results;
 eval { $results = $stylesheet->transform($doc); };
 ok( $@ );
 
-ok( $@ =~ /unregistered variable foo/ );
+ok( $@ =~ /unregistered variable foo|variable 'foo' has not been declared/i );
 ok( $@ =~ /element value-of/ );
 
 }
