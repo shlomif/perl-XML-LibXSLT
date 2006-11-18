@@ -1,6 +1,6 @@
 Revision history for Perl extension XML::LibXSLT.
 
-1.62pre
+1.62
      - security callback interface contributed by Shane Corgatelli
      - check libxslt version
      - added XML::LibXML-like API to retrieve libxslt version
