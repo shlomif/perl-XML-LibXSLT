@@ -1,6 +1,7 @@
 # $Id$
 
 use ExtUtils::MakeMaker;
+use Config;
 
 $|=0;
 
@@ -78,6 +79,8 @@ if (have_library("exslt")) {
     $config{LIBS} =~ s/-lxslt/-lxslt -lexslt/;
     $config{DEFINE} .= " -DHAVE_EXSLT"
 }
+
+$config{LIBS}.=' '.$Config{libs};
 
 WriteMakefile(
     'NAME'	=> 'XML::LibXSLT',
