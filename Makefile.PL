@@ -75,12 +75,37 @@ RPMs, as this is where the headers (.h files) are.
 DEATH
 }
 
+
 if (have_library("exslt")) {
-    $config{LIBS} =~ s/-lxslt/-lxslt -lexslt/;
-    $config{DEFINE} .= " -DHAVE_EXSLT"
+  my $exslt_defaults = q/-lexslt -lgcrypt -lgpg-error/;
+  my $exsltcfg = 'pkg-config libexslt';
+  my ($exslt_libs,$exslt_inc);
+  eval {
+    print "running $exsltcfg... ";
+    $exslt_libs = backtick("$exsltcfg --libs");
+    $exslt_inc = backtick("$exsltcfg --cflags");
+    $exslt_libs =~ s/-l(xml2|xslt|z|m)\s+//g;
+    print "ok\n";
+  };
+  if ($@) {
+    print "failed\n";
+    warn "*** ", $@ if $DEBUG;
+    warn "using fallback values for LIBS and INC\n";
+    # backtick fails if gnome-config didn't exist...
+    $exslt_libs  = $exslt_defaults;
+    $exslt_inc   = '';
+  }
+  $config{LIBS} .= ' '.$exslt_libs;
+  $config{INC} .= ' '.$exslt_inc;
+  $config{DEFINE} .= " -DHAVE_EXSLT"
 }
 
 $config{LIBS}.=' '.$Config{libs};
+
+if ($DEBUG) {
+  print "LIBS: $config{LIBS}\n";
+  print "INC: $config{INC}\n";
+}
 
 WriteMakefile(
     'NAME'	=> 'XML::LibXSLT',
