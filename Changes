@@ -1,5 +1,10 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.63
+     - fix SIGSEGV regarding freeing nodes created by extension functions
+       (reported by Elizabeth Mattijsen)
+     - use pkg-config to determine linker flags for libexslt
+
 1.62
      - security callback interface contributed by Shane Corgatelli
      - check libxslt version
