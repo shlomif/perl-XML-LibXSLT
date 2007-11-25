@@ -40,7 +40,8 @@ unless ( $is_Win32 ) { # cannot get config in W32
         if ($@) {
             print "failed\n";
             if ($@ =~ /^VERSION/) { 
-                die "XML::LibXSLT needs libxslt version 1.0.6 or higher\n";
+                print STDERR "XML::LibXSLT needs libxslt version 1.0.6 or higher\n";
+		exit 0; # 0 recommended by http://cpantest.grango.org (Notes for CPAN Authors)
             }
             warn "*** ", $@ if $DEBUG;
             warn "using fallback values for LIBS and INC\n";
@@ -65,7 +66,7 @@ if ($config{LIBS} !~ /\-lxslt/) {
 }
 
 if (!have_library("xslt")) {
-    die <<DEATH;
+    print STDERR <<DEATH;
 libxslt not found
 Try setting LIBS and INC values on the command line
 Or get libxslt and libxml2 from 
@@ -73,6 +74,7 @@ Or get libxslt and libxml2 from
 If you install via RPMs, make sure you also install the -devel
 RPMs, as this is where the headers (.h files) are.
 DEATH
+exit 0; # 0 recommended by http://cpantest.grango.org (Notes for CPAN Authors)
 }
 
 
