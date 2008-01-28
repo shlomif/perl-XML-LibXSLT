@@ -15,14 +15,10 @@ extern "C" {
 #include <stdarg.h>
 #include <stdlib.h>
 
-#include "EXTERN.h"
-#include "perl.h"
-#include "XSUB.h"
-
-#include <libxml/parser.h>
-#include <libxml/tree.h>
-
 #include "perl-libxml-mm.h"
+
+#include "XSUB.h"
+#include <libxml/tree.h>
 
 #ifdef __cplusplus
 }
