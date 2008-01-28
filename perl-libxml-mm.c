@@ -22,12 +22,15 @@ extern "C" {
 #include <libxml/parser.h>
 #include <libxml/tree.h>
 
+#include "perl-libxml-mm.h"
+
 #ifdef __cplusplus
 }
 #endif
 
 #ifdef XS_WARNINGS
 #define xs_warn(string) warn(string) 
+/* #define xs_warn(string) fprintf(stderr, string) */
 #else
 #define xs_warn(string)
 #endif
@@ -85,40 +88,78 @@ x_PmmNodeTypeName( xmlNodePtr elem ){
     return "";
 }
 
+
 /*
- * @node: Reference to the node the structure proxies
- * @owner: libxml defines only the document, but not the node owner
- *         (in case of document fragments, they are not the same!)
- * @count: this is the internal reference count!
- *
- * Since XML::LibXML will not know, is a certain node is already
- * defined in the perl layer, it can't shurely tell when a node can be
- * safely be removed from the memory. This structure helps to keep
- * track how intense the nodes of a document are used and will not
- * delete the nodes unless they are not refered from somewhere else.
+ * registry of all current proxy nodes
  */
-struct _ProxyNode {
-    xmlNodePtr node;
-    xmlNodePtr owner;
-    int count;
-    int encoding;
-};
+ProxyNodePtr PROXY_NODE_REGISTRY = NULL;
 
-/* helper type for the proxy structure */
-typedef struct _ProxyNode ProxyNode;
+/*
+ * @proxy: proxy node to register
+ *
+ * adds a proxy node to the proxy node registry
+ */
+void
+x_PmmRegisterProxyNode(ProxyNodePtr proxy)
+{
+    proxy->_registry = PROXY_NODE_REGISTRY;
+    PROXY_NODE_REGISTRY = proxy;
+}
 
-/* pointer to the proxy structure */
-typedef ProxyNode* ProxyNodePtr;
+/*
+ * @proxy: proxy node to remove
+ *
+ * removes a proxy node from the proxy node registry
+ */
+void
+x_PmmUnregisterProxyNode(ProxyNodePtr proxy)
+{
+    ProxyNodePtr cur = PROXY_NODE_REGISTRY;
+    if( PROXY_NODE_REGISTRY == proxy ) {
+        PROXY_NODE_REGISTRY = proxy->_registry;
+    }
+    else {
+        while(cur->_registry != NULL)
+        {
+            if( cur->_registry == proxy )
+            {
+                cur->_registry = proxy->_registry;
+                break;
+            }
+            cur = cur->_registry;
+        }
+    }
+}
 
-/* this my go only into the header used by the xs */
-#define SvPROXYNODE(x) ((ProxyNodePtr)SvIV(SvRV(x)))
-#define SvNAMESPACE(x) ((xmlNsPtr)SvIV(SvRV(x)))
+/*
+ * increments all proxy node counters by one (called on thread spawn)
+ */
+void
+x_PmmCloneProxyNodes()
+{
+    ProxyNodePtr cur = PROXY_NODE_REGISTRY;
+    while(cur != NULL)
+    {
+        x_PmmREFCNT_inc(cur);
+        cur = cur->_registry;
+    }
+}
 
-#define x_PmmREFCNT(node)      node->count
-#define x_PmmREFCNT_inc(node)  node->count++
-#define x_PmmNODE(thenode)     thenode->node
-#define x_PmmOWNER(node)       node->owner
-#define x_PmmOWNERPO(node)     ((node && x_PmmOWNER(node)) ? (ProxyNodePtr)x_PmmOWNER(node)->_private : node)
+/*
+ * returns the current number of proxy nodes in the registry
+ */
+int
+x_PmmProxyNodeRegistrySize()
+{
+    int i = 0;
+    ProxyNodePtr cur = PROXY_NODE_REGISTRY;
+    while(cur != NULL)
+    {
+        ++i;
+        cur = cur->_registry;
+    }
+    return i;
+}
 
 /* creates a new proxy node from a given node. this function is aware
  * about the fact that a node may already has a proxy structure.
@@ -126,37 +167,52 @@ typedef ProxyNode* ProxyNodePtr;
 ProxyNodePtr
 x_PmmNewNode(xmlNodePtr node)
 {
-    ProxyNodePtr proxy;
+    ProxyNodePtr proxy = NULL;
+
+    if ( node == NULL ) {
+        xs_warn( "x_PmmNewNode: no node found\n" );
+        return NULL;
+    }
 
     if ( node->_private == NULL ) {
+        /* proxy = (ProxyNodePtr)malloc(sizeof(struct _ProxyNode));  */
         Newc(0, proxy, 1, ProxyNode, ProxyNode);
         if (proxy != NULL) {
             proxy->node  = node;
             proxy->owner   = NULL;
             proxy->count   = 0;
-            proxy->encoding = 0;
+            proxy->encoding= 0;
+            proxy->_registry = NULL;
             node->_private = (void*) proxy;
+            x_PmmRegisterProxyNode(proxy);
         }
     }
     else {
         proxy = (ProxyNodePtr)node->_private;
     }
+
     return proxy;
 }
 
 ProxyNodePtr
 x_PmmNewFragment(xmlDocPtr doc) 
 {
-    ProxyNodePtr retval;
+    ProxyNodePtr retval = NULL;
     xmlNodePtr frag = NULL;
 
-    xs_warn("new frag\n");
+    xs_warn("x_PmmNewFragment: new frag\n");
     frag   = xmlNewDocFragment( doc );
     retval = x_PmmNewNode(frag);
+    /* fprintf(stderr, "REFCNT NOT incremented on frag: 0x%08.8X\n", retval); */
 
-    if ( doc ) {
-        xs_warn("inc document\n");
-        x_PmmREFCNT_inc(((ProxyNodePtr)doc->_private));
+    if ( doc != NULL ) {
+        xs_warn("x_PmmNewFragment: inc document\n");
+        /* under rare circumstances _private is not set correctly? */
+        if ( doc->_private != NULL ) {
+            xs_warn("x_PmmNewFragment:   doc->_private being incremented!\n");
+            x_PmmREFCNT_inc(((ProxyNodePtr)doc->_private));
+            /* fprintf(stderr, "REFCNT incremented on doc: 0x%08.8X\n", doc->_private); */
+        }
         retval->owner = (xmlNodePtr)doc;
     }
 
@@ -168,34 +224,38 @@ x_PmmNewFragment(xmlDocPtr doc)
  */
 void
 x_PmmFreeNode( xmlNodePtr node )
-{
+{  
     switch( node->type ) {
     case XML_DOCUMENT_NODE:
     case XML_HTML_DOCUMENT_NODE:
-        xs_warn("XML_DOCUMENT_NODE\n");
+        xs_warn("x_PmmFreeNode: XML_DOCUMENT_NODE\n");
         xmlFreeDoc( (xmlDocPtr) node );
         break;
     case XML_ATTRIBUTE_NODE:
-        xs_warn("XML_ATTRIBUTE_NODE\n");
+        xs_warn("x_PmmFreeNode: XML_ATTRIBUTE_NODE\n");
         if ( node->parent == NULL ) {
-            xs_warn( "free node\n");
+            xs_warn( "x_PmmFreeNode:   free node!\n");
             node->ns = NULL;
             xmlFreeProp( (xmlAttrPtr) node );
         }
         break;
     case XML_DTD_NODE:
-        if ( node->doc ) {
+        if ( node->doc != NULL ) {
             if ( node->doc->extSubset != (xmlDtdPtr)node 
                  && node->doc->intSubset != (xmlDtdPtr)node ) {
-                xs_warn( "XML_DTD_NODE\n");
+                xs_warn( "x_PmmFreeNode: XML_DTD_NODE\n");
                 node->doc = NULL;
                 xmlFreeDtd( (xmlDtdPtr)node );
             }
+        } else {
+            xs_warn( "x_PmmFreeNode: XML_DTD_NODE (no doc)\n");
+            xmlFreeDtd( (xmlDtdPtr)node );
         }
         break;
     case XML_DOCUMENT_FRAG_NODE:
-        xs_warn("XML_DOCUMENT_FRAG_NODE\n");
+        xs_warn("x_PmmFreeNode: XML_DOCUMENT_FRAG_NODE\n");
     default:
+        xs_warn( "x_PmmFreeNode: normal node\n" );
         xmlFreeNode( node);
         break;
     }
@@ -203,41 +263,62 @@ x_PmmFreeNode( xmlNodePtr node )
 
 /* decrements the proxy counter. if the counter becomes zero or less,
    this method will free the proxy node. If the node is part of a
-   subtree, PmmREFCNT_def will fix the reference counts and delete
+   subtree, x_PmmREFCNT_dec will fix the reference counts and delete
    the subtree if it is not required any more.
  */
 int
 x_PmmREFCNT_dec( ProxyNodePtr node ) 
 { 
-    xmlNodePtr libnode;
-    ProxyNodePtr owner; 
+    xmlNodePtr libnode = NULL;
+    ProxyNodePtr owner = NULL;  
     int retval = 0;
-    if ( node ) {
+
+    if ( node != NULL ) {
         retval = x_PmmREFCNT(node)--;
+	/* fprintf(stderr, "REFCNT on 0x%08.8X decremented to %d\n", node, x_PmmREFCNT(node)); */
+        if ( x_PmmREFCNT(node) < 0 )
+            warn( "x_PmmREFCNT_dec: REFCNT decremented below 0!" );
         if ( x_PmmREFCNT(node) <= 0 ) {
-            xs_warn( "NODE DELETATION\n" );
+            xs_warn( "x_PmmREFCNT_dec: NODE DELETION\n" );
+
             libnode = x_PmmNODE( node );
-            libnode->_private = NULL;
+            if ( libnode != NULL ) {
+                if ( libnode->_private != node ) {
+                    xs_warn( "x_PmmREFCNT_dec:   lost node\n" );
+                    libnode = NULL;
+                }
+                else {
+                    libnode->_private = NULL;
+                }
+            }
+
             x_PmmNODE( node ) = NULL;
             if ( x_PmmOWNER(node) && x_PmmOWNERPO(node) ) {
-                xs_warn( "DOC NODE!\n" );
+                xs_warn( "x_PmmREFCNT_dec:   DOC NODE!\n" );
                 owner = x_PmmOWNERPO(node);
                 x_PmmOWNER( node ) = NULL;
-                if ( libnode->parent == NULL ) {
+                if( libnode != NULL && libnode->parent == NULL ) {
                     /* this is required if the node does not directly
                      * belong to the document tree
                      */
-                    xs_warn( "REAL DELETE" );
+                    xs_warn( "x_PmmREFCNT_dec:     REAL DELETE\n" );
                     x_PmmFreeNode( libnode );
-                }            
+                }
+                xs_warn( "x_PmmREFCNT_dec:   decrease owner\n" );
                 x_PmmREFCNT_dec( owner );
             }
-            else {
-                xs_warn( "STANDALONE REAL DELETE" );
+            else if ( libnode != NULL ) {
+                xs_warn( "x_PmmREFCNT_dec:   STANDALONE REAL DELETE\n" );
+                
                 x_PmmFreeNode( libnode );
             }
+            x_PmmUnregisterProxyNode(node);
             Safefree( node );
+            /* free( node ); */
         }
+    }
+    else {
+        xs_warn("x_PmmREFCNT_dec: lost node\n" );
     }
     return retval;
 }
@@ -265,53 +346,117 @@ x_PmmNodeToSv( xmlNodePtr node, ProxyNodePtr owner )
     if ( node != NULL ) {
         /* find out about the class */
         CLASS = x_PmmNodeTypeName( node );
-        xs_warn(" return new perl node\n");
+        xs_warn("x_PmmNodeToSv: return new perl node of class:\n");
         xs_warn( CLASS );
 
-        if ( node->_private ) {
+        if ( node->_private != NULL ) { 
             dfProxy = x_PmmNewNode(node);
+            /* fprintf(stderr, " at 0x%08.8X\n", dfProxy); */
         }
         else {
             dfProxy = x_PmmNewNode(node);
+            /* fprintf(stderr, " at 0x%08.8X\n", dfProxy); */
             if ( dfProxy != NULL ) {
                 if ( owner != NULL ) {
                     dfProxy->owner = x_PmmNODE( owner );
                     x_PmmREFCNT_inc( owner );
+                    /* fprintf(stderr, "REFCNT incremented on owner: 0x%08.8X\n", owner); */
                 }
                 else {
-                   xs_warn("node contains himself");
+                   xs_warn("x_PmmNodeToSv:   node contains itself (owner==NULL)\n");
                 }
             }
             else {
-                xs_warn("proxy creation failed!\n");
+                xs_warn("x_PmmNodeToSv:   proxy creation failed!\n");
             }
         }
 
         retval = NEWSV(0,0);
         sv_setref_pv( retval, CLASS, (void*)dfProxy );
-        x_PmmREFCNT_inc(dfProxy);            
-    }         
+        x_PmmREFCNT_inc(dfProxy); 
+        /* fprintf(stderr, "REFCNT incremented on node: 0x%08.8X\n", dfProxy); */
+
+        switch ( node->type ) {
+        case XML_DOCUMENT_NODE:
+        case XML_HTML_DOCUMENT_NODE:
+        case XML_DOCB_DOCUMENT_NODE:
+            if ( ((xmlDocPtr)node)->encoding != NULL ) {
+                dfProxy->encoding = (int)xmlParseCharEncoding( (const char*)((xmlDocPtr)node)->encoding );
+            }
+            break;
+        default:
+            break;
+        }
+    }
     else {
-        xs_warn( "no node found!" );
+        xs_warn( "x_PmmNodeToSv: no node found!\n" );
     }
 
     return retval;
 }
+
 
 /* extracts the libxml2 node from a perl reference
  */
+
 xmlNodePtr
-x_PmmSvNode( SV* perlnode ) 
+x_PmmSvNodeExt( SV* perlnode, int copy ) 
 {
     xmlNodePtr retval = NULL;
+    ProxyNodePtr proxy = NULL;
 
-    if ( perlnode != NULL
-         && perlnode != &PL_sv_undef
-         && sv_derived_from(perlnode, "XML::LibXML::Node")
-         && SvPROXYNODE(perlnode) != NULL  ) {
-        retval = x_PmmNODE( SvPROXYNODE(perlnode) ) ;
+    if ( perlnode != NULL && perlnode != &PL_sv_undef ) {
+/*         if ( sv_derived_from(perlnode, "XML::LibXML::Node") */
+/*              && SvPROXYNODE(perlnode) != NULL  ) { */
+/*             retval = x_PmmNODE( SvPROXYNODE(perlnode) ) ; */
+/*         } */
+        xs_warn("x_PmmSvNodeExt: perlnode found\n" );
+        if ( sv_derived_from(perlnode, "XML::LibXML::Node")  ) {
+            proxy = SvPROXYNODE(perlnode);
+            if ( proxy != NULL ) {
+                xs_warn( "x_PmmSvNodeExt:   is a xmlNodePtr structure\n" );
+                retval = x_PmmNODE( proxy ) ;
+            }
+
+            if ( retval != NULL
+                 && ((ProxyNodePtr)retval->_private) != proxy ) {
+                xs_warn( "x_PmmSvNodeExt:   no node in proxy node\n" );
+                x_PmmNODE( proxy ) = NULL;
+                retval = NULL;
+            }
+        }
+#ifdef  XML_LIBXML_GDOME_SUPPORT
+        else if ( sv_derived_from( perlnode, "XML::GDOME::Node" ) ) {
+            GdomeNode* gnode = (GdomeNode*)SvIV((SV*)SvRV( perlnode ));
+            if ( gnode == NULL ) {
+                warn( "no XML::GDOME data found (datastructure empty)" );    
+            }
+            else {
+                retval = gdome_xml_n_get_xmlNode( gnode );
+                if ( retval == NULL ) {
+                    xs_warn( "x_PmmSvNodeExt: no XML::LibXML node found in GDOME object\n" );
+                }
+                else if ( copy == 1 ) {
+                    retval = x_PmmCloneNode( retval, 1 );
+                }
+            }
+        }
+#endif
     }
 
     return retval;
 }
 
+/* extracts the libxml2 owner node from a perl reference
+ */
+xmlNodePtr
+x_PmmSvOwner( SV* perlnode ) 
+{
+    xmlNodePtr retval = NULL;
+    if ( perlnode != NULL
+         && perlnode != &PL_sv_undef
+         && SvPROXYNODE(perlnode) != NULL  ) {
+        retval = x_PmmOWNER( SvPROXYNODE(perlnode) );
+    }
+    return retval;
+}

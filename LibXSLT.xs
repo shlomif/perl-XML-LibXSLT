@@ -389,7 +389,7 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
 	      }
 	      xsltRegisterLocalRVT(tctxt,container);
 	      tmp_node = xmlDocCopyNode(tmp_node1, container, 1);
-	      xmlAddChild(container,tmp_node);
+	      xmlAddChild((xmlNodePtr)container,tmp_node);
 	      xmlXPathNodeSetAdd(ret->nodesetval,tmp_node);
 	    }
 	  } else {
