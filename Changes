@@ -1,5 +1,9 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.66pre
+     - bump requirements to libxslt 1.1.8
+     - sync the binary internals to those of XML::LibXML 1.66
+
 1.63
      - fix SIGSEGV regarding freeing nodes created by extension functions
        (reported by Elizabeth Mattijsen)
