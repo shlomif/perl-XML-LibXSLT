@@ -54,6 +54,8 @@ extern "C" {
 
 static SV * LibXSLT_debug_cb = NULL;
 static HV * LibXSLT_HV_allCallbacks = NULL;
+ProxyNodePtr* PROXY_NODE_REGISTRY_PTR = NULL;
+
 
 void
 LibXSLT_free_all_callbacks(void)
@@ -909,6 +911,20 @@ lib_cleanup_callbacks( self )
     CODE:
         xmlCleanupInputCallbacks();
         xmlRegisterDefaultInputCallbacks();
+
+void
+__lib_init_proxy_registry( scalar )
+        SV* scalar;
+    CODE:
+	if (PROXY_NODE_REGISTRY_PTR != NULL) {
+	  croak("XML::LibXSLT::__lib_init_proxy_registry must be called only once!\n");
+	}
+	if (scalar!=NULL && scalar != &PL_sv_undef) {
+  	     PROXY_NODE_REGISTRY_PTR = (ProxyNodePtr*) SvIV((SV*)SvRV(scalar));
+	}
+	if (PROXY_NODE_REGISTRY_PTR == NULL) {
+	  croak("XML::LibXSLT::__lib_init_proxy_registry failed to initialize the proxy registry!\n");
+	}
 
 MODULE = XML::LibXSLT         PACKAGE = XML::LibXSLT::Stylesheet
 

@@ -4,17 +4,18 @@ package XML::LibXSLT;
 use strict;
 use vars qw($VERSION @ISA $USE_LIBXML_DATA_TYPES $MatchCB $ReadCB $OpenCB $CloseCB);
 
-use XML::LibXML 1.60;
+use XML::LibXML 1.66;
 use XML::LibXML::Literal;
 use XML::LibXML::Boolean;
 use XML::LibXML::Number;
 use XML::LibXML::NodeList;
 
+BEGIN {
 use Carp;
 
 require Exporter;
 
-$VERSION = "1.63";
+$VERSION = "1.66";
 
 require DynaLoader;
 
@@ -22,7 +23,11 @@ require DynaLoader;
 
 bootstrap XML::LibXSLT $VERSION;
 
+# the following magic lets XML::LibXSLT internals know
+# where to register XML::LibXML proxy nodes
+__lib_init_proxy_registry(XML::LibXML::__proxy_registry());
 $USE_LIBXML_DATA_TYPES = 0;
+}
 
 sub new {
     my $class = shift;
@@ -930,19 +935,19 @@ runtime version of the library is less then the compile-time version.
 =item XML::LibXSLT::LIBXSLT_VERSION()
 
 Returns version number of libxslt library which was used to compile
-XML::LibXSLT as an integer. For example, for libxslt-1.1.15, it will
-return 10115.
+XML::LibXSLT as an integer. For example, for libxslt-1.1.18, it will
+return 10118.
 
 =item XML::LibXSLT::LIBXSLT_DOTTED_VERSION()
 
 Returns version number of libxslt library which was used to compile
-XML::LibXSLT as a string, e.g. "1.1.15".
+XML::LibXSLT as a string, e.g. "1.1.18".
 
 =item XML::LibXSLT::LIBXSLT_RUNTIME_VERSION()
 
 Returns version number of libxslt library to which XML::LibXSLT is
 linked at runtime (either dynamically or statically). For example, for
-example, for libxslt.so.1.1.15, it will return 10115.
+example, for libxslt.so.1.1.18, it will return 10118.
 
 =back
 
@@ -952,7 +957,17 @@ Matt Sergeant, matt@sergeant.org
 
 Security callbacks implementation contributed by Shane Corgatelli.
 
-Copyright 2001-2006, AxKit.com Ltd. All rights reserved.
+Copyright 2001-2008, AxKit.com Ltd. All rights reserved.
+
+=head1 MAINTAINER
+
+Petr Pajas , pajas@matfyz.org
+
+=head1 BUGS
+
+Please report bugs via
+
+  http://rt.cpan.org/NoAuth/Bugs.html?Dist=XML-LibXSLT
 
 =head1 SEE ALSO
 
