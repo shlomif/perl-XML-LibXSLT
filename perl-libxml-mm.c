@@ -86,9 +86,12 @@ x_PmmNodeTypeName( xmlNodePtr elem ){
 
 
 /*
- * registry of all current proxy nodes
+ * This is XML::LibXSLT specific:
+ *
+ * a pointer to XML::LibXML's registry of all current proxy nodes
  */
-ProxyNodePtr PROXY_NODE_REGISTRY = NULL;
+extern ProxyNodePtr* PROXY_NODE_REGISTRY_PTR;
+#define PROXY_NODE_REGISTRY *PROXY_NODE_REGISTRY_PTR
 
 /*
  * @proxy: proxy node to register
@@ -98,8 +101,9 @@ ProxyNodePtr PROXY_NODE_REGISTRY = NULL;
 void
 x_PmmRegisterProxyNode(ProxyNodePtr proxy)
 {
-    proxy->_registry = PROXY_NODE_REGISTRY;
-    PROXY_NODE_REGISTRY = proxy;
+  ProxyNodePtr ptr;
+  proxy->_registry = PROXY_NODE_REGISTRY;
+  PROXY_NODE_REGISTRY = proxy;
 }
 
 /*
@@ -114,7 +118,7 @@ x_PmmUnregisterProxyNode(ProxyNodePtr proxy)
     if( PROXY_NODE_REGISTRY == proxy ) {
         PROXY_NODE_REGISTRY = proxy->_registry;
     }
-    else {
+    else if (cur!=NULL) {
         while(cur->_registry != NULL)
         {
             if( cur->_registry == proxy )
@@ -124,6 +128,8 @@ x_PmmUnregisterProxyNode(ProxyNodePtr proxy)
             }
             cur = cur->_registry;
         }
+    } else {
+      warn("XML::LibXSLT: Unregistering a node while no node was registered?");
     }
 }
 
@@ -185,6 +191,9 @@ x_PmmNewNode(xmlNodePtr node)
     }
     else {
         proxy = (ProxyNodePtr)node->_private;
+	if (proxy->_registry==NULL && PROXY_NODE_REGISTRY!=proxy) {
+	  x_PmmRegisterProxyNode(proxy);
+	}
     }
 
     return proxy;
@@ -347,7 +356,7 @@ x_PmmNodeToSv( xmlNodePtr node, ProxyNodePtr owner )
 
         if ( node->_private != NULL ) { 
             dfProxy = x_PmmNewNode(node);
-            /* fprintf(stderr, " at 0x%08.8X\n", dfProxy); */
+            /* warn(" at 0x%08.8X\n", dfProxy); */
         }
         else {
             dfProxy = x_PmmNewNode(node);
