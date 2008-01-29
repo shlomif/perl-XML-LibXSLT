@@ -101,7 +101,6 @@ extern ProxyNodePtr* PROXY_NODE_REGISTRY_PTR;
 void
 x_PmmRegisterProxyNode(ProxyNodePtr proxy)
 {
-  ProxyNodePtr ptr;
   proxy->_registry = PROXY_NODE_REGISTRY;
   PROXY_NODE_REGISTRY = proxy;
 }
