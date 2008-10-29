@@ -54,7 +54,7 @@ extern "C" {
 
 static SV * LibXSLT_debug_cb = NULL;
 static HV * LibXSLT_HV_allCallbacks = NULL;
-ProxyNodePtr* PROXY_NODE_REGISTRY_PTR = NULL;
+SV* x_PROXY_NODE_REGISTRY_MUTEX = NULL;
 
 
 void
@@ -913,18 +913,12 @@ lib_cleanup_callbacks( self )
         xmlRegisterDefaultInputCallbacks();
 
 void
-__lib_init_proxy_registry( scalar )
-        SV* scalar;
+INIT_THREAD_SUPPORT()
     CODE:
-	if (PROXY_NODE_REGISTRY_PTR != NULL) {
-	  croak("XML::LibXSLT::__lib_init_proxy_registry must be called only once!\n");
-	}
-	if (scalar!=NULL && scalar != &PL_sv_undef) {
-  	     PROXY_NODE_REGISTRY_PTR = (ProxyNodePtr*) SvIV((SV*)SvRV(scalar));
-	}
-	if (PROXY_NODE_REGISTRY_PTR == NULL) {
-	  croak("XML::LibXSLT::__lib_init_proxy_registry failed to initialize the proxy registry!\n");
-	}
+       if (x_PROXY_NODE_REGISTRY_MUTEX != NULL) {
+	  croak("XML::LibXSLT::INIT_THREAD_SUPPORT can only be called once!\n");
+       }
+       x_PROXY_NODE_REGISTRY_MUTEX = get_sv("XML::LibXML::__PROXY_NODE_REGISTRY_MUTEX",0);
 
 MODULE = XML::LibXSLT         PACKAGE = XML::LibXSLT::Stylesheet
 

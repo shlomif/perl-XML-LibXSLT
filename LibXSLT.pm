@@ -25,7 +25,7 @@ bootstrap XML::LibXSLT $VERSION;
 
 # the following magic lets XML::LibXSLT internals know
 # where to register XML::LibXML proxy nodes
-__lib_init_proxy_registry(XML::LibXML::__proxy_registry());
+INIT_THREAD_SUPPORT() if XML::LibXML::threads_shared_enabled();
 $USE_LIBXML_DATA_TYPES = 0;
 }
 

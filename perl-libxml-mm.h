@@ -50,7 +50,6 @@ struct _ProxyNode {
     xmlNodePtr owner;
     int count;
     int encoding;
-    struct _ProxyNode * _registry;
 };
 
 /* helper type for the proxy structure */
@@ -73,6 +72,19 @@ typedef ProxyNode* ProxyNodePtr;
 
 #define x_PmmNodeEncoding(node) ((ProxyNodePtr)(node->_private))->encoding
 #define x_PmmDocEncoding(node) (node->charset)
+
+
+/* structure for storing thread-local refcount */
+struct _LocalProxyNode {
+	ProxyNodePtr proxy;
+	int count;
+};
+typedef struct _LocalProxyNode LocalProxyNode;
+typedef LocalProxyNode* LocalProxyNodePtr;
+
+
+#define x_PmmUSEREGISTRY		(x_PROXY_NODE_REGISTRY_MUTEX != NULL)
+#define x_PmmREGISTRY		(INT2PTR(xmlHashTablePtr,SvIV(SvRV(get_sv("XML::LibXML::__PROXY_NODE_REGISTRY",0)))))
 
 
 ProxyNodePtr
