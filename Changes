@@ -1,6 +1,10 @@
 Revision history for Perl extension XML::LibXSLT.
 
-1.66pre
+1.67
+     - sync the binary internals to those of XML::LibXML 1.67
+     - update regression tests for compatibility with up-to-date libxslt
+
+1.66
      - bump requirements to libxslt 1.1.8
      - sync the binary internals to those of XML::LibXML 1.66
 
