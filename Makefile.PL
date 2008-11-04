@@ -1,9 +1,15 @@
 # $Id$
 
+BEGIN {
+  if ($] < 5.006_001) {
+    warn "\nSorry, at least Perl 5.6.1 is required for this module!\n\n";
+    exit;
+  }
+}
+
 use ExtUtils::MakeMaker;
 use Config;
 
-use v5.6.1; # refuse to compile on earlier
 
 $|=0;
 
@@ -123,7 +129,7 @@ WriteMakefile(
     'VERSION_FROM' => 'LibXSLT.pm', # finds $VERSION
     'AUTHOR'    => 'Matt Sergeant',
     'ABSTRACT'  => 'Interface to Gnome libxslt library',
-    'PREREQ_PM' => { 'XML::LibXML' => "1.66", },
+    'PREREQ_PM' => { 'XML::LibXML' => "1.67", },
     'OBJECT'     => '$(O_FILES)',
     %config,
 );
