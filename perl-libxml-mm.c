@@ -84,6 +84,7 @@ x_PmmNodeTypeName( xmlNodePtr elem ){
     return "";
 }
 
+#ifdef XML_LIBXML_THREADS
 /*
  * registry of all current proxy nodes
  *
@@ -194,6 +195,7 @@ x_PmmProxyNodeRegistrySize()
 	return xmlHashSize(x_PmmREGISTRY);
 }
 
+#endif /* XML_LIBXML_THREADS */
 
 /* creates a new proxy node from a given node. this function is aware
  * about the fact that a node may already has a proxy structure.

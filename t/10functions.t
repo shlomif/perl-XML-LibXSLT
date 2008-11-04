@@ -125,14 +125,17 @@ XML
      );
     my $stylesheet = $xsltproc->parse_stylesheet($xslt);
     my $result = $stylesheet->transform($xml);
-    ok ($result->serialize,qq(<?xml version="1.0"?>\n<html xmlns:foo="http://foo"><head><foo>1st</foo><foo>2nd</foo></head></html>\n));
+    # the behavior has changed in some version of libxslt
+    my $expect = qq(<html xmlns:foo="http://foo"><head><foo>1st</foo><foo>2nd</foo></head></html>\n);
+    ok ($result->serialize,qr{(\Q<?xml version="1.0"?>\n\E)?\Q$expect\E});
   }
   {
     XML::LibXSLT->register_function(
       ('http://foo', 'custom') => sub { $parser->parse_string( $aux )->findnodes('//y')->[0]; });
     my $stylesheet = $xsltproc->parse_stylesheet($xslt);
     my $result = $stylesheet->transform($xml);
-    ok ($result->serialize,qq(<?xml version="1.0"?>\n<html xmlns:foo="http://foo"><head><foo>1st</foo></head></html>\n));
+    my $expect = qq(<html xmlns:foo="http://foo"><head><foo>1st</foo></head></html>\n);
+    ok ($result->serialize,qr{(\Q<?xml version="1.0"?>\n\E)?\Q$expect\E});
   }
 }
 

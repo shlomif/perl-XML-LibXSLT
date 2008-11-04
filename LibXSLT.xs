@@ -56,7 +56,6 @@ static SV * LibXSLT_debug_cb = NULL;
 static HV * LibXSLT_HV_allCallbacks = NULL;
 SV* x_PROXY_NODE_REGISTRY_MUTEX = NULL;
 
-
 void
 LibXSLT_free_all_callbacks(void)
 {
@@ -236,7 +235,6 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
     char *strkey;
     const char *function, *uri;
     SV **perl_function;
-    AV *arguments;
     xmlDocPtr container;
     xsltTransformContextPtr tctxt = xsltXPathGetTransformContext(ctxt);
     dSP;
@@ -323,7 +321,7 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
     SPAGAIN;
 
     if (SvTRUE(ERRSV)) {
-        POPs;
+        (void) POPs;
         croak("LibXSLT: error coming back from perl-dispatcher in pm file. %s\n", SvPV(ERRSV, n_a));
     } 
 
@@ -362,7 +360,7 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
 		} else {
 		  tmp_node = xmlDocCopyNode(tmp_node1, container, 1);
 		  /* a wraper element is needed to prevent libxml2 from merging adjacent text nodes */
-		  tmp_node2 = xmlNewDocNode(container,NULL,"x",NULL);
+		  tmp_node2 = xmlNewDocNode(container,NULL,(xmlChar*) "x",NULL);
 		  xmlAddChild((xmlNodePtr)container,tmp_node2);
 		  xmlAddChild(tmp_node2,tmp_node);
 		  xmlXPathNodeSetAdd(ret->nodesetval, tmp_node);
@@ -456,7 +454,7 @@ LibXSLT_input_match(char const * filename)
         }
 
         if (SvTRUE(ERRSV)) {
-            POPs ;
+            (void) POPs ;
             croak("input match callback died: %s", SvPV_nolen(ERRSV));
         }
 
@@ -500,7 +498,7 @@ LibXSLT_input_open(char const * filename)
     }
 
     if (SvTRUE(ERRSV)) {
-        POPs ;
+        (void) POPs ;
         croak("input callback died: %s", SvPV_nolen(ERRSV));
     }
 
@@ -550,7 +548,7 @@ LibXSLT_input_read(void * context, char * buffer, int len)
         }
 
         if (SvTRUE(ERRSV)) {
-            POPs ;
+            (void) POPs ;
             croak("read callback died: %s", SvPV_nolen(ERRSV));
         }
 
@@ -640,7 +638,7 @@ LibXSLT_security_check(xsltSecurityOption option,
       }
 
       if (SvTRUE(ERRSV)) {
-         POPs;
+          (void) POPs;
          croak("security callback died: %s", SvPV_nolen(ERRSV));
       }
 
@@ -767,6 +765,7 @@ int
 xinclude_default(self, ...)
         SV * self
     CODE:
+        PERL_UNUSED_VAR(self);
         RETVAL = xsltGetXIncludeDefault();
         if (items > 1) {
            xsltSetXIncludeDefault(SvIV(ST(1)));
@@ -778,6 +777,7 @@ int
 max_depth(self, ...)
         SV * self
     CODE:
+        PERL_UNUSED_VAR(self);
         RETVAL = xsltMaxDepth;
         if (items > 1) {
             xsltMaxDepth = SvIV(ST(1));
@@ -796,7 +796,7 @@ register_function(self, uri, name, callback)
         SV *key;
         STRLEN len;
         char *strkey;
-        
+        PERL_UNUSED_VAR(self);        
         /* todo: Add checking of uri and name in here! */
         xsltRegisterExtModuleFunction((const xmlChar *)name,
                         (const xmlChar *)uri,
@@ -816,6 +816,7 @@ SV *
 debug_callback(self, ...)
         SV * self
     CODE:
+        PERL_UNUSED_VAR(self);
         if (items > 1) {
             SV * debug_cb = ST(1);
             if (debug_cb && SvTRUE(debug_cb)) {
@@ -839,6 +840,7 @@ _parse_stylesheet(self, sv_doc)
         xmlDocPtr doc;
         SV * saved_error = sv_2mortal(newSVpv("",0));
     CODE:
+        PERL_UNUSED_VAR(self);
         if (sv_doc == NULL) {
             XSRETURN_UNDEF;
         }
@@ -855,7 +857,7 @@ _parse_stylesheet(self, sv_doc)
         if (LibXSLT_debug_cb && SvTRUE(LibXSLT_debug_cb)) {
             xsltSetGenericDebugFunc(PerlIO_stderr(), (xmlGenericErrorFunc)LibXSLT_debug_handler);
         }
-        else {
+	else {
             xsltSetGenericDebugFunc(NULL, NULL);
         }
 
@@ -878,7 +880,7 @@ _parse_stylesheet_file(self, filename)
         char * CLASS = "XML::LibXSLT::Stylesheet";
         SV * saved_error = sv_2mortal(newSVpv("",0));
     CODE:
-
+        PERL_UNUSED_VAR(self);
         if (LibXSLT_debug_cb && SvTRUE(LibXSLT_debug_cb)) {
             xsltSetGenericDebugFunc(PerlIO_stderr(), (xmlGenericErrorFunc)LibXSLT_debug_handler);
         }
@@ -900,6 +902,7 @@ void
 lib_init_callbacks( self )
         SV * self
     CODE:
+        PERL_UNUSED_VAR(self);
         xmlRegisterInputCallbacks((xmlInputMatchCallback) LibXSLT_input_match,
                                   (xmlInputOpenCallback) LibXSLT_input_open,
                                   (xmlInputReadCallback) LibXSLT_input_read,
@@ -909,6 +912,7 @@ void
 lib_cleanup_callbacks( self )
         SV * self
     CODE:
+        PERL_UNUSED_VAR(self);
         xmlCleanupInputCallbacks();
         xmlRegisterDefaultInputCallbacks();
 
@@ -1136,7 +1140,7 @@ _output_string(self, sv_doc, bytes_vs_chars=0)
         xmlOutputBufferClose(output);
 
         if ((bytes_vs_chars == 2) ||
-            (bytes_vs_chars == 0) && xmlStrEqual(encoding, (const xmlChar *) "UTF-8")) {
+            ((bytes_vs_chars == 0) && xmlStrEqual(encoding, (const xmlChar *) "UTF-8"))) {
 	  SvUTF8_on( results );
 	}
         RETVAL = results;
@@ -1210,16 +1214,16 @@ media_type(self)
             RETVAL = "text/xml";
             /* this below is rather simplistic, but should work for most cases */
             if (method != NULL) {
-        	if (strcmp(method, "html") == 0) {
+        	if (xmlStrcmp(method, (xmlChar*) "html") == 0) {
                     RETVAL = "text/html";
         	}
-        	else if (strcmp(method, "text") == 0) {
+        	else if (xmlStrcmp(method, (xmlChar*) "text") == 0) {
                     RETVAL = "text/plain";
         	}
             }
         }
 	else {
-	    RETVAL = mediaType;
+	    RETVAL = (char*) mediaType;
 	}
     OUTPUT:
         RETVAL
@@ -1232,7 +1236,7 @@ output_encoding(self)
     CODE:
     	XSLT_GET_IMPORT_PTR(encoding, self, encoding)
 	
-        RETVAL = encoding;
+        RETVAL = (char*) encoding;
         if (RETVAL == NULL) {
             RETVAL = "UTF-8";
         }
