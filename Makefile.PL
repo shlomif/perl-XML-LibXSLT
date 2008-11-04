@@ -3,6 +3,8 @@
 use ExtUtils::MakeMaker;
 use Config;
 
+use v5.6.1; # refuse to compile on earlier
+
 $|=0;
 
 my %config;
@@ -13,6 +15,12 @@ while($_ = shift) {
 }
 
 my $DEBUG = delete $config{DEBUG};
+
+if ( $] < 5.008 or $config{NO_THREADS} ) {
+  warn "disabling XML::LibXML support for Perl threads\n";
+  $config{DEFINE} .= " -DNO_LIBXML_THREADS";
+}
+delete $config{NO_THREADS};
 
 unless ( $is_Win32 ) { # cannot get config in W32
     my $xsltcfg = "xslt-config";
