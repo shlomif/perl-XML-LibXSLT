@@ -1,10 +1,16 @@
 use strict;                     # -*- perl -*-
 use Test;
-BEGIN { plan tests => 32; }
+use constant PLAN => 32;
+BEGIN {
+  plan tests => PLAN;
+  unless (eval { require Encode; import Encode; 1 }) {
+    skip("this test requires Encode.pm\n") for (1..PLAN);
+    exit;
+  }
+}
 
 use XML::LibXSLT;
 use XML::LibXML;
-use Encode;
 
 my $parser = XML::LibXML->new();
 ok( $parser );
