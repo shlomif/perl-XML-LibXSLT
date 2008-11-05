@@ -84,7 +84,6 @@ x_PmmNodeTypeName( xmlNodePtr elem ){
     return "";
 }
 
-#ifdef XML_LIBXML_THREADS
 /*
  * registry of all current proxy nodes
  *
@@ -93,6 +92,8 @@ x_PmmNodeTypeName( xmlNodePtr elem ){
  *
  */
 extern SV* x_PROXY_NODE_REGISTRY_MUTEX;
+
+#ifdef XML_LIBXML_THREADS
 
 /*
  * returns the address of the proxy registry
@@ -273,9 +274,10 @@ x_PmmNodeToSv( xmlNodePtr node, ProxyNodePtr owner )
     const char * CLASS = "XML::LibXML::Node";
 
     if ( node != NULL ) {
+#ifdef XML_LIBXML_THREADS
       if( x_PmmUSEREGISTRY )
 		SvLOCK(x_PROXY_NODE_REGISTRY_MUTEX);
-
+#endif
         /* find out about the class */
         CLASS = x_PmmNodeTypeName( node );
         xs_warn("x_PmmNodeToSv: return new perl node of class:\n");
@@ -305,8 +307,10 @@ x_PmmNodeToSv( xmlNodePtr node, ProxyNodePtr owner )
 
         retval = NEWSV(0,0);
         sv_setref_pv( retval, CLASS, (void*)dfProxy );
+#ifdef XML_LIBXML_THREADS
 	if( x_PmmUSEREGISTRY )
 	    x_PmmRegistryREFCNT_inc(dfProxy);
+#endif
         x_PmmREFCNT_inc(dfProxy); 
         /* fprintf(stderr, "REFCNT incremented on node: 0x%08.8X\n", dfProxy); */
 
@@ -321,8 +325,10 @@ x_PmmNodeToSv( xmlNodePtr node, ProxyNodePtr owner )
         default:
             break;
         }
+#ifdef XML_LIBXML_THREADS
       if( x_PmmUSEREGISTRY )
 		SvUNLOCK(x_PROXY_NODE_REGISTRY_MUTEX);
+#endif
     }
     else {
         xs_warn( "x_PmmNodeToSv: no node found!\n" );

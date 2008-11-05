@@ -24,7 +24,7 @@ my $DEBUG = delete $config{DEBUG};
 
 if ( $] < 5.008 or $config{NO_THREADS} ) {
   warn "disabling XML::LibXML support for Perl threads\n";
-  $config{DEFINE} .= " -DNO_LIBXML_THREADS";
+  $config{DEFINE} .= " -DNO_XML_LIBXML_THREADS";
 }
 delete $config{NO_THREADS};
 
