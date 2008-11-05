@@ -739,6 +739,17 @@ BOOT:
     exsltRegisterAll();
 #endif
 
+int
+HAVE_EXSLT()
+    CODE:
+#ifdef HAVE_EXSLT
+        RETVAL = 1;
+#else
+        RETVAL = 0;
+#endif
+    OUTPUT:
+        RETVAL
+
 char *
 LIBXSLT_DOTTED_VERSION()
     CODE:

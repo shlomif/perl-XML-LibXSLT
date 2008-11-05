@@ -1,7 +1,14 @@
 use Test;
-BEGIN { plan tests => 6 }
+use constant PLAN => 6;
+BEGIN { plan tests => PLAN; }
+
 use XML::LibXSLT;
 use XML::LibXML;
+
+unless (XML::LibXSLT::HAVE_EXSLT()) {
+  skip("this test requires XML::LibXSLT to be compiled with libexslt\n") for (1..PLAN);	
+  exit;
+}
 
 my $parser = XML::LibXML->new();
 ok($parser);
