@@ -949,6 +949,10 @@ Returns version number of libxslt library to which XML::LibXSLT is
 linked at runtime (either dynamically or statically). For example, for
 example, for libxslt.so.1.1.18, it will return 10118.
 
+=item XML::LibXSLT::HAVE_EXLT()
+
+Returns 1 if the module was compiled with libexslt, 0 otherwised.
+
 =back
 
 =head1 AUTHOR
