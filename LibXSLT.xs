@@ -837,7 +837,7 @@ debug_callback(self, ...)
                 LibXSLT_debug_cb = NULL;
             }
         }
-        RETVAL = LibXSLT_debug_cb ? sv_2mortal(LibXSLT_debug_cb) : &PL_sv_undef;
+        RETVAL = LibXSLT_debug_cb ? LibXSLT_debug_cb : &PL_sv_undef;
     OUTPUT:
         RETVAL
 
