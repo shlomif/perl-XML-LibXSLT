@@ -21,6 +21,10 @@ require DynaLoader;
 
 @ISA = qw(DynaLoader);
 
+# avoid possible shared library name conflict on Win32
+# not using this trick on 5.10.0 (suffering from DynaLoader bug)
+local $DynaLoader::dl_dlext = "xs.$DynaLoader::dl_dlext" if (($^O eq 'MSWin32') && ($] ne '5.010000'));
+
 bootstrap XML::LibXSLT $VERSION;
 
 # the following magic lets XML::LibXSLT internals know

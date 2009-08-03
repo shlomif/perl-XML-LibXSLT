@@ -1,5 +1,8 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.70pre
+     - #48247: Win32 patch kindly provided by KMX@cpan.org
+
 1.67
      - sync the binary internals to those of XML::LibXML 1.67
      - update regression tests for compatibility with up-to-date libxslt

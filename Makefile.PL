@@ -172,6 +172,30 @@ if ($ldflags) {
     $config{dynamic_lib} = { OTHERLDFLAGS => " $ldflags " };
 }
 
+# Avoid possible shared library name conflict. On Win32 systems
+# the name of system DLL libxlst.dll clashes with module's LibXSLT.dll.
+# To handle this we are gonna rename module's DLL to LibXSLT.xs.dll.
+if ($is_Win32) {
+  if ($] eq '5.010000') {
+    print STDERR <<5100BUG;
+******************************** !!!WARNING!!! ******************************** 
+According to the version string you are running a win32 perl 5.10.0 that is
+known to be suffering from dynaloader bug that prevents using non-default 
+module's DLL name. Therefore we have to use LibXSLT.dll that will clash with the
+standard name of xslt library DLL. Please consider renaming your xslt library
+to e.g. libxslt_win32.dll and then make the appropriate changes to this module's
+build process to look for that instead of standard libxslt.dll. If you do not
+make the proposed changes you will got during the tests many error popups with 
+slightly confusing message about "xsltApplyOneTemplate" function.  
+This bug is not present in perl 5.8.* and will be fixed in 5.10.1.
+*******************************************************************************
+5100BUG
+  }
+  else {
+    $config{DLEXT} = 'xs.dll' if ($is_Win32);
+  }
+}
+
 WriteMakefile(
     'NAME'	=> 'XML::LibXSLT',
     'VERSION_FROM' => 'LibXSLT.pm', # finds $VERSION
