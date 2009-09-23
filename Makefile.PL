@@ -137,7 +137,7 @@ exit 0; # 0 recommended by http://cpantest.grango.org (Notes for CPAN Authors)
 if (have_library($is_Win32 ? "libexslt" : "exslt")) {
   my $exslt_defaults = $is_Win32 ?
     ($ENV{ACTIVEPERL_MINGW} ? q/-llibexslt.lib/ : q/-llibexslt/) :
-                              q/-lexslt -lgcrypt -lgpg-error/;
+                              q/-lexslt/; # -lgcrypt -lgpg-error/;
   my $exsltcfg = 'pkg-config libexslt';
   my ($exslt_libs,$exslt_inc);
   eval {
