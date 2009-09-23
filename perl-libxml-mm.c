@@ -7,6 +7,12 @@
  * with the c source) implements a few functions, that can be used from within
  * the core module inorder to avoid cascades of c pragmas
  */
+/*
+ * This is free software, you may use it and distribute it under the same terms as
+ * Perl itself.
+ *
+ * Copyright 2001-2009 AxKit.com Ltd.
+*/
 
 #ifdef __cplusplus
 extern "C" {
@@ -213,12 +219,24 @@ x_PmmNewNode(xmlNodePtr node)
     }
 
     if ( node->_private == NULL ) {
-        proxy = (ProxyNodePtr)xmlMalloc(sizeof(struct _ProxyNode));
+        switch ( node->type ) {
+        case XML_DOCUMENT_NODE:
+        case XML_HTML_DOCUMENT_NODE:
+        case XML_DOCB_DOCUMENT_NODE:
+            proxy = (ProxyNodePtr)xmlMalloc(sizeof(struct _DocProxyNode));
+            if (proxy != NULL) {
+                ((DocProxyNodePtr)proxy)->psvi_status = Pmm_NO_PSVI;
+                x_SetPmmENCODING(proxy, XML_CHAR_ENCODING_NONE);
+            }
+            break;
+        default:
+            proxy = (ProxyNodePtr)xmlMalloc(sizeof(struct _ProxyNode));
+            break;
+        }
         if (proxy != NULL) {
             proxy->node  = node;
             proxy->owner   = NULL;
             proxy->count   = 0;
-            proxy->encoding= 0;
             node->_private = (void*) proxy;
         }
     }
@@ -320,7 +338,7 @@ x_PmmNodeToSv( xmlNodePtr node, ProxyNodePtr owner )
         case XML_HTML_DOCUMENT_NODE:
         case XML_DOCB_DOCUMENT_NODE:
             if ( ((xmlDocPtr)node)->encoding != NULL ) {
-                dfProxy->encoding = (int)xmlParseCharEncoding( (const char*)((xmlDocPtr)node)->encoding );
+                x_SetPmmENCODING(dfProxy, (int)xmlParseCharEncoding( (const char*)((xmlDocPtr)node)->encoding ));
             }
             break;
         default:

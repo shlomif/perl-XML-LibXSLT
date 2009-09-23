@@ -7,6 +7,12 @@
  * with the c source) implements a few functions, that can be used from within
  * the core module inorder to avoid cascades of c pragmas
  */
+/*
+ * This is free software, you may use it and distribute it under the same terms as
+ * Perl itself.
+ *
+ * Copyright 2001-2009 AxKit.com Ltd.
+*/
 
 #ifndef __PERL_LIBXML_MM_H__
 #define __PERL_LIBXML_MM_H__
@@ -49,29 +55,43 @@ struct _ProxyNode {
     xmlNodePtr node;
     xmlNodePtr owner;
     int count;
-    int encoding;
 };
 
+struct _DocProxyNode {
+    xmlNodePtr node;
+    xmlNodePtr owner;
+    int count;
+    int encoding; /* only used for proxies of xmlDocPtr */
+    int psvi_status; /* three-state flag for a document */
+};
+
+#define Pmm_NO_PSVI 0
+#define Pmm_PSVI_TAINTED 1
+
 /* helper type for the proxy structure */
+typedef struct _DocProxyNode DocProxyNode;
 typedef struct _ProxyNode ProxyNode;
 
 /* pointer to the proxy structure */
 typedef ProxyNode* ProxyNodePtr;
+typedef DocProxyNode* DocProxyNodePtr;
 
 /* this my go only into the header used by the xs */
-#define SvPROXYNODE(x) ((ProxyNodePtr)SvIV(SvRV(x)))
-#define SvNAMESPACE(x) ((xmlNsPtr)SvIV(SvRV(x)))
-#define x_PmmPROXYNODE(x) ((ProxyNodePtr)x->_private)
+#define SvPROXYNODE(x) (INT2PTR(ProxyNodePtr,SvIV(SvRV(x))))
+#define PmmPROXYNODE(x) (INT2PTR(ProxyNodePtr,x->_private))
+#define SvNAMESPACE(x) (INT2PTR(xmlNsPtr,SvIV(SvRV(x))))
 
 #define x_PmmREFCNT(node)      node->count
 #define x_PmmREFCNT_inc(node)  node->count++
 #define x_PmmNODE(xnode)       xnode->node
 #define x_PmmOWNER(node)       node->owner
 #define x_PmmOWNERPO(node)     ((node && x_PmmOWNER(node)) ? (ProxyNodePtr)x_PmmOWNER(node)->_private : node)
-#define x_PmmENCODING(node)    node->encoding
 
-#define x_PmmNodeEncoding(node) ((ProxyNodePtr)(node->_private))->encoding
-#define x_PmmDocEncoding(node) (node->charset)
+#define x_PmmENCODING(node)    ((DocProxyNodePtr)(node))->encoding
+#define x_PmmNodeEncoding(node) ((DocProxyNodePtr)(node->_private))->encoding
+
+#define x_SetPmmENCODING(node,code) x_PmmENCODING(node)=(code)
+#define x_SetPmmNodeEncoding(node,code) x_PmmNodeEncoding(node)=(code)
 
 #ifndef NO_XML_LIBXML_THREADS
 #ifdef USE_ITHREADS

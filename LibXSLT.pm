@@ -1,21 +1,31 @@
 # $Id$
+#
+# This is free software, you may use it and distribute it under the same terms as
+# Perl itself.
+#
+# Copyright 2001-2009 AxKit.com Ltd.
+#
+#
 package XML::LibXSLT;
 
 use strict;
 use vars qw($VERSION @ISA $USE_LIBXML_DATA_TYPES $MatchCB $ReadCB $OpenCB $CloseCB);
 
-use XML::LibXML 1.67;
+sub REQUIRE_XML_LIBXML_ABI_VERSION { 2 }
+
+use XML::LibXML 1.70;
 use XML::LibXML::Literal;
 use XML::LibXML::Boolean;
 use XML::LibXML::Number;
 use XML::LibXML::NodeList;
+
 
 BEGIN {
 use Carp;
 
 require Exporter;
 
-$VERSION = "1.67";
+$VERSION = "1.69_3";
 
 require DynaLoader;
 
@@ -32,6 +42,7 @@ bootstrap XML::LibXSLT $VERSION;
 INIT_THREAD_SUPPORT() if XML::LibXML::threads_shared_enabled();
 $USE_LIBXML_DATA_TYPES = 0;
 }
+
 
 sub new {
     my $class = shift;
@@ -959,13 +970,18 @@ Returns 1 if the module was compiled with libexslt, 0 otherwised.
 
 =back
 
+=head1 LICENSE
+
+This is free software, you may use it and distribute it under the same terms as
+Perl itself.
+
+Copyright 2001-2009, AxKit.com Ltd.
+
 =head1 AUTHOR
 
 Matt Sergeant, matt@sergeant.org
 
 Security callbacks implementation contributed by Shane Corgatelli.
-
-Copyright 2001-2008, AxKit.com Ltd. All rights reserved.
 
 =head1 MAINTAINER
 
