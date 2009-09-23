@@ -1,4 +1,10 @@
 /* $Id$ */
+/*
+ * This is free software, you may use it and distribute it under the same terms as
+ * Perl itself.
+ *
+ * Copyright 2001-2009 AxKit.com Ltd.
+*/
 
 #ifdef __cplusplus
 extern "C" {
