@@ -349,21 +349,27 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
 	    if (tctxt == NULL) {
               croak("LibXSLT: perl-dispatcher: internal error tctxt == NULL\n");
 	    }
-            container = xsltCreateRVT(tctxt);
-	    if (container == NULL) {
-              croak("LibXSLT: perl-dispatcher: cannot create container RVT\n");
-            }
-	    xsltRegisterLocalRVT(tctxt,container);
             ret = xmlXPathNewNodeSet(NULL);
             ret->boolval = 0;
             array_result = (AV*)SvRV(perl_result);
             while (av_len(array_result) >= 0) {
 	      tmp_node1 = (xmlNodePtr)x_PmmSvNode(sv_2mortal(av_shift(array_result)));
 	      if (tmp_node1) {
-		if (ctxt->context->doc == tmp_node1->doc) {
+		if (ctxt->context->doc == tmp_node1->doc
+		    /* for an unknown reason we must copy attributes */
+		    && tmp_node1->type != XML_ATTRIBUTE_NODE
+		    && tmp_node1->type != XML_NAMESPACE_DECL
+		    ) {
 		  /* special case: no copy */
 		  xmlXPathNodeSetAdd(ret->nodesetval, tmp_node1);
 		} else {
+		  if (container == NULL) {
+		    container = xsltCreateRVT(tctxt);
+		    if (container == NULL) {
+		      croak("LibXSLT: perl-dispatcher: cannot create container RVT\n");
+		    }
+		    xsltRegisterLocalRVT(tctxt,container);
+		  }
 		  tmp_node = xmlDocCopyNode(tmp_node1, container, 1);
 		  /* a wraper element is needed to prevent libxml2 from merging adjacent text nodes */
 		  tmp_node2 = xmlNewDocNode(container,NULL,(xmlChar*) "x",NULL);
@@ -382,7 +388,10 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
 	  ret =  (xmlXPathObjectPtr)xmlXPathNewNodeSet(NULL);
 	  ret->boolval = 0;
 	  if (tmp_node1) {
-	    if (ctxt->context->doc == tmp_node1->doc) {
+	    if (ctxt->context->doc == tmp_node1->doc
+		/* for an unknown reason we must copy attributes */
+		&& tmp_node1->type != XML_ATTRIBUTE_NODE
+		&& tmp_node1->type != XML_NAMESPACE_DECL) {
 	      /* special case: no copy */
 	      xmlXPathNodeSetAdd(ret->nodesetval, tmp_node1);
 	    } else {
@@ -395,7 +404,17 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
 	      }
 	      xsltRegisterLocalRVT(tctxt,container);
 	      tmp_node = xmlDocCopyNode(tmp_node1, container, 1);
-	      xmlAddChild((xmlNodePtr)container,tmp_node);
+	      if (tmp_node == NULL) {
+		croak("LibXSLT: perl-dispatcher: cannot copy node for RVT\n");
+	      }
+	      if (tmp_node->type != XML_ELEMENT_NODE) {
+		/* create a wrapper element */
+		tmp_node2 = xmlNewDocNode(container,NULL,(xmlChar*) "x",NULL);
+		xmlAddChild((xmlNodePtr)container,tmp_node2);
+		xmlAddChild(tmp_node2,tmp_node);
+	      } else {
+		xmlAddChild((xmlNodePtr)container,tmp_node);
+	      }
 	      xmlXPathNodeSetAdd(ret->nodesetval,tmp_node);
 	    }
 	  } else {

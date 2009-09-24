@@ -620,7 +620,7 @@ XML::LibXSLT - Interface to the gnome libxslt library
   
   my $results = $stylesheet->transform($source);
   
-  print $stylesheet->output_string($results);
+  print $stylesheet->output_as_bytes($results);
 
 =head1 DESCRIPTION
 
@@ -737,38 +737,41 @@ happen with one stylesheet without requiring a reparse.
 =item transform(doc, %params)
 
   my $results = $stylesheet->transform($doc, foo => "value);
+  print $stylesheet->output_as_bytes($results);
 
 Transforms the passed in XML::LibXML::Document object, and returns a
 new XML::LibXML::Document. Extra hash entries are used as parameters.
+See output_string
 
 =item transform_file(filename, %params)
 
   my $results = $stylesheet->transform_file($filename, bar => "value");
 
-=item output_string(result)
+=item output_as_bytes(result)
 
 Returns a scalar that is the XSLT rendering of the
 XML::LibXML::Document object using the desired output format
 (specified in the xsl:output tag in the stylesheet). Note that you can
 also call $result->toString, but that will *always* output the
 document in XML format which may not be what you asked for in the
-xsl:output tag.
-
-Important note: The string returned by this function appears to Perl
-as characters if the output encoding was specified as UTF-8 and as
-bytes if no output encoding was specified or if the output encoding
-was different from UTF-8. See also C<output_as_bytes(result)> and
-C<output_as_chars(result)>.
-
-=item output_as_bytes(result)
-
-Like C<output_string(result)>, but always return the output as a byte
-string encoded in the output encoding specified in the stylesheet.
+xsl:output tag. The scalar is a byte string encoded in the output
+encoding specified in the stylesheet.
 
 =item output_as_chars(result)
 
-Like C<output_string(result)>, but always return the output as (UTF-8
+Like C<output_as_bytes(result)>, but always return the output as (UTF-8
 encoded) string of characters.
+
+=item output_string(result)
+
+DEPRECATED: This method is something between
+C<output_as_bytes(result)> and C<output_as_bytes(result)>: The scalar
+returned by this function appears to Perl as characters (UTF8 flag is
+on) if the output encoding specified in the XSLT stylesheet was UTF-8
+and as bytes if no output encoding was specified or if the output
+encoding was other than UTF-8. Since the behavior of this function
+depends on the particular stylesheet, it is deprecated in favor of
+C<output_as_bytes(result)> and C<output_as_chars(result)>.
 
 =item output_fh(result, fh)
 
