@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan tests => 33 }
+BEGIN { plan tests => 35 }
 use XML::LibXSLT;
 
 {
@@ -162,4 +162,74 @@ XSLT
 <a><b><b/></b><b><c/></b></a>
 XML
   ok ($result->serialize,qq(<?xml version="1.0"?>\n<out><b><b/></b><b><c/></b></out>\n));
+}
+
+{
+  my $callbackNS = "http://x/x";
+
+  my $p = XML::LibXML->new;
+  my $xsltproc = XML::LibXSLT->new;
+  $xsltproc->register_function(
+    $callbackNS,
+    "some_function",
+    sub {
+      my($format) = @_;
+      return $format;
+    }
+   );
+  $xsltproc->register_function(
+    $callbackNS,
+    "some_function2",
+    sub {
+      my($format) = @_;
+      return $format->[0];
+    }
+   );
+
+  my $xsltdoc = $p->parse_string(<<'EOF');
+<?xml version="1.0" encoding="utf-8"?>
+<xsl:stylesheet version="1.0"
+     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"  
+     xmlns:x="http://x/x"
+>
+
+<xsl:template match="root">
+  <root>
+    <xsl:value-of select="x:some_function(@format)" />
+    <xsl:text>,</xsl:text>
+    <xsl:value-of select="x:some_function(.)" />
+    <xsl:text>,</xsl:text>
+    <xsl:value-of select="x:some_function(processing-instruction())" />
+    <xsl:text>,</xsl:text>
+    <xsl:value-of select="x:some_function(text())" />
+    <xsl:text>;</xsl:text>
+
+    <xsl:value-of select="x:some_function2(@format)" />
+    <xsl:text>,</xsl:text>
+    <xsl:value-of select="x:some_function2(.)" />
+    <xsl:text>,</xsl:text>
+    <xsl:value-of select="x:some_function2(processing-instruction())" />
+    <xsl:text>,</xsl:text>
+    <xsl:value-of select="x:some_function2(text())" />
+    <xsl:text>;</xsl:text>
+    <xsl:for-each select="x:some_function(node())">
+      <xsl:value-of select="." />
+    </xsl:for-each>
+  </root>
+</xsl:template>
+
+</xsl:stylesheet>
+EOF
+
+  my $doc = $p->parse_string(<<EOF);
+<root format="foo">bar<?baz bak?><y>zzz</y></root>
+EOF
+
+  my $stylesheet = $xsltproc->parse_stylesheet($xsltdoc);
+  my $result = $stylesheet->transform($doc);
+  my $val = $result->findvalue("/root");
+  ok($val);
+  ok($val eq "foo,barzzz,bak,bar;foo,barzzz,bak,bar;barbakzzz")
+    or print $stylesheet->output_as_bytes($result);
+
 }

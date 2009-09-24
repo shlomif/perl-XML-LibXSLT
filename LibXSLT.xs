@@ -236,12 +236,12 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
     double tmp_double;
     int tmp_int;
     AV * array_result;
-    xmlNodePtr tmp_node, tmp_node1, tmp_node2;
+    xmlNodePtr tmp_node, tmp_node1, tmp_node2 = NULL;
     SV *key;
     char *strkey;
     const char *function, *uri;
     SV **perl_function;
-    xmlDocPtr container;
+    xmlDocPtr container = NULL;
     xsltTransformContextPtr tctxt = xsltXPathGetTransformContext(ctxt);
     dSP;
     
@@ -291,6 +291,7 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
 			} else {
                             /* need to copy the node as libxml2 will free it */
                             xmlNodePtr tnode_cpy = xmlCopyNode(tnode, 1);
+			    tnode_cpy->doc = tnode->doc;
                             element = x_PmmNodeToSv(tnode_cpy, NULL);
                         }
                         XPUSHs( sv_2mortal(element) );
@@ -355,32 +356,24 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
             while (av_len(array_result) >= 0) {
 	      tmp_node1 = (xmlNodePtr)x_PmmSvNode(sv_2mortal(av_shift(array_result)));
 	      if (tmp_node1) {
-		if (ctxt->context->doc == tmp_node1->doc
-		    /* for an unknown reason we must copy attributes */
-		    && tmp_node1->type != XML_ATTRIBUTE_NODE
-		    && tmp_node1->type != XML_NAMESPACE_DECL
-		    ) {
-		  /* special case: no copy */
-		  xmlXPathNodeSetAdd(ret->nodesetval, tmp_node1);
-		} else {
+		  container = xsltCreateRVT(tctxt);
+		if (container == NULL) {
 		  if (container == NULL) {
-		    container = xsltCreateRVT(tctxt);
-		    if (container == NULL) {
-		      croak("LibXSLT: perl-dispatcher: cannot create container RVT\n");
-		    }
-		    xsltRegisterLocalRVT(tctxt,container);
+		    croak("LibXSLT: perl-dispatcher: cannot create container RVT\n");
 		  }
-		  tmp_node = xmlDocCopyNode(tmp_node1, container, 1);
-		  /* a wraper element is needed to prevent libxml2 from merging adjacent text nodes */
-		  tmp_node2 = xmlNewDocNode(container,NULL,(xmlChar*) "x",NULL);
-		  xmlAddChild((xmlNodePtr)container,tmp_node2);
-		  xmlAddChild(tmp_node2,tmp_node);
-		  xmlXPathNodeSetAdd(ret->nodesetval, tmp_node);
+		  xsltRegisterLocalRVT(tctxt,container);
 		}
+		tmp_node = xmlDocCopyNode(tmp_node1, container, 1);
+		/* a wraper element is needed to wrap attributes and
+		   prevent libxml2 from merging adjacent text nodes */
+		tmp_node2 = xmlNewDocNode(container,NULL,(xmlChar*) "x",NULL);
+		xmlAddChild((xmlNodePtr)container,tmp_node2);
+		xmlAddChild(tmp_node2,tmp_node);
+		xmlXPathNodeSetAdd(ret->nodesetval, tmp_node);
 	      } else {
 		croak("LibXSLT: perl-dispatcher returned nodelist with non-node elements\n");
 	      }
-            }
+	    }
             goto FINISH;
         } 
         else if (sv_derived_from(perl_result, "XML::LibXML::Node")) {
@@ -388,13 +381,6 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
 	  ret =  (xmlXPathObjectPtr)xmlXPathNewNodeSet(NULL);
 	  ret->boolval = 0;
 	  if (tmp_node1) {
-	    if (ctxt->context->doc == tmp_node1->doc
-		/* for an unknown reason we must copy attributes */
-		&& tmp_node1->type != XML_ATTRIBUTE_NODE
-		&& tmp_node1->type != XML_NAMESPACE_DECL) {
-	      /* special case: no copy */
-	      xmlXPathNodeSetAdd(ret->nodesetval, tmp_node1);
-	    } else {
 	      if (tctxt == NULL) {
 		croak("LibXSLT: perl-dispatcher: internal error tctxt == NULL\n");
 	      }
@@ -416,7 +402,6 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
 		xmlAddChild((xmlNodePtr)container,tmp_node);
 	      }
 	      xmlXPathNodeSetAdd(ret->nodesetval,tmp_node);
-	    }
 	  } else {
 	    croak("LibXSLT: perl-dispatcher returned a null XML::LibXML::Node object\n");
 	  }
@@ -441,12 +426,12 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
     ret = (xmlXPathObjectPtr)xmlXPathNewCString(SvPV(perl_result, len));
 
 FINISH:
-
     valuePush(ctxt, ret);
     PUTBACK;
     FREETMPS;
     LEAVE;	
 }
+
 
 int
 LibXSLT_input_match(char const * filename)
@@ -832,6 +817,7 @@ register_function(self, uri, name, callback)
         SV *key;
         STRLEN len;
         char *strkey;
+
         PERL_UNUSED_VAR(self);        
         /* todo: Add checking of uri and name in here! */
         xsltRegisterExtModuleFunction((const xmlChar *)name,
@@ -844,7 +830,7 @@ register_function(self, uri, name, callback)
         sv_catpv(key, (const char*)name);
         strkey = SvPV(key, len);
         /* warn("Trying to store function '%s' in %d\n", strkey, LibXSLT_HV_allCallbacks); */
-        hv_store(LibXSLT_HV_allCallbacks, strkey, len, SvREFCNT_inc(callback), 0);
+        (void) hv_store(LibXSLT_HV_allCallbacks, strkey, len, SvREFCNT_inc(callback), 0);
         SvREFCNT_dec(key);
     }
 
@@ -856,7 +842,7 @@ debug_callback(self, ...)
         if (items > 1) {
             SV * debug_cb = ST(1);
             if (debug_cb && SvTRUE(debug_cb)) {
-                SET_CB(LibXSLT_debug_cb, ST(1));
+                SET_CB(LibXSLT_debug_cb, debug_cb);
             }
             else {
                 LibXSLT_debug_cb = NULL;
