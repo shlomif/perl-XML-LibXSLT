@@ -610,11 +610,10 @@ XML::LibXSLT - Interface to the gnome libxslt library
   use XML::LibXSLT;
   use XML::LibXML;
   
-  my $parser = XML::LibXML->new();
   my $xslt = XML::LibXSLT->new();
   
-  my $source = $parser->parse_file('foo.xml');
-  my $style_doc = $parser->parse_file('bar.xsl');
+  my $source = XML::LibXML->load_xml(location => 'foo.xml');
+  my $style_doc = XML::LibXML->load_xml(location=>'bar.xsl', no_cdata=>1);
   
   my $stylesheet = $xslt->parse_stylesheet($style_doc);
   
@@ -696,13 +695,19 @@ The following methods are available on the new XML::LibXSLT object:
 
 =over
 
-=item parse_stylesheet($doc)
+=item parse_stylesheet($stylesheet_doc)
 
-C<$doc> here is an XML::LibXML::Document object (see L<XML::LibXML>)
+C<$stylesheet_doc> here is an XML::LibXML::Document object (see L<XML::LibXML>)
 representing an XSLT file. This method will return a 
 XML::LibXSLT::Stylesheet object, or undef on failure. If the XSLT is
 invalid, an exception will be thrown, so wrap the call to 
 parse_stylesheet in an eval{} block to trap this.
+
+IMPORTANT: C<$stylesheet_doc> should not contain CDATA sections,
+otherwise libxslt may misbehave. The best way to assure this is to
+load the stylesheet with no_cdata flag, e.g.
+
+  my $stylesheet_doc = XML::LibXML->load_xml(location=>"some.xsl", no_cdata=>1);
 
 =item parse_stylesheet_file($filename)
 
