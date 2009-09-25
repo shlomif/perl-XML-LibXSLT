@@ -10,14 +10,29 @@ implementation of XSLT 1.0.
 A NOTE ON INSTALLATION
 ----------------------
 
+The library depends on libxslt. You have to have both the library and
+its header files installed (on various Linux/UNIX distributions thay
+are usually packaged as libxslt-dev or libxslt-devel). The module can
+further make use of libexslt, which is distributed with libxslt, but
+on some systems packaged separately. These libraries may have their
+own dependencies (usually resolved automatically by the packaging
+system).
+
 Note that if you want any global data to be shared between the libxml2
 libraries used by this module and XML-LibXML, e.g. the input callback
 table, then each module must link dynamically against libxml2 so that
 they both use the same shared library (this is in fact default on most
 UNIX/POSIX platforms).
 
-WIN32 BUILDING ISSUES
----------------------
+The Makefile.PL tries to determine the correct compiler and linker
+flags for its library dependencies using pkg-config and
+xslt-config. If this fails, you may override the values like this
+
+  perl Makefile.PL INC="..." LIBS="..." 
+
+where INC contains flags for the compiler (such as -I/some_path/include etc.) and LIBS contains linker flags (such as -L/some_path/lib -llibsomething ...).
+
+WIN32 BUILDING ISSUES ---------------------
 
 It is recommended that when building this module on Win32 you also
 link dynamically against libxslt and libexslt, since linking
