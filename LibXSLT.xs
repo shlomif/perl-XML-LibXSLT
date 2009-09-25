@@ -964,10 +964,11 @@ transform(self, wrapper, sv_doc, ...)
         SV * wrapper
         SV * sv_doc
     PREINIT:
-        # note really only 254 entries here - last one is NULL
-        const char *xslt_params[255];
+	const char *xslt_params[255]; /* note really only 254 entries here - last one is NULL */
         xmlDocPtr real_dom;
         xmlDocPtr doc;
+        xmlNodePtr dtd_prev = NULL;
+        xmlNodePtr dtd_next = NULL;
         SV * saved_error = sv_2mortal(newSVpv("",0));
         xsltTransformContextPtr ctxt;
         xsltSecurityPrefsPtr sec;
@@ -1014,8 +1015,27 @@ transform(self, wrapper, sv_doc, ...)
         ctxt->xinclude = 1;
         ctxt->_private = (void *) wrapper;
         sec = LibXSLT_init_security_prefs(ctxt);
+
+        if (doc->intSubset != NULL) {
+	  /* Note: libxslt will unlink intSubset, we
+	     want to restore it when done
+	   */
+          dtd_prev = doc->intSubset->prev;
+          dtd_next = doc->intSubset->next;
+	}
+
 	real_dom = xsltApplyStylesheetUser(self, doc, xslt_params,
 					   NULL, NULL, ctxt);
+        if (doc->intSubset != NULL &&
+	    doc->prev == NULL && doc->next == NULL) {
+           xmlNodePtr cur = (xmlNodePtr) doc->intSubset;
+	   cur->prev = dtd_prev;
+	   cur->next = dtd_next;
+           if (dtd_prev) dtd_prev->next = cur;
+	   if (dtd_next) dtd_next->prev = cur;
+	   if (doc->children == dtd_next) doc->children = cur;
+	   if (doc->last == dtd_prev) doc->last = cur;
+	}
         if ((real_dom != NULL) && (ctxt->state != XSLT_STATE_OK)) {
           /* fatal error */
              xmlFreeDoc(real_dom);
