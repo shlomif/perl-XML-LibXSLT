@@ -276,8 +276,8 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
                 if ( nodelist->nodeNr > 0 ) {
                     int i = 0 ;
                     const char * cls = "XML::LibXML::Node";
-                    xmlNodePtr tnode;
-                    SV * element;
+                    xmlNodePtr tnode = NULL;
+                    SV * element = NULL;
                     len = nodelist->nodeNr;
                     for( ; i < len; i++ ){
                         tnode = nodelist->nodeTab[i];
@@ -289,10 +289,15 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
                                                     (void *)xmlCopyNamespace((xmlNsPtr)tnode)
                                                 );
 			} else {
-                            /* need to copy the node as libxml2 will free it */
-                            xmlNodePtr tnode_cpy = xmlCopyNode(tnode, 1);
-			    tnode_cpy->doc = tnode->doc;
-                            element = x_PmmNodeToSv(tnode_cpy, NULL);
+                          /* need to copy the node as libxml2 will free it */
+			  xmlNodePtr tnode_cpy = xmlCopyNode(tnode, 1);
+			    if( tnode_cpy != NULL) {
+			      ProxyNodePtr owner = NULL;
+			      if ( tnode_cpy != NULL && tnode_cpy->doc != NULL) {
+				owner = x_PmmOWNERPO(x_PmmNewNode(INT2PTR(xmlNodePtr,tnode_cpy->doc)));
+			      }
+			      element = x_PmmNodeToSv(tnode_cpy, owner);
+			    }
                         }
                         XPUSHs( sv_2mortal(element) );
                     }
