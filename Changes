@@ -1,9 +1,16 @@
 Revision history for Perl extension XML::LibXSLT.
 
 1.70pre
+     - fixed various bugs
+     - documentation updates
      - #48247: Win32 patch kindly provided by KMX@cpan.org
+     - sync with latest XML::LibXML ABI and add a compatibility check
+     - do not force -lgcrypt and -lgpg-error linker flags
+     - fix for attribute nodes returned by user-defined XPath functions
+     - address #41542: restore internalDTD subset on the source
+       document of a transformation (libxslt unlinks it)
 
-1.68pre
+1.68
      - fix compilation problems
      - skip exslt tests if not available
      - added XML::LibXSLT::HAVE_EXSLT() (1/0)
