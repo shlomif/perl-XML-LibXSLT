@@ -1,6 +1,6 @@
 Revision history for Perl extension XML::LibXSLT.
 
-1.70pre
+1.70
      - fixed various bugs
      - documentation updates
      - #48247: Win32 patch kindly provided by KMX@cpan.org
