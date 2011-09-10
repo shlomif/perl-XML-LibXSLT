@@ -52,14 +52,9 @@ PATCHES AND DEVELOPER VERSION
 As XML::LibXSLT is open source software help and patches are appreciated. If you
 find a bug in the current release, make sure this bug still exists in the
 developer version of XML::LibXSLT. This version can be downloaded from its
-Subversion repository. The Subversion version can be checked out via:
-
-    svn co svn://axkit.org/XML-LibXSLT/trunk
-
-It is also recommended to use the development version of XML::LibXML,
-which can be checked out via:
-
-    svn co svn://axkit.org/XML-LibXML/trunk
+Mercurial repository. The repository can be cloned via:
+    
+    hg clone ssh://hg@bitbucket.org/shlomif/perl-xml-libxslt
 
 Note this account does not allow direct commits.
 
