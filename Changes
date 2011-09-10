@@ -5,6 +5,7 @@ Revision history for Perl extension XML::LibXSLT.
         hangs a test.
     - Fixed https://rt.cpan.org/Ticket/Display.html?id=52422 :
         - Unexpected webserver dependency in test
+    - Updated the version control instructions in the README to bitbucket.org.
 
 1.70
      - fixed various bugs
