@@ -1,12 +1,12 @@
 use strict;
 use Test;
 BEGIN { plan tests => 26 }
-use UNIVERSAL qw(isa);
 use XML::LibXSLT;
 use XML::LibXML 1.59;
 use Data::Dumper;
 use Devel::Peek;
 
+use IO::Socket::INET;
 
 my $parser = XML::LibXML->new();
 print "# parser\n";
@@ -183,13 +183,26 @@ ok($@ =~ m|read for http://localhost/deny\.xml refused|);
 # test net write
 # ---------------------------------------------------------------------------
 # - test allowed
-$file = 'http://localhost/allow.xml';
+{
+    # We reserve a random port to make sure the localhost address is not
+    # valid. See:
+    #
+    # https://rt.cpan.org/Ticket/Display.html?id=52422
+
+    my $sock = IO::Socket::INET->new(
+        Proto => 'tcp',
+    );
+
+    my $port = $sock->sockport();
+
+$file = "http://localhost:${port}/allow.xml";
 $doc = $parser->parse_string("<write>$file</write>");
 eval {
    $results = $stylesheet->transform($doc);
 };
 print "# net write allowed\n";
 ok($@ =~ /unable to save to \Q$file\E/);
+}
 
 # - test denied
 $file = 'http://localhost/deny.xml';
@@ -227,9 +240,9 @@ sub read_file {
    print "# security read_file: $value\n";
    if ($value eq 'allow.xml') {
       print "# transform context\n";
-      ok( isa($tctxt, "XML::LibXSLT::TransformContext") );
+      ok( $tctxt->isa("XML::LibXSLT::TransformContext") );
       print "# stylesheet from transform context\n";
-      ok( isa($tctxt->stylesheet, "XML::LibXSLT::StylesheetWrapper") );
+      ok( $tctxt->stylesheet->isa("XML::LibXSLT::StylesheetWrapper") );
       return 1;
    }
    else {
