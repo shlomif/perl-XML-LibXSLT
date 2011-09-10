@@ -1,5 +1,8 @@
 Revision history for Perl extension XML::LibXSLT.
 
+    - Fixed https://rt.cpan.org/Ticket/Display.html?id=52422 :
+        - Unexpected webserver dependency in test
+
 1.70
      - fixed various bugs
      - documentation updates
