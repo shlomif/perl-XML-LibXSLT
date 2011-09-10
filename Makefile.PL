@@ -53,7 +53,14 @@ unless ( $is_Win32 ) { # cannot get config in W32
             my $ver = backtick("$xsltcfg --version");
             my ($major, $minor, $point) = $ver =~ /(\d+)\.(\d+)\.(\d+)/g;
             die "VERSION" unless $major > 1 || $minor > 1 ||
-	      ($major>=1 and $minor >=1 and $point >= 18);
+                 ($major>=1 and $minor >=1 and $point >= 18);
+            if ($major == 1 and $minor == 1 and $point == 25)
+            {
+                die <<'EOF';
+libxslt-1.1.25 contains a deadlock that breaks the tests, and is not supported.
+See: https://rt.cpan.org/Ticket/Display.html?id=50487 .
+EOF
+            }
             $config{LIBS} ||= backtick("$xsltcfg --libs");
             $config{INC} ||= backtick("$xsltcfg --cflags");
             print "ok\n";
