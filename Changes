@@ -1,5 +1,6 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.71            Sat Sep 10 20:38:23 IDT 2011
     - Fixed https://rt.cpan.org/Ticket/Display.html?id=50487 :
         - add a blacklist for libxslt-1.1.25 which has a deadlock that
         hangs a test.
