@@ -1,5 +1,5 @@
 use Test;
-BEGIN { plan tests => 35 }
+BEGIN { plan tests => 36 }
 use XML::LibXSLT;
 
 {
@@ -232,4 +232,37 @@ EOF
   ok($val eq "foo,barzzz,bak,bar;foo,barzzz,bak,bar;barbakzzz")
     or print $stylesheet->output_as_bytes($result);
 
+}
+
+{
+  my $ns = "http://foo";
+
+  my $p = XML::LibXML->new;
+  my $xsltproc = XML::LibXSLT->new;
+
+  my $xsltdoc = $p->parse_string(<<EOF);
+<?xml version="1.0" encoding="utf-8"?>
+<xsl:stylesheet version="1.0"
+     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"  
+     xmlns:foo="$ns"
+>
+
+<xsl:template match="root">
+<root>
+<xsl:value-of select="foo:bar(10)" />
+</root>
+</xsl:template>
+
+</xsl:stylesheet>
+EOF
+
+  my $doc = $p->parse_string(<<EOF);
+<root></root>
+EOF
+
+  my $stylesheet = $xsltproc->parse_stylesheet($xsltdoc);
+  $stylesheet->register_function($ns, "bar", sub { return $_[0] * 2 });
+  my $result = $stylesheet->transform($doc);
+  my $val = $result->findvalue("/root");
+  ok($val, 20, "contextual register_function");
 }

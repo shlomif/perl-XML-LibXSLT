@@ -223,7 +223,7 @@ LibXSLT_debug_handler(void * ctxt, const char * msg, ...)
 }
 
 static void
-LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
+LibXSLT__function (xmlXPathParserContextPtr ctxt, int nargs, SV *perl_function) {
     xmlXPathObjectPtr obj,ret;
     xmlNodeSetPtr nodelist = NULL;
     int count;
@@ -237,31 +237,15 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
     int tmp_int;
     AV * array_result;
     xmlNodePtr tmp_node, tmp_node1, tmp_node2 = NULL;
-    SV *key;
-    char *strkey;
-    const char *function, *uri;
-    SV **perl_function;
     xmlDocPtr container = NULL;
     xsltTransformContextPtr tctxt = xsltXPathGetTransformContext(ctxt);
     dSP;
     
-    function = (const char *) ctxt->context->function;
-    uri = (const char *) ctxt->context->functionURI;
-    
-    key = newSVpvn("",0);
-    sv_catpv(key, "{");
-    sv_catpv(key, (const char*)uri);
-    sv_catpv(key, "}");
-    sv_catpv(key, (const char*)function);
-    strkey = SvPV(key, len);
-    perl_function = hv_fetch(LibXSLT_HV_allCallbacks, strkey, len, 0);
-    SvREFCNT_dec(key);
-
     ENTER;
     SAVETMPS;
     PUSHMARK(SP);
     
-    XPUSHs(*perl_function);
+    XPUSHs(perl_function);
 
     /* set up call to perl dispatcher function */
     for (i = 0; i < nargs; i++) {
@@ -443,6 +427,81 @@ FINISH:
     PUTBACK;
     FREETMPS;
     LEAVE;	
+}
+
+/*
+ * LibXSLT_generic_function
+ *
+ * Callback for global functions
+ *
+ */
+static void
+LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
+    const char *uri, *name;
+    SV *key;
+    char *strkey;
+    STRLEN len;
+    SV **perl_function;
+
+    uri = (const char *) ctxt->context->functionURI;
+    name = (const char *) ctxt->context->function;
+    
+    key = newSVpvn("",0);
+    sv_catpv(key, "{");
+    sv_catpv(key, (const char*)uri);
+    sv_catpv(key, "}");
+    sv_catpv(key, (const char*)name);
+    strkey = SvPV(key, len);
+    perl_function = hv_fetch(LibXSLT_HV_allCallbacks, strkey, len, 0);
+    SvREFCNT_dec(key);
+
+    LibXSLT__function (ctxt, nargs, *perl_function);
+}
+
+/*
+ * LibXSLT_context_function
+ *
+ * Callback for context-specific (=stylesheet specific) functions. The
+ * functions themselves are stored in the StylesheetWrapper object which is
+ * retrieved via the xsltTransformContext _private bit
+ *
+ */
+static void
+LibXSLT_context_function (xmlXPathParserContextPtr ctxt, int nargs) {
+    const char *uri, *name;
+    SV *key;
+    char *strkey;
+    STRLEN len;
+    SV *wrapper;
+    HV *functions;
+    SV **ptr;
+    SV **perl_function;
+    AV *val;
+    xsltTransformContextPtr tctxt = xsltXPathGetTransformContext(ctxt);
+
+    wrapper = (SV *) tctxt->_private;
+
+    key = newSVpvn("XML_LIBXSLT_FUNCTIONS", 21);
+    strkey = SvPV(key, len);
+
+    ptr = hv_fetch((HV *) SvRV(wrapper), strkey, len, 0);
+    functions = (HV *) SvRV(*ptr);
+
+    uri = (const char *) ctxt->context->functionURI;
+    name = (const char *) ctxt->context->function;
+    
+    sv_setpv(key, "{");
+    sv_catpv(key, (const char*)uri);
+    sv_catpv(key, "}");
+    sv_catpv(key, (const char*)name);
+    strkey = SvPV(key, len);
+
+    val = (AV *) SvRV(*hv_fetch(functions, strkey, len, 0));
+    perl_function = av_fetch(val, 2, 0);
+
+    SvREFCNT_dec(key);
+
+    LibXSLT__function (ctxt, nargs, *perl_function);
 }
 
 
@@ -744,6 +803,47 @@ LibXSLT_free_security_prefs(xsltSecurityPrefsPtr sec,
    xsltFreeSecurityPrefs(sec);
 }
 
+/*
+ * LibXSLT_init_functions
+ *
+ * Add functions registered in $stylesheet->register_function() to the new
+ * stylesheet context. This iterates over a hash ref keyed on the uri/name of
+ * the functions and adds them to the new context that is used to perform the
+ * transform. The value of the hash is [uri, name, callback] (saves us the
+ * trouble of parsing the key). This is called by transform().
+ *
+ */
+void
+LibXSLT_init_functions(xsltTransformContextPtr ctxt, SV *wrapper)
+{
+    SV **ptr;
+    HV *functions;
+    HE *key;
+    AV *val;
+    char *uri, *name;
+    const char strkey[] = "XML_LIBXSLT_FUNCTIONS";
+
+    ptr = hv_fetch((HV *) SvRV(wrapper), strkey, strlen(strkey), 0);
+	/* make sure the user hasn't screwed up our StylesheetWrapper object */
+    if (ptr == NULL)
+        croak("XML_LIBXSLT_FUNCTIONS is undef in StylesheetWrapper");
+    if (SvTYPE(SvRV(*ptr)) != SVt_PVHV)
+        croak("XML_LIBXSLT_FUNCTIONS is not a HASHREF in StylesheetWrapper");
+
+    functions = (HV *) SvRV(*ptr);
+    hv_iterinit(functions);
+    while (key = hv_iternext(functions))
+    {
+        val = (AV *) SvRV(HeVAL(key)); /* [uri, name, callback] */
+        uri = SvPV_nolen (*av_fetch (val, 0, 0));
+        name = SvPV_nolen (*av_fetch (val, 1, 0));
+        xsltRegisterExtFunction (ctxt,
+                (const xmlChar *)name,
+                (const xmlChar *)uri,
+                LibXSLT_context_function
+                );
+    }
+}
 
 MODULE = XML::LibXSLT         PACKAGE = XML::LibXSLT
 
@@ -1020,6 +1120,7 @@ transform(self, wrapper, sv_doc, ...)
         ctxt->xinclude = 1;
         ctxt->_private = (void *) wrapper;
         sec = LibXSLT_init_security_prefs(ctxt);
+        LibXSLT_init_functions(ctxt, wrapper);
 
         if (doc->intSubset != NULL) {
 	  /* Note: libxslt will unlink intSubset, we
@@ -1118,6 +1219,7 @@ transform_file(self, wrapper, filename, ...)
 	   ctxt->xinclude = 1;
            ctxt->_private = (void *) wrapper;
            sec = LibXSLT_init_security_prefs(ctxt);
+           LibXSLT_init_functions(ctxt, wrapper);
 	   real_dom = xsltApplyStylesheetUser(self, source_dom, xslt_params,
 					      NULL, NULL, ctxt);
 	   if ((ctxt->state != XSLT_STATE_OK) && real_dom) {
