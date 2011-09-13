@@ -263,6 +263,7 @@ sub parse_stylesheet {
                XML_LIBXSLT_READ_CB => $self->{XML_LIBXSLT_READ_CB},
                XML_LIBXSLT_CLOSE_CB => $self->{XML_LIBXSLT_CLOSE_CB},
                XML_LIBXSLT_SECPREFS => $self->{XML_LIBXSLT_SECPREFS},
+			   XML_LIBXSLT_FUNCTIONS => {},
              };
 
     return bless $rv, "XML::LibXSLT::StylesheetWrapper";
@@ -291,6 +292,7 @@ sub parse_stylesheet_file {
                XML_LIBXSLT_READ_CB => $self->{XML_LIBXSLT_READ_CB},
                XML_LIBXSLT_CLOSE_CB => $self->{XML_LIBXSLT_CLOSE_CB},
                XML_LIBXSLT_SECPREFS => $self->{XML_LIBXSLT_SECPREFS},
+			   XML_LIBXSLT_FUNCTIONS => {},
              };
 
     return bless $rv, "XML::LibXSLT::StylesheetWrapper";
@@ -486,6 +488,13 @@ sub transform_file {
     return $doc;
 }
 
+sub register_function
+{
+	my $self = shift;
+
+	$self->{XML_LIBXSLT_FUNCTIONS}->{"{$_[0]}$_[1]"} = \@_;
+}
+
 sub output_string { shift->{XML_LIBXSLT_STYLESHEET}->_output_string($_[0],0) }
 sub output_as_bytes { shift->{XML_LIBXSLT_STYLESHEET}->_output_string($_[0],1) }
 sub output_as_chars { shift->{XML_LIBXSLT_STYLESHEET}->_output_string($_[0],2) }
@@ -659,6 +668,7 @@ debug messages will be ignored.
 =item register_function
 
   XML::LibXSLT->register_function($uri, $name, $subref);
+  $stylesheet->register_function($uri, $name, $subref);
 
 Registers an XSLT extension function mapped to the given URI. For example:
 
