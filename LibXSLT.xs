@@ -962,12 +962,18 @@ BOOT:
       warn("Warning: XML::LibXSLT compiled against libxslt %d, "
            "but runtime libxslt is older %d\n", LIBXSLT_VERSION, xsltLibxsltVersion);
     }
+    xsltInit();
     xsltMaxDepth = 250;
     xsltSetXIncludeDefault(1);
     LibXSLT_HV_allCallbacks = newHV();
 #ifdef HAVE_EXSLT
     exsltRegisterAll();
 #endif
+
+void
+END()
+    CODE:
+        xsltCleanupGlobals();
 
 int
 HAVE_EXSLT()
