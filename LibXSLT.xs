@@ -504,6 +504,81 @@ LibXSLT_context_function (xmlXPathParserContextPtr ctxt, int nargs) {
     LibXSLT__function (ctxt, nargs, *perl_function);
 }
 
+static void
+LibXSLT_context_element(xsltTransformContextPtr ctxt, xmlNodePtr node, xmlNodePtr inst, xsltElemPreCompPtr comp)
+{
+    SV *key, *wrapper, **ptr, **perl_function, *perlnode;
+	HV *elements;
+	AV *val;
+	char *strkey;
+	STRLEN len;
+    HE *ent;
+    int count;
+    xmlNodePtr result;
+
+    wrapper = (SV *) ctxt->_private;
+
+    key = newSVpvn("", 0);
+
+	sv_setpv(key, "XML_LIBXSLT_ELEMENTS");
+    strkey = SvPV(key, len);
+    ptr = hv_fetch((HV *) SvRV(wrapper), strkey, len, 0);
+	elements = (HV *) SvRV(*ptr);
+
+	sv_setpv(key, "{");
+    sv_catpv(key, (const char*)inst->ns->href);
+	sv_catpv(key, "}");
+	sv_catpv(key, (const char*)inst->name);
+    strkey = SvPV(key, len);
+    ptr = hv_fetch(elements, strkey, len, 0);
+    val = (AV *) SvRV(*ptr);
+
+    perl_function = av_fetch(val, 2, 0);
+
+    SvREFCNT_dec(key);
+
+    dSP;
+    
+    ENTER;
+    SAVETMPS;
+    PUSHMARK(SP);
+    EXTEND(SP, 3);
+    PUSHs(sv_setref_pv(sv_newmortal(), "XML::LibXSLT::TransformContext",
+                (void*)ctxt));
+    if (PmmPROXYNODE(node->doc) == NULL) {
+        node->doc->_private = x_PmmNewNode(INT2PTR(xmlNodePtr,node->doc));
+    }
+    PUSHs(x_PmmNodeToSv(node, PmmPROXYNODE(node->doc)));
+    if (PmmPROXYNODE(inst->doc) == NULL) {
+        inst->doc->_private = x_PmmNewNode(INT2PTR(xmlNodePtr,inst->doc));
+    }
+    PUSHs(x_PmmNodeToSv(inst, PmmPROXYNODE(inst->doc)));
+    PUTBACK;
+
+    count = call_sv(*perl_function, G_SCALAR);
+
+    SPAGAIN;
+
+    if (count != 1)
+        croak("LibXSLT: element callback did not return anything");
+
+    perlnode = POPs;
+
+    if (perlnode != &PL_sv_undef)
+    {
+        result = x_PmmSvNodeExt(perlnode, 0); 
+        if (result == NULL)
+            croak("LibXSLT: element callback did not return a XML::Node");
+
+        x_PmmREFCNT_inc(PmmPROXYNODE(result));
+
+        xmlAddChild(ctxt->insert, result);
+    }
+
+    FREETMPS;
+    LEAVE;
+}
+
 
 int
 LibXSLT_input_match(char const * filename)
@@ -845,6 +920,38 @@ LibXSLT_init_functions(xsltTransformContextPtr ctxt, SV *wrapper)
     }
 }
 
+void
+LibXSLT_init_elements(xsltTransformContextPtr ctxt, SV *wrapper)
+{
+    SV **ptr;
+    HV *functions;
+    HE *key;
+    AV *val;
+    char *uri, *name;
+    const char strkey[] = "XML_LIBXSLT_ELEMENTS";
+
+    ptr = hv_fetch((HV *) SvRV(wrapper), strkey, strlen(strkey), 0);
+	/* make sure the user hasn't screwed up our StylesheetWrapper object */
+    if (ptr == NULL)
+        croak("XML_LIBXSLT_ELEMENTS is undef in StylesheetWrapper");
+    if (SvTYPE(SvRV(*ptr)) != SVt_PVHV)
+        croak("XML_LIBXSLT_ELEMENTS is not a HASHREF in StylesheetWrapper");
+
+    functions = (HV *) SvRV(*ptr);
+    hv_iterinit(functions);
+    while (key = hv_iternext(functions))
+    {
+        val = (AV *) SvRV(HeVAL(key)); /* [uri, name, callback] */
+        uri = SvPV_nolen (*av_fetch (val, 0, 0));
+        name = SvPV_nolen (*av_fetch (val, 1, 0));
+        xsltRegisterExtElement (ctxt,
+                (const xmlChar *)name,
+                (const xmlChar *)uri,
+                LibXSLT_context_element
+                );
+    }
+}
+
 MODULE = XML::LibXSLT         PACKAGE = XML::LibXSLT
 
 PROTOTYPES: DISABLE
@@ -1121,6 +1228,7 @@ transform(self, wrapper, sv_doc, ...)
         ctxt->_private = (void *) wrapper;
         sec = LibXSLT_init_security_prefs(ctxt);
         LibXSLT_init_functions(ctxt, wrapper);
+        LibXSLT_init_elements(ctxt, wrapper);
 
         if (doc->intSubset != NULL) {
 	  /* Note: libxslt will unlink intSubset, we
@@ -1220,6 +1328,7 @@ transform_file(self, wrapper, filename, ...)
            ctxt->_private = (void *) wrapper;
            sec = LibXSLT_init_security_prefs(ctxt);
            LibXSLT_init_functions(ctxt, wrapper);
+           LibXSLT_init_elements(ctxt, wrapper);
 	   real_dom = xsltApplyStylesheetUser(self, source_dom, xslt_params,
 					      NULL, NULL, ctxt);
 	   if ((ctxt->state != XSLT_STATE_OK) && real_dom) {
