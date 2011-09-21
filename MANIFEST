@@ -1,8 +1,4 @@
-benchmark.pl
 Changes
-Driver/BaseClass.pm
-Driver/LibXSLT.pm
-Driver/Sablotron.pm
 example/1.xml
 example/1.xsl
 example/2.xml
