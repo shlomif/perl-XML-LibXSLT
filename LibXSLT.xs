@@ -545,14 +545,16 @@ LibXSLT_context_element(xsltTransformContextPtr ctxt, xmlNodePtr node, xmlNodePt
     EXTEND(SP, 3);
     PUSHs(sv_setref_pv(sv_newmortal(), "XML::LibXSLT::TransformContext",
                 (void*)ctxt));
-    if (PmmPROXYNODE(node->doc) == NULL) {
-        node->doc->_private = x_PmmNewNode(INT2PTR(xmlNodePtr,node->doc));
-    }
-    PUSHs(x_PmmNodeToSv(node, PmmPROXYNODE(node->doc)));
+    // node and node->doc are the document being transformed
+    PUSHs(sv_2mortal(x_PmmNodeToSv(node, PmmPROXYNODE(node->doc))));
+    // inst is the stylesheet's private copy of the stylesheet document
     if (PmmPROXYNODE(inst->doc) == NULL) {
         inst->doc->_private = x_PmmNewNode(INT2PTR(xmlNodePtr,inst->doc));
+        // add a private reference which is cleaned up when the stylesheet
+        // is destroyed
+        x_PmmREFCNT_inc(PmmPROXYNODE(inst->doc));
     }
-    PUSHs(x_PmmNodeToSv(inst, PmmPROXYNODE(inst->doc)));
+    PUSHs(sv_2mortal(x_PmmNodeToSv(inst, PmmPROXYNODE(inst->doc))));
     PUTBACK;
 
     count = call_sv(*perl_function, G_SCALAR);
@@ -1370,6 +1372,12 @@ DESTROY(self)
     CODE:
         if (self == NULL) {
             XSRETURN_UNDEF;
+        }
+        if (PmmPROXYNODE(self->doc)) {
+            if (x_PmmREFCNT(PmmPROXYNODE(self->doc)) > 1)
+                warn("LibXSLT: reference to stylesheet document outside of stylesheet scope"); // perhaps croak() ?
+            else
+                xmlFree(PmmPROXYNODE(self->doc));
         }
         xsltFreeStylesheet(self);
 
