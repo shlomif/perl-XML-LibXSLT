@@ -1,3 +1,7 @@
+benchmark/benchmark.pl
+benchmark/Driver/BaseClass.pm
+benchmark/Driver/LibXSLT.pm
+benchmark/Driver/Sablotron.pm
 Changes
 example/1.xml
 example/1.xsl
