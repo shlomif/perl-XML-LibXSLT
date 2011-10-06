@@ -1,5 +1,18 @@
 Revision history for Perl extension XML::LibXSLT.
 
+    - Moved the benchmarking code under benchmark/ so it won't be indexed
+    by CPAN (Tim Brody).
+    - Avoid leaking memory inside extension elements by cleaning up on 
+    stylesheet DESTROY (Tim Brody).
+    - xsltInit() and xsltCleanupGlobals() to avoid leaking memory on 
+    init/shutdown (Tim Brody).
+    - Added support for stylesheet context functions via a 
+    $stylesheet->register_function() method with the same arguments as 
+    XML::LibXSLT->register_function(). (Tim Brody)
+    - Added support for register_element() on stylesheet objects. The callback
+    may leak memory though - nothing frees the _private attributes of the
+    node + document owner for the passed arguments? (Tim Brody)
+
 1.71            Sat Sep 10 20:38:23 IDT 2011
     - Fixed https://rt.cpan.org/Ticket/Display.html?id=50487 :
         - add a blacklist for libxslt-1.1.25 which has a deadlock that
