@@ -1,5 +1,6 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.72            Thu Oct  6 13:37:13 IST 2011
     - Moved the benchmarking code under benchmark/ so it won't be indexed
     by CPAN (Tim Brody).
     - Avoid leaking memory inside extension elements by cleaning up on 
