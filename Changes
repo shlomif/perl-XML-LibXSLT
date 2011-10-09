@@ -1,5 +1,10 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.73            Sun Oct  9 17:32:30 IST 2011
+    - Possible fix for https://rt.cpan.org/Ticket/Display.html?id=71456 :
+        - made the port reservation on t/14security.t for the non-existent
+        URL more robust.
+
 1.72            Thu Oct  6 13:37:13 IST 2011
     - Moved the benchmarking code under benchmark/ so it won't be indexed
     by CPAN (Tim Brody).

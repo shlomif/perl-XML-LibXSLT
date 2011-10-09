@@ -188,12 +188,27 @@ ok($@ =~ m|read for http://localhost/deny\.xml refused|);
     # valid. See:
     #
     # https://rt.cpan.org/Ticket/Display.html?id=52422
+    #
+    # We need to go to additional lengths to reserve a port due to:
+    # - https://rt.cpan.org/Ticket/Display.html?id=71456
+    # - http://stackoverflow.com/questions/7704228/perl-how-to-portably-reserve-a-tcp-port-so-there-will-be-a-non-available-url
+ 
+my $listen_sock = IO::Socket::INET->new(
+    Listen => 1,
+    Proto => 'tcp',
+    Blocking => 0,
+);
 
-    my $sock = IO::Socket::INET->new(
-        Proto => 'tcp',
-    );
+my $listen_port = $listen_sock->sockport();
 
-    my $port = $sock->sockport();
+my $conn_sock = IO::Socket::INET->new(
+    PeerAddr => 'localhost',
+    PeerPort => $listen_port,
+    Proto => 'tcp',
+    Blocking => 0,
+);
+
+my $port = $conn_sock->sockport();
 
 $file = "http://localhost:${port}/allow.xml";
 $doc = $parser->parse_string("<write>$file</write>");
