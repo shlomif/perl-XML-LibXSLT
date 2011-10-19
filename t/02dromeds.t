@@ -1,10 +1,15 @@
-use Test;
-BEGIN { plan tests => 6 }
+use strict;
+use warnings;
+
+use Test::More tests => 6;
+
 use XML::LibXSLT;
 use XML::LibXML;
 
 my $parser = XML::LibXML->new();
-ok($parser);
+# TEST
+
+ok($parser, ' TODO : Add test name');
 
 my $doc = $parser->parse_string(<<'EOT');
 <?xml version="1.0"?>
@@ -24,7 +29,9 @@ my $doc = $parser->parse_string(<<'EOT');
 </dromedaries>
 EOT
 
-ok($doc);
+# TEST
+
+ok($doc, ' TODO : Add test name');
 
 my $xslt = XML::LibXSLT->new();
 my $style_doc = $parser->parse_string(<<'EOT');
@@ -60,20 +67,24 @@ my $style_doc = $parser->parse_string(<<'EOT');
 </xsl:stylesheet>
 EOT
 
-ok($style_doc);
+# TEST
+ok($style_doc, ' TODO : Add test name');
 
 # warn "Style_doc = \n", $style_doc->toString, "\n";
 
 my $stylesheet = $xslt->parse_stylesheet($style_doc);
 
-ok($stylesheet);
+# TEST
+ok($stylesheet, ' TODO : Add test name');
 
 my $results = $stylesheet->transform($doc);
 
-ok($results);
+# TEST
+ok($results, ' TODO : Add test name');
 
 my $output = $stylesheet->output_string($results);
 
-ok($output);
+# TEST
+ok($output, ' TODO : Add test name');
 
 # warn "Results:\n", $output, "\n";
