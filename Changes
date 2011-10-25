@@ -4,6 +4,7 @@ Revision history for Perl extension XML::LibXSLT.
         - t/01basic.t
         - t/02dromeds.t
         - t/04params.t
+        - t/05quick.t
 
 1.73            Sun Oct  9 17:32:30 IST 2011
     - Possible fix for https://rt.cpan.org/Ticket/Display.html?id=71456 :
