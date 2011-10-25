@@ -1,12 +1,14 @@
-use Test;
-BEGIN { plan tests => 28 };
-
-use warnings;
 use strict;
+use warnings;
+
+# Should be 28.
+use Test::More tests => 28;
+
 $|=1;
 
 use XML::LibXSLT;
-ok(1);
+# TEST
+ok(1, ' TODO : Add test name');
 
 my $bad_xsl1 = 'example/bad1.xsl';
 my $bad_xsl2 = 'example/bad2.xsl';
@@ -18,84 +20,106 @@ my $good_xml = 'example/1.xml';
 my $bad_xml  = 'example/bad2.xsl';
 
 my $xslt = XML::LibXSLT->new;
-ok($xslt);
+# TEST
+ok($xslt, ' TODO : Add test name');
 
 {
   my $stylesheet = XML::LibXML->new->parse_file($bad_xsl1);
   undef $@;
   eval { $xslt->parse_stylesheet($stylesheet) };
-  ok( $@ );
+  # TEST
+  ok( $@, ' TODO : Add test name' );
 }
 
 {
   undef $@;
   eval { XML::LibXML->new->parse_file($bad_xsl2) };
-  ok( $@ );
+  # TEST
+  ok( $@, ' TODO : Add test name' );
 }
 
 {
   my $stylesheet = XML::LibXML->new->parse_file($good_xsl);
-  ok( $stylesheet );
+  # TEST
+  ok( $stylesheet, ' TODO : Add test name' );
   my $parsed = $xslt->parse_stylesheet( $stylesheet );
-  ok( $parsed );
+  # TEST
+  ok( $parsed, ' TODO : Add test name' );
   undef $@;
   eval { $parsed->transform_file( $bad_xml ); };
-  ok( $@ );
+  # TEST
+  ok( $@, ' TODO : Add test name' );
 }
 
 {
   my $stylesheet = XML::LibXML->new->parse_file($nonfatal_xsl);
-  ok( $stylesheet );
+  # TEST
+  ok( $stylesheet, ' TODO : Add test name' );
   my $parsed = $xslt->parse_stylesheet( $stylesheet );
-  ok( $parsed );
+  # TEST
+  ok( $parsed, ' TODO : Add test name' );
   undef $@;
   my $warn;
   local $SIG{__WARN__} = sub { $warn = shift; };
   eval { $parsed->transform_file( $good_xml ); };
-  ok( !$@ );
-  ok( $warn , "Non-fatal message.\n" );
+  # TEST
+  ok( !$@, ' TODO : Add test name' );
+  # TEST
+  is( $warn , "Non-fatal message.\n", ' TODO : Add test name' );
 }
 
 {
   my $parser = XML::LibXML->new;
   my $stylesheet = $parser->parse_file($bad_xsl3);
-  ok( $stylesheet );
+  # TEST
+  ok( $stylesheet, ' TODO : Add test name' );
   my $parsed = $xslt->parse_stylesheet( $stylesheet );
-  ok( $parsed );
+  # TEST
+  ok( $parsed, ' TODO : Add test name' );
   undef $@;
   eval { $parsed->transform_file( $good_xml ); };
-  ok( $@ );
+  # TEST
+  ok( $@, ' TODO : Add test name' );
   my $dom = $parser->parse_file( $good_xml );
-  ok( $dom );
+  # TEST
+  ok( $dom, ' TODO : Add test name' );
   undef $@;
   eval { $parsed->transform( $dom ); };
-  ok( $@ );
+  # TEST
+  ok( $@, ' TODO : Add test name' );
 }
 
 {
   my $parser = XML::LibXML->new;
   my $stylesheet = $parser->parse_file($fatal_xsl);
-  ok( $stylesheet );
+  # TEST
+  ok( $stylesheet, ' TODO : Add test name' );
   my $parsed = $xslt->parse_stylesheet( $stylesheet );
-  ok( $parsed );
+  # TEST
+  ok( $parsed, ' TODO : Add test name' );
   undef $@;
   eval { $parsed->transform_file( $good_xml ); };
-  ok( $@ );
+  # TEST
+  ok( $@, ' TODO : Add test name' );
   my $dom = $parser->parse_file( $good_xml );
-  ok( $dom );
+  # TEST
+  ok( $dom, ' TODO : Add test name' );
   undef $@;
   eval { $parsed->transform( $dom ); };
-  ok( $@ );
+  # TEST
+  ok( $@, ' TODO : Add test name' );
 }
 
 {
 my $parser = XML::LibXML->new();
-ok( $parser );
+# TEST
+ok( $parser, ' TODO : Add test name' );
 
 my $doc = $parser->parse_string(<<XML);
 <doc/>
 XML
-ok( $doc );
+# TEST
+ok( $doc, ' TODO : Add test name' );
 
 my $xslt = XML::LibXSLT->new();
 my $style_doc = $parser->parse_string(<<XSLT);
@@ -106,16 +130,24 @@ my $style_doc = $parser->parse_string(<<XSLT);
   </xsl:template>
 </xsl:stylesheet>
 XSLT
-ok( $style_doc );
+# TEST
+ok( $style_doc, ' TODO : Add test name' );
 
 my $stylesheet = $xslt->parse_stylesheet($style_doc);
-ok( $stylesheet );
+# TEST
+ok( $stylesheet, ' TODO : Add test name' );
 
 my $results;
 eval { $results = $stylesheet->transform($doc); };
-ok( $@ );
 
-ok( $@ =~ /unregistered variable foo|variable 'foo' has not been declared/i );
-ok( $@ =~ /element value-of/ );
+my $E = $@;
+# TEST
+ok( $E, ' TODO : Add test name' );
 
+# TEST
+like ( $E, 
+    qr/unregistered variable foo|variable 'foo' has not been declared/i, 
+    'Exception matches.' );
+# TEST
+like ( $E, qr/element value-of/, 'Exception matches "element value-of"' );
 }
