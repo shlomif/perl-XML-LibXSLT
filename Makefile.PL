@@ -210,8 +210,10 @@ WriteMakefile(
     'ABSTRACT'  => 'Interface to Gnome libxslt library',
     'PREREQ_PM' =>
     { 
-        'Encode' => '0',
+        'Encode' => 0,
         'XML::LibXML' => "1.70", 
+        'strict' => 0,
+        'warnings' => 0,
     },
     'OBJECT'     => '$(O_FILES)',
     %config,
