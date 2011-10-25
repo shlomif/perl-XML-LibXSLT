@@ -1,17 +1,22 @@
-use Test;
-use constant PLAN => 6;
-BEGIN { plan tests => PLAN; }
+use strict;
+use warnings;
+
+use Test::More;
 
 use XML::LibXSLT;
 use XML::LibXML;
 
-unless (XML::LibXSLT::HAVE_EXSLT()) {
-  skip("this test requires XML::LibXSLT to be compiled with libexslt\n") for (1..PLAN);	
-  exit;
+if (not XML::LibXSLT::HAVE_EXSLT()) {
+    plan skip_all => "this test requires XML::LibXSLT to be compiled with libexslt"
+}
+else {
+    # Should be 6.
+    plan tests => 6;
 }
 
 my $parser = XML::LibXML->new();
-ok($parser);
+# TEST
+ok($parser, '$parser was initted.');
 
 my $doc = $parser->parse_string(<<'EOT');
 <?xml version="1.0"?>
@@ -21,7 +26,8 @@ my $doc = $parser->parse_string(<<'EOT');
 </doc>
 EOT
 
-ok($doc);
+# TEST
+ok($doc, '$doc is true.');
 
 my $xslt = XML::LibXSLT->new();
 my $style_doc = $parser->parse_string(<<'EOT');
@@ -43,20 +49,25 @@ my $style_doc = $parser->parse_string(<<'EOT');
 </xsl:stylesheet>
 EOT
 
-ok($style_doc);
+# TEST
+
+ok($style_doc, '$style_doc is true.');
 
 # warn "Style_doc = \n", $style_doc->toString, "\n";
 
 my $stylesheet = $xslt->parse_stylesheet($style_doc);
 
-ok($stylesheet);
+# TEST
+ok($stylesheet, '$stylesheet is true.');
 
 my $results = $stylesheet->transform($doc);
 
-ok($results);
+# TEST
+ok($results, '$results is true.');
 
 my $output = $stylesheet->output_string($results);
 
-ok($output);
+# TEST
+ok($output, '$output is true.');
 
 # warn "Results:\n", $output, "\n";
