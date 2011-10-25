@@ -15,6 +15,7 @@ Revision history for Perl extension XML::LibXSLT.
         - t/12import.t
         - t/13error.t
         - t/14security.t
+        - t/15misc.t
 
     - In the process made "Encode" and perl-5.8.1. pre-requisites of this
     distribution.
