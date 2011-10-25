@@ -1,14 +1,11 @@
 use strict;
 use warnings;
 
-# Should be 29.
-use Test::More tests => 29;
+# Should be 28.
+use Test::More tests => 28;
 
 use XML::LibXSLT;
 use XML::LibXML;
-# TEST
-
-ok(1, ' TODO : Add test name');
 
 my $parser = XML::LibXML->new();
 my $xslt = XML::LibXSLT->new();
