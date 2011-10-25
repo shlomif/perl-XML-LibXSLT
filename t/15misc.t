@@ -1,7 +1,11 @@
 # -*- cperl -*-
 
-use Test;
-BEGIN { plan tests => 4 }
+use strict;
+use warnings;
+
+# Should be 4.
+use Test::More tests => 4;
+
 use XML::LibXML 1.70;
 use XML::LibXSLT;
 
@@ -32,9 +36,11 @@ EOT
 </xsl:transform>
 EOX
 
-  ok($doc->toString() eq $xml);
+  # TEST
+  is ($doc->toString(), $xml, 'toString() No. 1');
   $xslt->parse_stylesheet($style_doc)->transform($doc);
-  ok($doc->toString() eq $xml);
+  # TEST
+  is ($doc->toString(), $xml, 'toString() No. 2');
 
 }
 
@@ -60,9 +66,11 @@ EOT2
   my $stylesheet = $xslt->parse_stylesheet($style_doc);
 
   my $results = $stylesheet->transform($source);
-  ok($results);
+  # TEST
+  ok($results, ' TODO : Add test name');
   my $out = $stylesheet->output_string($results);
-  ok($out eq <<'EOF') or print $out;
+  # TEST
+  is($out, <<'EOF', '$out is equal to <tr>');
 <?xml version="1.0"?>
 <tr>
 EOF
