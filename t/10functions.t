@@ -1,15 +1,36 @@
-use Test;
-BEGIN { plan tests => 38 }
+use strict;
+use warnings;
+
+# Should be 38.
+use Test::More tests => 38;
 use XML::LibXSLT;
 
 {
   my $parser = XML::LibXML->new();
   my $xslt = XML::LibXSLT->new();
-  ok($parser); ok($xslt);
+  # TEST
+  ok($parser, '$parser was initted'); 
+  # TEST
+  ok($xslt, '$xslt was initted');
   
-  $xslt->register_function('urn:foo' => 'test', sub { ok(1); defined $_[1] ? return $_[0] . $_[1] : return $_[0] });
-  $xslt->register_function('urn:foo' => 'test2', sub { ok(ref($_[0]), 'XML::LibXML::NodeList'); ref($_[0]) });
-  $xslt->register_function('urn:foo' => 'test3', sub { ok(@_ == 0); return; });
+  $xslt->register_function('urn:foo' => 'test', sub { 
+          # TEST*4
+          ok(1, 'urn:foo was reached.'); 
+          return $_[1] ?  ($_[0] . $_[1]) : $_[0];
+      }
+  );
+  $xslt->register_function('urn:foo' => 'test2', sub { 
+          # TEST*2
+          is(ref($_[0]), 'XML::LibXML::NodeList', 'First argument is a NodeList'); 
+          ref($_[0]) 
+      }
+  );
+  $xslt->register_function('urn:foo' => 'test3', sub { 
+          # TEST*2
+          is(scalar(@_), 0, 'No arguments were received.'); 
+          return; 
+      }
+  );
   
   my $source = $parser->parse_string(<<'EOT');
 <?xml version="1.0" encoding="ISO-8859-1"?>
@@ -41,14 +62,18 @@ EOT
 </xsl:stylesheet>
 EOT
 
-  ok($style);
+  # TEST
+  ok($style, '$style is true');
   my $stylesheet = $xslt->parse_stylesheet($style);
 
   my $results = $stylesheet->transform($source);
-  ok($results);
+  # TEST
+  ok($results, '$results is true.');
 
-  ok($stylesheet->output_string($results), qr(Foo!));
-  ok($stylesheet->output_string($results), qr(NodeList));
+  # TEST
+  like ($stylesheet->output_string($results), qr(Foo!), 'Matches Foo!');
+  # TEST
+  like ($stylesheet->output_string($results), qr(NodeList), 'Matches NodeList');
 
   $xslt->register_function('urn:foo' => 'get_list', \&get_nodelist );
 
@@ -74,15 +99,27 @@ EOT
 </xsl:stylesheet>
 EOT
 
-  ok($style);
+  # TEST
+  ok($style, '$style is true - 2');
 
   $stylesheet = $xslt->parse_stylesheet($style);
-  for (1..5) {
+  # TEST:$n=5;
+  for my $n (1..5) {
     $results = $stylesheet->transform($source);
 
-    ok($results);
-    ok($stylesheet->output_string($results), qr(<li>one</li>));
-    ok($stylesheet->output_string($results), qr(<li>one</li><li>two</li><li>three</li>));
+    # TEST*$n
+    ok($results, '$results is true - 2 (' . $n . ')');
+    # TEST*$n
+    like($stylesheet->output_string($results), 
+        qr(<li>one</li>), 
+        'Matches li-one - ' . $n
+    );
+    # TEST*$n
+    like (
+        $stylesheet->output_string($results), 
+        qr(<li>one</li><li>two</li><li>three</li>), 
+        'Output matches multiple lis - ' . $n
+    );
   }
 }
 
@@ -127,7 +164,11 @@ XML
     my $result = $stylesheet->transform($xml);
     # the behavior has changed in some version of libxslt
     my $expect = qq(<html xmlns:foo="http://foo"><head><foo>1st</foo><foo>2nd</foo></head></html>\n);
-    ok ($result->serialize,qr{(\Q<?xml version="1.0"?>\n\E)?\Q$expect\E});
+    # TEST
+    like ($result->serialize,
+        qr{(\Q<?xml version="1.0"?>\n\E)?\Q$expect\E}, 
+        'Results serialize matches text.'
+    );
   }
   {
     XML::LibXSLT->register_function(
@@ -135,7 +176,12 @@ XML
     my $stylesheet = $xsltproc->parse_stylesheet($xslt);
     my $result = $stylesheet->transform($xml);
     my $expect = qq(<html xmlns:foo="http://foo"><head><foo>1st</foo></head></html>\n);
-    ok ($result->serialize,qr{(\Q<?xml version="1.0"?>\n\E)?\Q$expect\E});
+    # TEST
+    like (
+        $result->serialize,
+        qr{(\Q<?xml version="1.0"?>\n\E)?\Q$expect\E},
+        'Results serialize matches text - 2.'
+    );
   }
 }
 
@@ -161,7 +207,11 @@ XSLT
   my $result = $stylesheet->transform($parser->parse_string( <<'XML' ));
 <a><b><b/></b><b><c/></b></a>
 XML
-  ok ($result->serialize,qq(<?xml version="1.0"?>\n<out><b><b/></b><b><c/></b></out>\n));
+  # TEST
+  is ($result->serialize,
+      qq(<?xml version="1.0"?>\n<out><b><b/></b><b><c/></b></out>\n), 
+      'result is right.'
+  );
 }
 
 {
@@ -228,8 +278,11 @@ EOF
   my $stylesheet = $xsltproc->parse_stylesheet($xsltdoc);
   my $result = $stylesheet->transform($doc);
   my $val = $result->findvalue("/root");
-  ok($val);
-  ok($val eq "foo,barzzz,bak,bar;foo,barzzz,bak,bar;barbakzzz")
+  # TEST
+  ok ($val, 'val is true.');
+  # TEST
+  is ($val, "foo,barzzz,bak,bar;foo,barzzz,bak,bar;barbakzzz", 
+      'val has the right value.')
     or print $stylesheet->output_as_bytes($result);
 
 }
@@ -264,7 +317,8 @@ EOF
   $stylesheet->register_function($ns, "bar", sub { return $_[0] * 2 });
   my $result = $stylesheet->transform($doc);
   my $val = $result->findvalue("/root");
-  ok($val, 20, "contextual register_function");
+  # TEST
+  is ($val, 20, "contextual register_function" );
 }
 
 {
@@ -300,7 +354,9 @@ EOF
   });
   my $result = $stylesheet->transform($doc);
   my $val = $result->findvalue("/root");
-  ok($val, 10, "contextual register_element");
+  # TEST
+  is ($val, 10, "contextual register_element");
 }
 
-ok(1);
+# TEST
+ok(1, 'Reached here.');
