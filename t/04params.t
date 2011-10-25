@@ -1,9 +1,11 @@
-use Test;
-BEGIN { plan tests => 8 }
+use strict;
+use warnings;
+
+# Should be 7.
+use Test::More tests => 7;
 
 use XML::LibXSLT;
 use XML::LibXML;
-ok(1);
 
 my $parser = XML::LibXML->new();
 my $xslt = XML::LibXSLT->new();
@@ -16,7 +18,9 @@ my $source = $parser->parse_string(<<'EOF');
 </top>
 EOF
         
-ok($source);
+# TEST
+        
+ok($source, ' TODO : Add test name');
 
 my $style_doc = $parser->parse_string(<<'EOF');
 <?xml version="1.0"?>
@@ -39,11 +43,13 @@ my $style_doc = $parser->parse_string(<<'EOF');
 </xsl:stylesheet>
 EOF
 
-ok($style_doc);
+# TEST
+ok($style_doc, ' TODO : Add test name');
 
 my $stylesheet = $xslt->parse_stylesheet($style_doc);
 
-ok($stylesheet);
+# TEST
+ok($stylesheet, ' TODO : Add test name');
 
 my $results = $stylesheet->transform($source,
         'incoming' => "'INCOMINGTEXT'",
@@ -51,12 +57,16 @@ my $results = $stylesheet->transform($source,
         'outgoing' => "'OUTGOINGTEXT'",
         );
 
-ok($results);
+# TEST
+ok($results, ' TODO : Add test name');
 
-ok($stylesheet->output_string($results));
+# TEST
+ok($stylesheet->output_string($results), ' TODO : Add test name');
 
 my @params = XML::LibXSLT::xpath_to_string('empty' => undef);
 $results = $stylesheet->transform($source, @params);
-ok($results);
-ok($stylesheet->output_string($results));
+# TEST
+ok($results, ' TODO : Add test name');
+# TEST
+ok($stylesheet->output_string($results), ' TODO : Add test name');
 
