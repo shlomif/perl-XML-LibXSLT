@@ -1,10 +1,17 @@
-use Test;
-BEGIN { plan tests => 5 }
+use strict;
+use warnings;
+
+# Should be 5.
+use Test::More tests => 5;
 use XML::LibXSLT;
 
 my $parser = XML::LibXML->new();
 my $xslt = XML::LibXSLT->new();
-ok($parser); ok($xslt);
+
+# TEST
+ok($parser, 'parser was initted.');
+# TEST
+ok($xslt, 'xslt object was initted.');
 
 local $XML::LibXML::match_cb = \&match_cb;
 local $XML::LibXML::open_cb = \&open_cb;
@@ -37,14 +44,18 @@ EOT
 
 my $style = $parser->parse_string($foodoc,'foo');
 
-ok($style);
+# TEST
+ok($style, '$style is true');
+
 my $stylesheet = $xslt->parse_stylesheet($style);
 # my $stylesheet = $xslt->parse_stylesheet_file("example/document.xsl");
 
 my $results = $stylesheet->transform($source);
-ok($results);
-
-ok($results->toString, qr/typed data in stylesheet/);
+# TEST
+ok ($results, 'Results are true.');
+# TEST
+like ($results->toString, qr/typed data in stylesheet/, 
+    'found "typed data in stylesheet"');
 
 ###############################################################
 # Callbacks - this is needed because with document('') now,
