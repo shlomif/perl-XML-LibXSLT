@@ -1,5 +1,10 @@
-use Test;
-BEGIN { plan tests => 11 }
+
+use strict;
+use warnings;
+
+# Should be 11.
+use Test::More tests => 11;
+
 use XML::LibXSLT;
 use XML::LibXML;
 
@@ -9,9 +14,12 @@ use XML::LibXML;
 
 my $parser = XML::LibXML->new();
 my $xslt = XML::LibXSLT->new();
-ok($parser); ok($xslt);
+# TEST
+ok($parser, ' TODO : Add test name'); # TEST
+ ok($xslt, ' TODO : Add test name');
 my $source = $parser->parse_file('example/1.xml');
-ok($source);
+# TEST
+ok($source, ' TODO : Add test name');
 
 my ($out1, $out2);
 
@@ -20,18 +28,22 @@ my $style_doc = $parser->parse_file('example/1.xsl');
 my $stylesheet = $xslt->parse_stylesheet($style_doc);
 my $results = $stylesheet->transform($source);
 $out1 = $stylesheet->output_string($results);
-ok($out1);
+# TEST
+ok($out1, ' TODO : Add test name');
 }
 
 {
 $source = $parser->parse_file('example/2.xml');
-ok($source);
-$style_doc = $parser->parse_file('example/2.xsl');
-$stylesheet = $xslt->parse_stylesheet($style_doc);
-$results = $stylesheet->transform($source);
-ok($stylesheet->media_type);
+# TEST
+ok($source, ' TODO : Add test name');
+my $style_doc = $parser->parse_file('example/2.xsl');
+my $stylesheet = $xslt->parse_stylesheet($style_doc);
+my $results = $stylesheet->transform($source);
+# TEST
+ok($stylesheet->media_type, ' TODO : Add test name');
 $out2 = $stylesheet->output_string($results);
-ok($out2);
+# TEST
+ok($out2, ' TODO : Add test name');
 }
 
 {
@@ -39,15 +51,19 @@ ok($out2);
   my $stylesheet = $xslt->parse_stylesheet($style_doc);
   my $results = $stylesheet->transform_file('example/1.xml');
   my $out = $stylesheet->output_string($results);
-  ok( $out );
-  ok( $out1 eq $out );
+  # TEST
+  ok ($out, ' TODO : Add test name' );
+  # TEST
+  is ($out1, $out, ' TODO : Add test name' );
 }
 
 {
-  $style_doc = $parser->parse_file('example/2.xsl');
-  $stylesheet = $xslt->parse_stylesheet($style_doc);
-  $results = $stylesheet->transform_file('example/2.xml');
+  my $style_doc = $parser->parse_file('example/2.xsl');
+  my $stylesheet = $xslt->parse_stylesheet($style_doc);
+  my $results = $stylesheet->transform_file('example/2.xml');
   my $out = $stylesheet->output_string($results);
-  ok( $out );
-  ok( $out2 eq $out );
+  # TEST
+  ok( $out, ' TODO : Add test name' );
+  # TEST
+  is ($out2, $out, ' TODO : Add test name' );
 }
