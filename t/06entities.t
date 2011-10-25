@@ -1,15 +1,10 @@
-use Test;
-BEGIN { plan tests => 2 }
+use strict;
+use warnings;
+
+use Test::More tests => 2;
 
 use XML::LibXML;
 use XML::LibXSLT;
-for my $p (qw(
-  XML::LibXML::VERSION
-  XML::LibXSLT::VERSION
- )) {
-  printf "%s: %s\n", $p, $$p;
-}
-use strict;
 
 my $parser = XML::LibXML->new();
 my $xslt = XML::LibXSLT->new();
@@ -35,22 +30,21 @@ my $style_doc = $parser->parse_string('<?xml version="1.0" encoding="ISO-8859-1"
 </xsl:stylesheet>
 ');
 
-print $style_doc->toString;
 
 my $stylesheet = $xslt->parse_stylesheet($style_doc);
 
 my $results = $stylesheet->transform($source);
 
 my $tostring = $results->toString;
-print $tostring;
 
-ok($tostring, qr/foo(?:.|&#xF6;)bar/i);
+# TEST
+like ($tostring, qr/foo(?:.|&#xF6;)bar/i, '$tostring matches entity.');
 
 my $content = $stylesheet->output_string($results);
-
-print $content, "\n";
 
 # libxml2-2.6.16/libxslt-1.1.9 will produce a character entity
 # latest versions give a UTF-8 encoded character
 
-ok($content, qr/foo(?:&#xF6;|\xC3\xB6)bar/i);
+# TEST
+like ($content, qr/foo(?:&#xF6;|\xC3\xB6)bar/i, '$content matches entity.');
+
