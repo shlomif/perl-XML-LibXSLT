@@ -445,3 +445,19 @@ SRC
     print "yes\n";
     return 1;
 }
+
+sub MY::postamble {
+  return <<'MAKE_FRAG';
+
+runtest: pure_all
+	perl -MFile::Spec -MTest::Run::CmdLine::Iface -e \
+        "local @INC = @INC;	unshift @INC, map { File::Spec->rel2abs(\$$_) } ('$(INST_LIB)', '$(INST_ARCHLIB)'); Test::Run::CmdLine::Iface->new({test_files => [glob(q{t/*.t})]})->run();"
+
+distruntest: distdir
+	cd $(DISTVNAME) && $(ABSPERLRUN) Makefile.PL
+	cd $(DISTVNAME) && $(MAKE) $(PASTHRU)
+	cd $(DISTVNAME) && $(MAKE) runtest $(PASTHRU)
+
+MAKE_FRAG
+}
+
