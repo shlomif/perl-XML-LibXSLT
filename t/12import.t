@@ -1,14 +1,29 @@
 # -*- cperl -*-
-use Test;
-BEGIN { plan tests => 5 }
-END { ok(0) unless $loaded }
+
+use strict;
+use warnings;
+
+use Test::More tests => 6;
+
+use vars (qw($loaded));
+
+END { 
+    # TEST
+    ok($loaded, 'Everything was properly loaded.');
+}
+
 use XML::LibXSLT;
+
 $loaded = 1;
-ok(1);
+
+# TEST
+ok(1, 'Running');
 my $x = XML::LibXML->new() ;
-ok($x) ;
+# TEST
+ok($x, 'XML::LibXML->new works.') ;
 my $p = XML::LibXSLT->new();
-ok($p);
+# TEST
+ok($p, 'XML::LibXSLT->new owrks.');
 my $xsl = <<EOF;
 <?xml version="1.0" encoding="UTF-8"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
@@ -18,6 +33,8 @@ my $xsl = <<EOF;
 EOF
 
 my $xsld = $x->parse_string($xsl) ;
-ok($xsld) ;
+# TEST
+ok($xsld, 'parse_string returned a true value.') ;
 my $tr = $p->parse_stylesheet($xsld) ;
-ok($tr) ;
+# TEST
+ok($tr, 'parse_stylesheet returned a true value.') ;
