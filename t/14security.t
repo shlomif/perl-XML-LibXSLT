@@ -1,6 +1,8 @@
 use strict;
-use Test;
-BEGIN { plan tests => 26 }
+use warnings;
+
+# Should be 26.
+use Test::More tests => 26;
 use XML::LibXSLT;
 use XML::LibXML 1.59;
 use Data::Dumper;
@@ -10,11 +12,13 @@ use IO::Socket::INET;
 
 my $parser = XML::LibXML->new();
 print "# parser\n";
-ok($parser);
+# TEST
+ok($parser, ' TODO : Add test name');
 
 my $xslt = XML::LibXSLT->new();
 print "# xslt\n";
-ok($xslt);
+# TEST
+ok($xslt, ' TODO : Add test name');
 
 my $stylsheetstring = <<'EOT';
 <xsl:stylesheet version="1.0"
@@ -52,7 +56,8 @@ EOT
 # We're using input callbacks so that we don't actually need real files while
 # testing the security callbacks
 my $icb = XML::LibXML::InputCallback->new();
-ok($icb);
+# TEST
+ok($icb, ' TODO : Add test name');
 
 print "# registering input callbacks\n";
 $icb->register_callbacks( [ \&match_cb, \&open_cb,
@@ -61,7 +66,8 @@ $xslt->input_callbacks($icb);
 
 
 my $scb = XML::LibXSLT::Security->new();
-ok($scb);
+# TEST
+ok($scb, ' TODO : Add test name');
 
 print "# registering security callbacks\n";
 $scb->register_callback( read_file  => \&read_file );
@@ -74,7 +80,8 @@ $xslt->security_callbacks($scb);
 
 my $stylesheet = $xslt->parse_stylesheet($parser->parse_string($stylsheetstring));
 print "# stylesheet\n";
-ok($stylesheet);
+# TEST
+ok($stylesheet, ' TODO : Add test name');
 
 
 # test local read
@@ -83,12 +90,14 @@ ok($stylesheet);
 my $doc = $parser->parse_string('<file>allow.xml</file>');
 my $results = $stylesheet->transform($doc);
 print "# local read results\n";
-ok($results);
+# TEST
+ok($results, ' TODO : Add test name');
 
 my $output = $stylesheet->output_string($results);
 #warn "output: $output\n";
 print "# local read output\n";
-ok($output =~ /foo: Text here/);
+# TEST
+like ($output, qr/foo: Text here/, 'Output matches foo');
 
 
 # - test denied
@@ -96,10 +105,12 @@ $doc = $parser->parse_string('<file>deny.xml</file>');
 eval {
    $results = $stylesheet->transform($doc);
 };
-print "# local read denied\n";
-ok($@ =~ /read for deny\.xml refused/);
-
-
+{
+    my $E = $@;
+    print "# local read denied\n";
+    # TEST
+    like ($E, qr/read for deny\.xml refused/, 'Exception gives read for deny.xml');
+}
 
 # test local write & create dir
 # ---------------------------------------------------------------------------
@@ -108,15 +119,17 @@ my $file = 't/allow.xml';
 $doc = $parser->parse_string("<write>$file</write>");
 $results = $stylesheet->transform($doc);
 print "# local write (no create dir) results\n";
-ok($results);
+# TEST
+ok($results, ' TODO : Add test name');
 
 $output = $stylesheet->output_string($results);
 #warn "output: $output\n";
 print "# local write (no create dir) output\n";
-ok($output =~ /wrote: \Q$file\E/);
+# TEST
+like($output, qr/wrote: \Q$file\E/, 'Output matches wrote.');
 
-print "# local write (no create dir) file exists\n";
-ok(-s $file);
+# TEST
+ok(scalar(-s $file), ' TODO : Add test name');
 unlink $file;
 
 # - test allowed (create dir)
@@ -124,15 +137,18 @@ $file = 't/newdir/allow.xml';
 $doc = $parser->parse_string("<write>$file</write>");
 $results = $stylesheet->transform($doc);
 print "# local write (create dir) results\n";
-ok($results);
+# TEST
+ok($results, ' TODO : Add test name');
 
 $output = $stylesheet->output_string($results);
 #warn "output: $output\n";
 print "# local write (create dir) output\n";
-ok($output =~ /wrote: \Q$file\E/);
+# TEST
+like ($output, qr/wrote: \Q$file\E/, 'Output matches wrote');
 
 print "# local write (create dir) file exists\n";
-ok(-s $file);
+# TEST
+ok(scalar(-s $file), 'File has non-zero size.');
 unlink $file;
 rmdir 't/newdir';
 
@@ -143,9 +159,13 @@ eval {
    $results = $stylesheet->transform($doc);
 };
 print "# local write (no create dir) denied\n";
-ok($@ =~ /write for \Q$file\E refused/);
-ok(!-e $file);
-
+{
+    my $E = $@;
+# TEST
+like($E, qr/write for \Q$file\E refused/, 'exception matches');
+}
+# TEST
+ok(scalar(! -e $file), 'File does not exist.');
 # - test denied (create dir)
 $file = 't/baddir/allow.xml';
 $doc = $parser->parse_string("<write>$file</write>");
@@ -153,8 +173,13 @@ eval {
    $results = $stylesheet->transform($doc);
 };
 print "# local write (create dir) denied\n";
-ok($@ =~ /creation for \Q$file\E refused/);
-ok(!-e $file);
+{
+    my $E = $@;
+    # TEST
+    like($E, qr/creation for \Q$file\E refused/, 'creation for file refused');
+}
+# TEST
+ok(scalar(!-e $file), 'File does nto exist - create dir.');
 
 
 # test net read
@@ -163,13 +188,14 @@ ok(!-e $file);
 $doc = $parser->parse_string('<file>http://localhost/allow.xml</file>');
 $results = $stylesheet->transform($doc);
 print "# net read results\n";
-ok($results);
+# TEST
+ok($results, ' TODO : Add test name');
 
 $output = $stylesheet->output_string($results);
 #warn "output: $output\n";
 print "# net read output\n";
-ok($output =~ /foo: Text here/);
-
+# TEST
+like($output, qr/foo: Text here/, 'Output matches.');
 
 # - test denied
 $doc = $parser->parse_string('<file>http://localhost/deny.xml</file>');
@@ -177,7 +203,13 @@ eval {
    $results = $stylesheet->transform($doc);
 };
 print "# net read denied\n";
-ok($@ =~ m|read for http://localhost/deny\.xml refused|);
+{
+    my $E = $@;
+# TEST
+like($E, qr|read for http://localhost/deny\.xml refused|, 
+    'Exception read for refused.'
+);
+}
 
 
 # test net write
@@ -216,7 +248,12 @@ eval {
    $results = $stylesheet->transform($doc);
 };
 print "# net write allowed\n";
-ok($@ =~ /unable to save to \Q$file\E/);
+{
+    my $E = $@;
+# TEST
+like ($E, qr/unable to save to \Q$file\E/, 
+    'unable to save excpetion');
+}
 }
 
 # - test denied
@@ -226,8 +263,12 @@ eval {
    $results = $stylesheet->transform($doc);
 };
 print "# net write denied\n";
-ok($@ =~ /write for \Q$file\E refused/);
+{
+    my $E = $@;
+# TEST
+like($E, qr/write for \Q$file\E refused/, 'Exception write refused');
 
+}
 
 # test a dying security callback (and resetting the callback object through
 # the stylesheet interface).
@@ -242,22 +283,30 @@ print "# dying callback test\n";
 eval {
     $stylesheet->transform($doc);
 };
-ok($@ =~ /Test die from security callback/);
+{
+    my $E = $@;
+# TEST
+like ($E, qr/Test die from security callback/, 
+    'Exception Test die from security callback.');
 
+}
 
 
 
 #
 # Security preference callbacks
 #
+# TEST:$read_file=1;
 sub read_file {
    my ($tctxt, $value) = @_;
    print "# security read_file: $value\n";
    if ($value eq 'allow.xml') {
       print "# transform context\n";
-      ok( $tctxt->isa("XML::LibXSLT::TransformContext") );
+      # TEST*$read_file
+      ok( $tctxt->isa("XML::LibXSLT::TransformContext"), ' TODO : Add test name' );
       print "# stylesheet from transform context\n";
-      ok( $tctxt->stylesheet->isa("XML::LibXSLT::StylesheetWrapper") );
+      # TEST*$read_file
+      ok( $tctxt->stylesheet->isa("XML::LibXSLT::StylesheetWrapper"), ' TODO : Add test name' );
       return 1;
    }
    else {
