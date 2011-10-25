@@ -7,8 +7,8 @@
 
 
 BEGIN {
-  if ($] < 5.006_001) {
-    warn "\nSorry, at least Perl 5.6.1 is required for this module!\n\n";
+  if ($] < 5.008_001) {
+    warn "\nSorry, at least Perl 5.8.1 is required for this module!\n\n";
     exit;
   }
 }
@@ -208,7 +208,11 @@ WriteMakefile(
     'VERSION_FROM' => 'LibXSLT.pm', # finds $VERSION
     'AUTHOR'    => 'Matt Sergeant',
     'ABSTRACT'  => 'Interface to Gnome libxslt library',
-    'PREREQ_PM' => { 'XML::LibXML' => "1.70", },
+    'PREREQ_PM' =>
+    { 
+        'Encode' => '0',
+        'XML::LibXML' => "1.70", 
+    },
     'OBJECT'     => '$(O_FILES)',
     %config,
 );
