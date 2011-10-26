@@ -1,22 +1,28 @@
-use Test;
-BEGIN { plan tests => 25 }
+use strict;
+use warnings;
+
+# Should be 25.
+use Test::More tests => 25;
 use XML::LibXSLT;
 use XML::LibXML 1.59;
 
 my $parser = XML::LibXML->new();
-print "# parser\n";
-ok($parser);
+# parser
+# TEST
+ok ($parser, 'Parser was initted.');
 
 my $doc = $parser->parse_string(<<'EOT');
 <xml>random contents</xml>
 EOT
 
-print "# doc\n";
-ok($doc);
+# doc
+# TEST
+ok ($doc, 'Doc was initted.');
 
 my $xslt = XML::LibXSLT->new();
-print "# xslt\n";
-ok($xslt);
+# xslt
+# TEST
+ok ($xslt, 'xslt was initted.');
 
 my $stylsheetstring = <<'EOT';
 <xsl:stylesheet version="1.0"
@@ -37,29 +43,32 @@ my $stylsheetstring = <<'EOT';
 EOT
 
 my $icb = XML::LibXML::InputCallback->new();
-ok($icb);
+# TEST
+ok ($icb, 'icb was initted.');
 
-print "# registering callbacks\n";
+# registering callbacks
 $icb->register_callbacks( [ \&match_cb, \&open_cb,
                             \&read_cb, \&close_cb ] );
 
 $xslt->input_callbacks($icb);
                 
 my $stylesheet = $xslt->parse_stylesheet($parser->parse_string($stylsheetstring));
-print "# stylesheet\n";
-ok($stylesheet);
+# stylesheet
+# TEST
+ok ($stylesheet, 'stylesheet is OK.');
 
 #$stylesheet->input_callbacks($icb);
 
 # warn "transforming\n";
 my $results = $stylesheet->transform($doc);
-print "# results\n";
-ok($results);
+# results
+# TEST
+ok ($results, 'results is OK.');
 
 my $output = $stylesheet->output_string($results);
 # warn "output: $output\n";
-print "# output\n";
-ok($output);
+# TEST
+ok ($output, 'output is OK.');
 
 # test a dying close callback
 # callbacks can only be registered as a callback group
@@ -69,15 +78,14 @@ $stylesheet->read_callback( \&read_cb );
 $stylesheet->close_callback( \&close_cb );
 
 # check if transform throws an exception
-print "# dying callback test\n";
+# dying callback test
 eval {
     $stylesheet->transform($doc);
 };
-if ($@) {
-    ok(1, 1, "Threw: $@");
-}
-else {
-    ok(0, 1, "No error");
+{
+    my $E = $@;
+    # TEST
+    ok ($E, "Threw: $E");
 }
 
 #
@@ -89,7 +97,7 @@ $stylesheet = undef;
 $xslt = XML::LibXSLT->new();
 $stylesheet = $xslt->parse_stylesheet($parser->parse_string($stylsheetstring));
 
-print "# setting callbacks\n";
+# setting callbacks
 local $XML::LibXML::match_cb = \&match_cb;
 local $XML::LibXML::open_cb = \&open_cb;
 local $XML::LibXML::close_cb = \&close_cb;
@@ -98,14 +106,16 @@ local $XML::LibXML::read_cb = \&read_cb;
 # warn "transform!\n";
 $results = $stylesheet->transform($doc);
 
-print "# results\n";
-ok($results);
+# results
+# TEST
+ok ($results, 'results is OK - 2.');
 
 $output = $stylesheet->output_string($results);
 
 # warn "output: $output\n";
-print "# output\n";
-ok($output);
+# output
+# TEST
+ok ($output, 'output is OK - 2.');
 
 $XML::LibXML::open_cb = \&dying_open_cb;
 
@@ -113,11 +123,10 @@ $XML::LibXML::open_cb = \&dying_open_cb;
 eval {
     $stylesheet->transform($doc);
 };
-if ($@) {
-    ok(1, 1, "Threw: $@");
-}
-else {
-    ok(0, 1, "No error");
+{
+    my $E = $@;
+    # TEST
+    ok ($E, "Transform Threw: $E");
 }
 
 #
@@ -131,7 +140,7 @@ $icb = undef;
 $xslt = XML::LibXSLT->new();
 $icb = XML::LibXML::InputCallback->new();
 
-print "# registering callbacks\n";
+# registering callbacks
 $icb->register_callbacks( [ \&match_cb, \&stylesheet_open_cb,
                             \&read_cb, \&close_cb ] );
 
@@ -158,8 +167,9 @@ $stylsheetstring = <<'EOT';
 EOT
 
 $stylesheet = $xslt->parse_stylesheet($parser->parse_string($stylsheetstring));
-print "# stylesheet\n";
-ok($stylesheet);
+# stylesheet
+# TEST
+ok ($stylesheet, 'stylesheet is OK - 2.');
 
 #
 # input callback functions
@@ -167,9 +177,10 @@ ok($stylesheet);
 
 sub match_cb {
     my $uri = shift;
-    print "# match_cb: $uri\n";
+    # match_cb
     if ($uri eq "foo.xml") {
-        ok(1);
+        # TEST*5
+        ok(1, 'URI is OK in match_cb.');
         return 1;
     }
     return 0;
@@ -177,35 +188,35 @@ sub match_cb {
 
 sub open_cb {
     my $uri = shift;
-    print "# open_cb: $uri\n";
-    ok($uri, "foo.xml");
+    # TEST*2
+    is ($uri, 'foo.xml', 'URI is OK in open_cb.');
     my $str ="<foo>Text here</foo>";
     return \$str;
 }
 
 sub dying_open_cb {
     my $uri = shift;
-    print "# dying_open_cb: $uri\n";
-    ok($uri, "foo.xml");
+    # dying_open_cb: $uri
+    # TEST*2
+    is ($uri, 'foo.xml', 'dying_open_cb');
     die "Test a die from open_cb";
 }
 
 sub stylesheet_open_cb {
     my $uri = shift;
-    print "# open_cb: $uri\n";
-    ok($uri, "foo.xml");
+    # TEST
+    is ($uri, 'foo.xml', 'stylesheet_open_cb uri compare.');
     my $str = '<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform"/>';
     return \$str;
 }
 
 sub close_cb {
-    print "# close_cb\n";
     # warn("close\n");
-    ok(1);
+    # TEST*3
+    ok(1, 'close_cb()');
 }
 
 sub read_cb {
-    print "# read_cb\n";
 #    warn("read\n");
     return substr(${$_[0]}, 0, $_[1], "");
 }
