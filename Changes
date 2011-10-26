@@ -1,5 +1,8 @@
 Revision history for Perl extension XML::LibXSLT.
 
+    - Convert the following test scripts from Test.pm to Test::More :
+        - t/03input.t
+
 1.74            Tue Oct 25 21:48:48 IST 2011
     - Convert the following test scripts from Test.pm to Test::More :
         - t/01basic.t
