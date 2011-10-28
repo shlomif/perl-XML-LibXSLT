@@ -54,6 +54,7 @@ sub new {
 # ido - perl dispatcher
 sub perl_dispatcher {
     my $func = shift;
+	my $owner_doc = shift;
     my @params = @_;
     my @perlParams;
     
