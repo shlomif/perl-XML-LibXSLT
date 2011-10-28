@@ -224,6 +224,7 @@ LibXSLT_debug_handler(void * ctxt, const char * msg, ...)
 
 static void
 LibXSLT__function (xmlXPathParserContextPtr ctxt, int nargs, SV *perl_function) {
+	SV * owner_doc;
     xmlXPathObjectPtr obj,ret;
     xmlNodeSetPtr nodelist = NULL;
     int count;
@@ -247,6 +248,10 @@ LibXSLT__function (xmlXPathParserContextPtr ctxt, int nargs, SV *perl_function) 
     
     XPUSHs(perl_function);
 
+	/* clone all of the arguments into a new owning document */
+	owner_doc = x_PmmNodeToSv(INT2PTR(xmlNodePtr,xmlNewDoc("1.0")),NULL);
+	XPUSHs( sv_2mortal(owner_doc) );
+
     /* set up call to perl dispatcher function */
     for (i = 0; i < nargs; i++) {
         obj = (xmlXPathObjectPtr)valuePop(ctxt);
@@ -254,39 +259,35 @@ LibXSLT__function (xmlXPathParserContextPtr ctxt, int nargs, SV *perl_function) 
         case XPATH_NODESET:
         case XPATH_XSLT_TREE:
             nodelist = obj->nodesetval;
-            if ( nodelist ) {
-                XPUSHs(sv_2mortal(newSVpv("XML::LibXML::NodeList", 0)));				
-                XPUSHs(sv_2mortal(newSViv(nodelist->nodeNr)));
-                if ( nodelist->nodeNr > 0 ) {
-                    int i = 0 ;
-                    const char * cls = "XML::LibXML::Node";
-                    xmlNodePtr tnode = NULL;
-                    SV * element = NULL;
-                    len = nodelist->nodeNr;
-                    for( ; i < len; i++ ){
-                        tnode = nodelist->nodeTab[i];
-                        if (tnode->type == XML_NAMESPACE_DECL) {
-                            element = sv_newmortal();
-                            cls = x_PmmNodeTypeName( tnode );
-                            element = sv_setref_pv( element,
-                                                    (const char *)cls,
-                                                    (void *)xmlCopyNamespace((xmlNsPtr)tnode)
-                                                );
-			} else {
-                          /* need to copy the node as libxml2 will free it */
-			  xmlNodePtr tnode_cpy = xmlCopyNode(tnode, 1);
-			    if( tnode_cpy != NULL) {
-			      ProxyNodePtr owner = NULL;
-			      if ( tnode_cpy != NULL && tnode_cpy->doc != NULL) {
-				owner = x_PmmOWNERPO(x_PmmNewNode(INT2PTR(xmlNodePtr,tnode_cpy->doc)));
-			      }
-			      element = x_PmmNodeToSv(tnode_cpy, owner);
-			    }
-                        }
-                        XPUSHs( sv_2mortal(element) );
-                    }
-                }
-            }
+			if ( nodelist == NULL )
+				break;
+			XPUSHs(sv_2mortal(newSVpv("XML::LibXML::NodeList", 0)));
+			XPUSHs(sv_2mortal(newSViv(nodelist->nodeNr)));
+			if ( nodelist->nodeNr == 0 )
+				break;
+			const char * cls = "XML::LibXML::Node";
+			xmlNodePtr tnode = NULL;
+			SV * element = NULL;
+			int i;
+			for(i=0; i < nodelist->nodeNr; i++ ){
+				tnode = nodelist->nodeTab[i];
+				/* need to copy the node as libxml2 will free it */
+				if (tnode->type == XML_NAMESPACE_DECL) {
+					element = sv_newmortal();
+					cls = x_PmmNodeTypeName( tnode );
+					element = sv_setref_pv( element,
+							(const char *)cls,
+							(void *)xmlCopyNamespace((xmlNsPtr)tnode)
+							);
+				}
+				else {
+					xmlNodePtr tnode_cpy = xmlDocCopyNode(tnode,INT2PTR(xmlDocPtr,x_PmmNODE(SvPROXYNODE(owner_doc))),1);
+					if( tnode_cpy == NULL )
+						break;
+					element = x_PmmNodeToSv(tnode_cpy,SvPROXYNODE(owner_doc));
+				}
+				XPUSHs( sv_2mortal(element) );
+			}
             break;
         case XPATH_BOOLEAN:
             XPUSHs(sv_2mortal(newSVpv("XML::LibXML::Boolean", 0)));
