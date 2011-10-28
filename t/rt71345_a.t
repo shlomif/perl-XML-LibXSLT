@@ -1,5 +1,7 @@
 use Test::More tests => 2;
 
+# See:
+# https://rt.cpan.org/Ticket/Display.html?id=71345
 {
 use strict;
 use warnings;
@@ -26,10 +28,15 @@ my $stylesheet = $xslt->parse_stylesheet(XML::LibXML->load_xml(string => <<'EOF'
 EOF
 
 my $input = XML::LibXML->load_xml(string => "<input/>");
-ok($stylesheet->transform($input)->toString =~ "<bar>FOO</bar>");
+# TEST
+like ($stylesheet->transform($input)->toString,
+    qr{\Q<bar>FOO</bar>\E},
+    'transformation works.',
+);
 
 # Next line crashes Perl
 @keep = undef;
 
 }
-ok(1);
+# TEST
+ok(1, 'Did not crash.');
