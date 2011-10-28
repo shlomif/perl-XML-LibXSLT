@@ -1,5 +1,6 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.75            Fri Oct 28 17:26:57 IST 2011
     - Convert the following test scripts from Test.pm to Test::More :
         - t/03input.t
     - Fix for https://rt.cpan.org/Public/Bug/Display.html?id=71345 by Tim
