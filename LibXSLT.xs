@@ -265,29 +265,31 @@ LibXSLT__function (xmlXPathParserContextPtr ctxt, int nargs, SV *perl_function) 
 			XPUSHs(sv_2mortal(newSViv(nodelist->nodeNr)));
 			if ( nodelist->nodeNr == 0 )
 				break;
-			const char * cls = "XML::LibXML::Node";
-			xmlNodePtr tnode = NULL;
-			SV * element = NULL;
-			int i;
-			for(i=0; i < nodelist->nodeNr; i++ ){
-				tnode = nodelist->nodeTab[i];
-				/* need to copy the node as libxml2 will free it */
-				if (tnode->type == XML_NAMESPACE_DECL) {
-					element = sv_newmortal();
-					cls = x_PmmNodeTypeName( tnode );
-					element = sv_setref_pv( element,
-							(const char *)cls,
-							(void *)xmlCopyNamespace((xmlNsPtr)tnode)
-							);
-				}
-				else {
-					xmlNodePtr tnode_cpy = xmlDocCopyNode(tnode,INT2PTR(xmlDocPtr,x_PmmNODE(SvPROXYNODE(owner_doc))),1);
-					if( tnode_cpy == NULL )
-						break;
-					element = x_PmmNodeToSv(tnode_cpy,SvPROXYNODE(owner_doc));
-				}
-				XPUSHs( sv_2mortal(element) );
-			}
+            {
+                const char * cls = "XML::LibXML::Node";
+                xmlNodePtr tnode = NULL;
+                SV * element = NULL;
+                int i;
+                for(i=0; i < nodelist->nodeNr; i++ ){
+                    tnode = nodelist->nodeTab[i];
+                    /* need to copy the node as libxml2 will free it */
+                    if (tnode->type == XML_NAMESPACE_DECL) {
+                        element = sv_newmortal();
+                        cls = x_PmmNodeTypeName( tnode );
+                        element = sv_setref_pv( element,
+                                (const char *)cls,
+                                (void *)xmlCopyNamespace((xmlNsPtr)tnode)
+                                );
+                    }
+                    else {
+                        xmlNodePtr tnode_cpy = xmlDocCopyNode(tnode,INT2PTR(xmlDocPtr,x_PmmNODE(SvPROXYNODE(owner_doc))),1);
+                        if( tnode_cpy == NULL )
+                            break;
+                        element = x_PmmNodeToSv(tnode_cpy,SvPROXYNODE(owner_doc));
+                    }
+                    XPUSHs( sv_2mortal(element) );
+                }
+            }
             break;
         case XPATH_BOOLEAN:
             XPUSHs(sv_2mortal(newSVpv("XML::LibXML::Boolean", 0)));
@@ -517,6 +519,8 @@ LibXSLT_context_element(xsltTransformContextPtr ctxt, xmlNodePtr node, xmlNodePt
     int count;
     xmlNodePtr result;
 
+    dSP;
+
     wrapper = (SV *) ctxt->_private;
 
     key = newSVpvn("", 0);
@@ -538,7 +542,6 @@ LibXSLT_context_element(xsltTransformContextPtr ctxt, xmlNodePtr node, xmlNodePt
 
     SvREFCNT_dec(key);
 
-    dSP;
     
     ENTER;
     SAVETMPS;

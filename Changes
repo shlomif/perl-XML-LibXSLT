@@ -1,5 +1,10 @@
 Revision history for Perl extension XML::LibXSLT.
 
+    - Made LibXSLT.xs compile with C compilers that don't accept declarations
+    inside blocks:
+        - https://rt.cpan.org/Public/Bug/Display.html?id=73905
+        - These include Microsoft Visual C++ (in C-mode).
+
 1.75            Fri Oct 28 17:26:57 IST 2011
     - Convert the following test scripts from Test.pm to Test::More :
         - t/03input.t
