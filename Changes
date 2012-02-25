@@ -1,5 +1,9 @@
 Revision history for Perl extension XML::LibXSLT.
 
+    - Apply a patch from Michael Ludwig clarifying the quoting of string
+    parameters to the XSLT transformation.
+        - Thanks, Michael!
+
 1.76            Thu Jan 12 19:15:03 IST 2012
     - Made LibXSLT.xs compile with C compilers that don't accept declarations
     inside blocks:
