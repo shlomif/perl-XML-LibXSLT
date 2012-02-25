@@ -785,16 +785,20 @@ happen with one stylesheet without requiring a reparse.
 
 =item transform(doc, %params)
 
-  my $results = $stylesheet->transform($doc, foo => "value);
+  my $results = $stylesheet->transform($doc, foo => "'bar'");
   print $stylesheet->output_as_bytes($results);
 
 Transforms the passed in XML::LibXML::Document object, and returns a
 new XML::LibXML::Document. Extra hash entries are used as parameters.
-See output_string
+Be sure to keep in mind the caveat with regard to quotes explained in
+the section on L</"Parameters"> below.
 
 =item transform_file(filename, %params)
 
-  my $results = $stylesheet->transform_file($filename, bar => "value");
+  my $results = $stylesheet->transform_file($filename, bar => "'baz'");
+
+Note the string parameter caveat, detailed in the section on
+L</"Parameters"> below.
 
 =item output_as_bytes(result)
 
