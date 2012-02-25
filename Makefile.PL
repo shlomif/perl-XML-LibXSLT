@@ -207,7 +207,7 @@ WriteMakefile(
     'NAME'	=> 'XML::LibXSLT',
     'VERSION_FROM' => 'LibXSLT.pm', # finds $VERSION
     'AUTHOR'    => 'Matt Sergeant',
-    'ABSTRACT'  => 'Interface to Gnome libxslt library',
+    'ABSTRACT'  => 'Interface to GNOME libxslt library',
     'PREREQ_PM' =>
     { 
         'Encode' => 0,

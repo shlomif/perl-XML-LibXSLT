@@ -622,7 +622,7 @@ __END__
 
 =head1 NAME
 
-XML::LibXSLT - Interface to the gnome libxslt library
+XML::LibXSLT - Interface to the GNOME libxslt library
 
 =head1 SYNOPSIS
 
@@ -642,7 +642,7 @@ XML::LibXSLT - Interface to the gnome libxslt library
 
 =head1 DESCRIPTION
 
-This module is an interface to the gnome project's libxslt. This is an
+This module is an interface to the GNOME project's libxslt. This is an
 extremely good XSLT engine, highly compliant and also very fast. I have
 tests showing this to be more than twice as fast as Sablotron.
 
