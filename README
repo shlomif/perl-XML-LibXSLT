@@ -1,4 +1,4 @@
-This module is a fast XSLT library, based on the Gnome libxslt engine
+This module is a fast XSLT library, based on the GNOME libxslt engine
 that you can find at http://www.xmlsoft.org/XSLT/
 
 Performance is currently about twice that of XML::Sablotron (based on 
