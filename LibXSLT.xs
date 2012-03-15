@@ -1513,6 +1513,23 @@ media_type(self)
         RETVAL
 
 char *
+output_method(self)
+        xsltStylesheetPtr self
+    PREINIT:
+    	xmlChar *method;
+    CODE:
+    	XSLT_GET_IMPORT_PTR(method, self, method)
+	
+        RETVAL = (char*) method;
+        if (RETVAL == NULL) {
+            /* read http://www.w3.org/TR/xslt#output and tell me how
+               you'd implement this the way it says to. */
+            RETVAL = "xml";
+        }
+    OUTPUT:
+        RETVAL
+
+char *
 output_encoding(self)
         xsltStylesheetPtr self
     PREINIT:

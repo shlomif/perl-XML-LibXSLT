@@ -511,6 +511,7 @@ sub output_as_chars { shift->{XML_LIBXSLT_STYLESHEET}->_output_string($_[0],2) }
 sub output_fh { shift->{XML_LIBXSLT_STYLESHEET}->output_fh(@_) }
 sub output_file { shift->{XML_LIBXSLT_STYLESHEET}->output_file(@_) }
 sub media_type { shift->{XML_LIBXSLT_STYLESHEET}->media_type(@_) }
+sub output_method { shift->{XML_LIBXSLT_STYLESHEET}->output_method(@_) }
 sub output_encoding { shift->{XML_LIBXSLT_STYLESHEET}->output_encoding(@_) }
 
 1;
@@ -838,11 +839,26 @@ Outputs the result to the file named in C<$filename>.
 
 Returns the output encoding of the results. Defaults to "UTF-8".
 
+=item output_method()
+
+Returns the value of the C<method> attribute from C<xsl:output>
+(usually C<xml>, C<html> or C<text>). If this attribute is
+unspecified, the default value is initially C<xml>. If the
+L<transform> method is used to produce an HTML document, as per the
+L<XSLT spec|http://www.w3.org/TR/xslt#output>, the default value will
+change to C<html>. To override this behavior completely, supply an
+C<xsl:output> element in the stylesheet source document.
+
 =item media_type()
 
-Returns the output media_type of the results. Defaults to "text/html".
+Returns the value of the C<media-type> attribute from
+C<xsl:output>. If this attribute is unspecified, the default media
+type is initially C<text/xml>. This default changes to C<text/html>
+under the same conditions as L<output_method>.
 
 =back
+
+=cut
 
 =head1 Parameters
 

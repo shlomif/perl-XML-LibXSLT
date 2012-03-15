@@ -2,8 +2,8 @@
 use strict;
 use warnings;
 
-# Should be 11.
-use Test::More tests => 11;
+# Should be 12.
+use Test::More tests => 12;
 
 use XML::LibXSLT;
 use XML::LibXML;
@@ -41,6 +41,7 @@ my $stylesheet = $xslt->parse_stylesheet($style_doc);
 my $results = $stylesheet->transform($source);
 # TEST
 ok($stylesheet->media_type, ' TODO : Add test name');
+ok($stylesheet->output_method, ' Test existence of output method');
 $out2 = $stylesheet->output_string($results);
 # TEST
 ok($out2, ' TODO : Add test name');

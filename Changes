@@ -1,5 +1,8 @@
 Revision history for Perl extension XML::LibXSLT.
 
+    - Add output_method method, update documentation of media_type
+      (dorian@cpan).
+
 1.77            Sat Feb 25 16:23:57 IST 2012
     - Apply a patch from Michael Ludwig clarifying the quoting of string
     parameters to the XSLT transformation.
