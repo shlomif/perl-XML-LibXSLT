@@ -1,8 +1,8 @@
 use strict;
 use warnings;
 
-# Should be 5.
-use Test::More tests => 5;
+# Should be 8.
+use Test::More tests => 8;
 use XML::LibXSLT;
 
 my $parser = XML::LibXML->new();
@@ -31,9 +31,23 @@ EOT
 ok ($style, '$style is true.');
 my $stylesheet = $xslt->parse_stylesheet($style);
 
+# TEST
+is ($stylesheet->output_method, 'xml',
+    'output method is xml BEFORE processing');
+
+# TEST
+is ($stylesheet->media_type, 'text/xml',
+    'media_type is text/xml BEFORE processing');
+
 my $results = $stylesheet->transform($source);
+
 # TEST
 ok ($results, '$results are true.');
 
 # TEST
-is ($stylesheet->media_type, 'text/html', 'media_type is text/html');
+is ($stylesheet->output_method, 'html',
+    'output method is html AFTER processing');
+
+# TEST
+is ($stylesheet->media_type, 'text/html',
+    'media_type is text/html AFTER processing');
