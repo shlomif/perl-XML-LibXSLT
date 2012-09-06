@@ -41,6 +41,7 @@ my $stylesheet = $xslt->parse_stylesheet($style_doc);
 my $results = $stylesheet->transform($source);
 # TEST
 ok($stylesheet->media_type, ' TODO : Add test name');
+# TEST
 ok($stylesheet->output_method, ' Test existence of output method');
 $out2 = $stylesheet->output_string($results);
 # TEST
