@@ -1,7 +1,9 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.78            Thu  6 Sep 13:17:28 IDT 2012
     - Add output_method method, update documentation of media_type
-      (dorian@cpan).
+    (dorian@cpan).
+        - Thanks, Dorian!
 
 1.77            Sat Feb 25 16:23:57 IST 2012
     - Apply a patch from Michael Ludwig clarifying the quoting of string
