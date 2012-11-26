@@ -61,6 +61,13 @@ libxslt-1.1.25 contains a deadlock that breaks the tests, and is not supported.
 See: https://rt.cpan.org/Ticket/Display.html?id=50487 .
 EOF
             }
+            if ($major == 1 and $minor == 1 and $point == 27)
+            {
+                die <<'EOF';
+libxslt-1.1.27 does not handle namespaces well, and is not supported.
+See: https://bugzilla.gnome.org/show_bug.cgi?id=684564 .
+EOF
+            }
             $config{LIBS} ||= backtick("$xsltcfg --libs");
             $config{INC} ||= backtick("$xsltcfg --cflags");
             print "ok\n";

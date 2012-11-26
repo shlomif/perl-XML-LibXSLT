@@ -1,5 +1,9 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.79            Mon 26 Nov 12:15:35 IST 2012
+    - Die when libxslt is 1.1.27.
+        - Due to this bug - https://bugzilla.gnome.org/show_bug.cgi?id=684564
+
 1.78            Thu  6 Sep 13:17:28 IDT 2012
     - Add output_method method, update documentation of media_type
     (dorian@cpan).
