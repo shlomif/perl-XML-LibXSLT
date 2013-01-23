@@ -1,5 +1,9 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.80            Wed 23 Jan 07:53:57 IST 2013
+    - Bump the minimum version of libxslt2 to 1.1.28.
+        - due to failures such as http://www.cpantesters.org/cpan/report/6f5029ee-639a-11e2-8465-2a97270fb964
+
 1.79            Mon 26 Nov 12:15:35 IST 2012
     - Die when libxslt is 1.1.27.
         - Due to this bug - https://bugzilla.gnome.org/show_bug.cgi?id=684564

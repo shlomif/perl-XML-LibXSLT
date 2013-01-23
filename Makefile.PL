@@ -52,20 +52,18 @@ unless ( $is_Win32 ) { # cannot get config in W32
             print "running xslt-config... ";
             my $ver = backtick("$xsltcfg --version");
             my ($major, $minor, $point) = $ver =~ /(\d+)\.(\d+)\.(\d+)/g;
-            die "VERSION" unless $major > 1 || $minor > 1 ||
-                 ($major>=1 and $minor >=1 and $point >= 18);
-            if ($major == 1 and $minor == 1 and $point == 25)
+            if (not
+                (
+                    ($major > 1)
+                        or
+                    (($major == 1) && ($minor > 1))
+                        or
+                    (($major == 1) && ($minor == 1) && ($point >= 28))
+                )
+            )
             {
                 die <<'EOF';
-libxslt-1.1.25 contains a deadlock that breaks the tests, and is not supported.
-See: https://rt.cpan.org/Ticket/Display.html?id=50487 .
-EOF
-            }
-            if ($major == 1 and $minor == 1 and $point == 27)
-            {
-                die <<'EOF';
-libxslt-1.1.27 does not handle namespaces well, and is not supported.
-See: https://bugzilla.gnome.org/show_bug.cgi?id=684564 .
+libxslt versions before 1.1.28 are buggy. Please install libxslt-1.1.28.
 EOF
             }
             $config{LIBS} ||= backtick("$xsltcfg --libs");
