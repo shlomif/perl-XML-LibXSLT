@@ -57,11 +57,11 @@ sub perl_dispatcher {
 	my $owner_doc = shift;
     my @params = @_;
     my @perlParams;
-    
+
     my $i = 0;
     while (@params) {
         my $type = shift(@params);
-        if ($type eq 'XML::LibXML::Literal' or 
+        if ($type eq 'XML::LibXML::Literal' or
             $type eq 'XML::LibXML::Number' or
             $type eq 'XML::LibXML::Boolean')
         {
@@ -75,7 +75,7 @@ sub perl_dispatcher {
             unshift(@perlParams, $type->new(@nodes));
         }
     }
-    
+
     $func = "main::$func" unless ref($func) || $func =~ /(.+)::/;
     no strict 'refs';
     my $res = $func->(@perlParams);
@@ -629,16 +629,16 @@ XML::LibXSLT - Interface to the GNOME libxslt library
 
   use XML::LibXSLT;
   use XML::LibXML;
-  
+
   my $xslt = XML::LibXSLT->new();
-  
+
   my $source = XML::LibXML->load_xml(location => 'foo.xml');
   my $style_doc = XML::LibXML->load_xml(location=>'bar.xsl', no_cdata=>1);
-  
+
   my $stylesheet = $xslt->parse_stylesheet($style_doc);
-  
+
   my $results = $stylesheet->transform($source);
-  
+
   print $stylesheet->output_as_bytes($results);
 
 =head1 DESCRIPTION
@@ -743,9 +743,9 @@ The following methods are available on the new XML::LibXSLT object:
 =item parse_stylesheet($stylesheet_doc)
 
 C<$stylesheet_doc> here is an XML::LibXML::Document object (see L<XML::LibXML>)
-representing an XSLT file. This method will return a 
+representing an XSLT file. This method will return a
 XML::LibXSLT::Stylesheet object, or undef on failure. If the XSLT is
-invalid, an exception will be thrown, so wrap the call to 
+invalid, an exception will be thrown, so wrap the call to
 parse_stylesheet in an eval{} block to trap this.
 
 IMPORTANT: C<$stylesheet_doc> should not contain CDATA sections,
@@ -1017,7 +1017,7 @@ number of XML::LibXSLT module itself, i.e. with
 C<$XML::LibXSLT::VERSION>). XML::LibXSLT issues a warning if the
 runtime version of the library is less then the compile-time version.
 
-=over 
+=over
 
 =item XML::LibXSLT::LIBXSLT_VERSION()
 
