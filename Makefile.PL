@@ -44,7 +44,7 @@ unless ( $is_Win32 ) { # cannot get config in W32
         $xsltcfg = $libprefix . '/bin/' . $xsltcfg;
     }
 
-    # if a user defined INC and LIBS on the command line we must not 
+    # if a user defined INC and LIBS on the command line we must not
     # override them
     if ( not defined $config{LIBS} and not defined $config{INC} ) {
         # get libs and inc from gnome-config
@@ -74,7 +74,7 @@ EOF
         };
         if ($@) {
             print "failed\n";
-            if ($@ =~ /^VERSION/) { 
+            if ($@ =~ /^VERSION/) {
                 print STDERR "XML::LibXSLT needs libxslt version 1.1.18 or higher\n";
 		exit 0; # 0 recommended by http://cpantest.grango.org (Notes for CPAN Authors)
             }
@@ -83,7 +83,7 @@ EOF
             # backtick fails if gnome-config didn't exist...
             $config{LIBS} = '-L/usr/local/lib -L/usr/lib -lxslt -lxml2 -lz -lm';
             $config{INC} = '-I/usr/local/include -I/usr/include';
-            
+
             print <<OPT;
 options:
   LIBS='$config{LIBS}'
@@ -139,7 +139,7 @@ if (!have_library($is_Win32 ? "libxslt" : "xslt")) {
     print STDERR <<DEATH;
 libxslt not found
 Try setting LIBS and INC values on the command line
-Or get libxslt and libxml2 from 
+Or get libxslt and libxml2 from
   http://www.libxml.org/
 If you install via RPMs, make sure you also install the -devel
 RPMs, as this is where the headers (.h files) are.
@@ -192,15 +192,15 @@ if ($ldflags) {
 if ($is_Win32) {
   if ($] eq '5.010000') {
     print STDERR <<5100BUG;
-******************************** !!!WARNING!!! ******************************** 
+******************************** !!!WARNING!!! ********************************
 According to the version string you are running a win32 perl 5.10.0 that is
-known to be suffering from dynaloader bug that prevents using non-default 
+known to be suffering from dynaloader bug that prevents using non-default
 module's DLL name. Therefore we have to use LibXSLT.dll that will clash with the
 standard name of xslt library DLL. Please consider renaming your xslt library
 to e.g. libxslt_win32.dll and then make the appropriate changes to this module's
 build process to look for that instead of standard libxslt.dll. If you do not
-make the proposed changes you will got during the tests many error popups with 
-slightly confusing message about "xsltApplyOneTemplate" function.  
+make the proposed changes you will got during the tests many error popups with
+slightly confusing message about "xsltApplyOneTemplate" function.
 This bug is not present in perl 5.8.* and will be fixed in 5.10.1.
 *******************************************************************************
 5100BUG
@@ -216,9 +216,9 @@ WriteMakefile(
     'AUTHOR'    => 'Matt Sergeant',
     'ABSTRACT'  => 'Interface to GNOME libxslt library',
     'PREREQ_PM' =>
-    { 
+    {
         'Encode' => 0,
-        'XML::LibXML' => "1.70", 
+        'XML::LibXML' => "1.70",
         'strict' => 0,
         'warnings' => 0,
     },
