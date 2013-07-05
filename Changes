@@ -1,5 +1,8 @@
 Revision history for Perl extension XML::LibXSLT.
 
+    - Fix a typo reported by dsteinbrunner:
+        - https://rt.cpan.org/Ticket/Display.html?id=86689
+
 1.80            Wed 23 Jan 07:53:57 IST 2013
     - Bump the minimum version of libxslt2 to 1.1.28.
         - due to failures such as http://www.cpantesters.org/cpan/report/6f5029ee-639a-11e2-8465-2a97270fb964

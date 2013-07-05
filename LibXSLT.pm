@@ -1038,7 +1038,7 @@ example, for libxslt.so.1.1.18, it will return 10118.
 
 =item XML::LibXSLT::HAVE_EXLT()
 
-Returns 1 if the module was compiled with libexslt, 0 otherwised.
+Returns 1 if the module was compiled with libexslt, 0 otherwise.
 
 =back
 
