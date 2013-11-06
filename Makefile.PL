@@ -72,9 +72,9 @@ EOF
         };
         if ($@) {
             print "failed\n";
-            if ($@ =~ /^VERSION/) {
-                print STDERR "XML::LibXSLT needs libxslt version 1.1.18 or higher\n";
-		exit 0; # 0 recommended by http://cpantest.grango.org (Notes for CPAN Authors)
+            if ($@ =~ /^libxslt versions before/) {
+                print STDERR "XML::LibXSLT needs libxslt version 1.1.28 or higher\n";
+                exit 0; # 0 recommended by http://cpantest.grango.org (Notes for CPAN Authors)
             }
             warn "*** ", $@ if $DEBUG;
             warn "using fallback values for LIBS and INC\n";
