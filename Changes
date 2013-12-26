@@ -1,5 +1,11 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.84            Thu 26 Dec 14:19:19 IST 2013
+    - Hopefully fix a segmentation fault on Win32 introduced in the last ver.
+        - https://rt.cpan.org/Ticket/Display.html?id=91652
+        - Thanks to Alexandr Ciornii for the report, and to Nikolay Sivov
+        for providing help.
+
 1.83            Sun 22 Dec 18:20:23 IST 2013
     - Get rid of compiler warnings when compiling using CLANG.
         - https://rt.cpan.org/Public/Bug/Display.html?id=91118

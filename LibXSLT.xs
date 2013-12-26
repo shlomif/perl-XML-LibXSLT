@@ -237,7 +237,6 @@ LibXSLT__function (xmlXPathParserContextPtr ctxt, int nargs, SV *perl_function) 
     double tmp_double;
     int tmp_int;
     AV * array_result;
-    xmlChar * xml_ver = NULL;
     xmlNodePtr tmp_node, tmp_node1, tmp_node2 = NULL;
     xmlDocPtr container = NULL;
     xsltTransformContextPtr tctxt = xsltXPathGetTransformContext(ctxt);
@@ -249,9 +248,8 @@ LibXSLT__function (xmlXPathParserContextPtr ctxt, int nargs, SV *perl_function) 
     
     XPUSHs(perl_function);
 
-    xml_ver = xmlCharStrdup("1.0");
 	/* clone all of the arguments into a new owning document */
-	owner_doc = x_PmmNodeToSv(INT2PTR(xmlNodePtr,xmlNewDoc(xml_ver)), NULL);
+	owner_doc = x_PmmNodeToSv(INT2PTR(xmlNodePtr,xmlNewDoc(NULL)), NULL);
 	XPUSHs( sv_2mortal(owner_doc) );
 
     /* set up call to perl dispatcher function */
@@ -428,11 +426,10 @@ LibXSLT__function (xmlXPathParserContextPtr ctxt, int nargs, SV *perl_function) 
     ret = (xmlXPathObjectPtr)xmlXPathNewCString(SvPV(perl_result, len));
 
 FINISH:
-    free( xml_ver );
     valuePush(ctxt, ret);
     PUTBACK;
     FREETMPS;
-    LEAVE;	
+    LEAVE;
 }
 
 /*
