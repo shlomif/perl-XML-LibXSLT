@@ -2,6 +2,9 @@
 
 package Driver::BaseClass;
 
+use strict;
+use warnings;
+
 use Carp;
 
 sub init {

@@ -1,8 +1,11 @@
 # base class.
 package Driver::Sablotron;
 
+use strict;
+use warnings;
+
 use Driver::BaseClass;
-@ISA = qw(Driver::BaseClass);
+our @ISA = qw(Driver::BaseClass);
 
 use XML::Sablotron;
 use IO::File;
@@ -34,7 +37,7 @@ sub load_stylesheet {
     my ($filename) = @_;
     my $fh = new IO::File;
     if ($fh->open("< $filename")) {
-        local $/;        
+        local $/;
         $stylesheet = <$fh>;
         $fh->close;
     }
@@ -42,12 +45,12 @@ sub load_stylesheet {
 
 sub load_input {
     my ($filename) = @_;
-    my $fh = new IO::File;   
-    if ($fh->open("< $filename")) { 
-        local $/; 
-        $input = <$fh>;   
-        $fh->close;       
-    }    
+    my $fh = new IO::File;
+    if ($fh->open("< $filename")) {
+        local $/;
+        $input = <$fh>;
+        $fh->close;
+    }
 }
 
 use Cwd;
@@ -92,10 +95,10 @@ sub MHError {
     my $self = shift;
     my $processor = shift;
     my ($code, $level, @fields) = @_;
-    
+
     return unless $self->{show_error};
     $self->{show_error} = 0;
-    
+
     warn "Sablotron [Error]: ", join(' :: ', @fields), "\n" if $self->{verbose};
     return 1;
 }

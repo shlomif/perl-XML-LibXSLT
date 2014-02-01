@@ -3,6 +3,7 @@ use Getopt::Long;
 use File::Basename;
 use XML::XPath;
 use strict;
+use warnings;
 
 $|++;
 

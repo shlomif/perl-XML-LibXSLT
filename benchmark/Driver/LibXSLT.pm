@@ -1,8 +1,11 @@
 # base class.
 package Driver::LibXSLT;
 
+use strict;
+use warnings;
+
 use Driver::BaseClass;
-@ISA = qw(Driver::BaseClass);
+our @ISA = qw(Driver::BaseClass);
 
 use XML::LibXSLT;
 use XML::LibXML;
