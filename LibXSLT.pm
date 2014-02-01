@@ -9,6 +9,8 @@
 package XML::LibXSLT;
 
 use strict;
+use warnings;
+
 use vars qw($VERSION @ISA $USE_LIBXML_DATA_TYPES $MatchCB $ReadCB $OpenCB $CloseCB);
 
 sub REQUIRE_XML_LIBXML_ABI_VERSION { 2 }

@@ -5,6 +5,10 @@
 # This file is required to generate a localized Makefile
 # -------------------------------------------------------------------------- #
 
+use strict;
+use warnings;
+
+use vars qw/$DEVNULL $is_Win32/;
 
 BEGIN {
   if ($] < 5.008_001) {
@@ -34,7 +38,7 @@ if ( $] < 5.008 or $config{NO_THREADS} ) {
 }
 delete $config{NO_THREADS};
 
-unless ( $is_Win32 ) { # cannot get config in W32
+unless ( $::is_Win32 ) { # cannot get config in W32
     my $xsltcfg = "xslt-config";
     my $libprefix = $ENV{XSLTPREFIX} || $config{XSLTPREFIX};
 
@@ -97,7 +101,7 @@ OPT
 if ($config{LIBS} !~ /\-l(lib)?xslt\b/) {
     # in this case we are not able to run xml2-config. therefore we need to
     # expand the libz as well.
-  if ($is_Win32) {
+  if ($::is_Win32) {
     if( $ENV{ACTIVEPERL_MINGW} ) {
       $config{LIBS} .= ' -llibxslt.lib -llibxml2.lib';
     } else {
@@ -108,16 +112,16 @@ if ($config{LIBS} !~ /\-l(lib)?xslt\b/) {
   }
 }
 
-if ($config{LIBS} !~ /\-lz(lib)?\b/ and !($is_win32 && $config{LIBS} !~ /\-lzlib\b/)) {
+if ($config{LIBS} !~ /\-lz(lib)?\b/ and !($::is_Win32 && $config{LIBS} !~ /\-lzlib\b/)) {
     # note if libxml2 has not -lz within its cflags, we should not use
     # it! We should trust libxml2 and assume libz is not available on the
     # current system (this is ofcourse not true with win32 systems.
-    # $config{LIBS} .= $is_Win32 ? ' -lzlib' :' -lz';
+    # $config{LIBS} .= $::is_Win32 ? ' -lzlib' :' -lz';
     if ( $config{DEBUG} ) {
         warn "zlib was not configured\n";
-        warn "set zlib\n" if $is_Win32;
+        warn "set zlib\n" if $::is_Win32;
     }
-  if ($is_Win32) {
+  if ($::is_Win32) {
     if( $ENV{ACTIVEPERL_MINGW} ) {
       $config{LIBS} .= '';
     } else {
@@ -130,10 +134,10 @@ if ($config{LIBS} !~ /\-lz(lib)?\b/ and !($is_win32 && $config{LIBS} !~ /\-lzlib
 
 if ($config{LIBS} !~ /\-lm\b/) {
     # math support is important, but is not available separately in W32
-    $config{LIBS} .= $is_Win32 ? '' :' -lm';
+    $config{LIBS} .= $::is_Win32 ? '' :' -lm';
 }
 
-if (!have_library($is_Win32 ? "libxslt" : "xslt")) {
+if (!have_library($::is_Win32 ? "libxslt" : "xslt")) {
     print STDERR <<DEATH;
 libxslt not found
 Try setting LIBS and INC values on the command line
@@ -146,8 +150,8 @@ exit 0; # 0 recommended by http://cpantest.grango.org (Notes for CPAN Authors)
 }
 
 
-if (have_library($is_Win32 ? "libexslt" : "exslt")) {
-  my $exslt_defaults = $is_Win32 ?
+if (have_library($::is_Win32 ? "libexslt" : "exslt")) {
+  my $exslt_defaults = $::is_Win32 ?
     ($ENV{ACTIVEPERL_MINGW} ? q/-llibexslt.lib/ : q/-llibexslt/) :
                               q/-lexslt/; # -lgcrypt -lgpg-error/;
   my $exsltcfg = 'pkg-config libexslt';
@@ -187,7 +191,7 @@ if ($ldflags) {
 # Avoid possible shared library name conflict. On Win32 systems
 # the name of system DLL libxlst.dll clashes with module's LibXSLT.dll.
 # To handle this we are gonna rename module's DLL to LibXSLT.xs.dll.
-if ($is_Win32) {
+if ($::is_Win32) {
   if ($] eq '5.010000') {
     print STDERR <<5100BUG;
 ******************************** !!!WARNING!!! ********************************
@@ -204,7 +208,7 @@ This bug is not present in perl 5.8.* and will be fixed in 5.10.1.
 5100BUG
   }
   else {
-    $config{DLEXT} = 'xs.dll' if ($is_Win32);
+    $config{DLEXT} = 'xs.dll' if ($::is_Win32);
   }
 }
 
@@ -234,11 +238,10 @@ use Cwd;
 use Symbol;
 use File::Spec;
 
-use vars qw/$DEVNULL $is_Win32/;
 
 BEGIN {
-    $is_Win32 = ($^O =~ /Win32/);
-    if ($is_Win32) {
+    $::is_Win32 = ($^O =~ /Win32/);
+    if ($::is_Win32) {
         $DEVNULL = 'DEVNULL';
     }
     else {
@@ -412,8 +415,8 @@ sub have_library {
 
     my $result;
     if ($func) {
-        my $libs = $is_Win32 ? " $lib.lib  " : "-l$lib";
-        if ($is_Win32) {
+        my $libs = $::is_Win32 ? " $lib.lib  " : "-l$lib";
+        if ($::is_Win32) {
             $result = try_link(<<"SRC", $libs);
 #include <windows.h>
 #include <winsock.h>

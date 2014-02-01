@@ -1,5 +1,8 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.85            Sat  1 Feb 16:23:43 IST 2014
+    - Add "use strict;" and "use warnings;" globally (CPANTS).
+
 1.84            Thu 26 Dec 14:19:19 IST 2013
     - Hopefully fix a segmentation fault on Win32 introduced in the last ver.
         - https://rt.cpan.org/Ticket/Display.html?id=91652

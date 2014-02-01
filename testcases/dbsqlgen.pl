@@ -1,8 +1,11 @@
 #!/usr/bin/perl
 
-$size = shift;
+use strict;
+use warnings;
 
-if ($size eq "") 
+my $size = shift;
+
+if ($size eq "")
 {
     die "usage:  dbsqlgen.pl [size]\n";
 }
