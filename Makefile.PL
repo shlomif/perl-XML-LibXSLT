@@ -217,6 +217,7 @@ WriteMakefile(
     'VERSION_FROM' => 'LibXSLT.pm', # finds $VERSION
     'AUTHOR'    => 'Matt Sergeant',
     'ABSTRACT'  => 'Interface to GNOME libxslt library',
+    'LICENSE'   => 'perl_5',
     'PREREQ_PM' =>
     {
         'Encode' => 0,
