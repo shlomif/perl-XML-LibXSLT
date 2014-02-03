@@ -62,22 +62,38 @@ unless ( $::is_Win32 ) { # cannot get config in W32
                         or
                     (($major == 1) && ($minor > 1))
                         or
-                    (($major == 1) && ($minor == 1) && ($point >= 28))
+                    (($major == 1) && ($minor == 1) && ($point >= 18))
                 )
             )
             {
-                die <<'EOF';
-libxslt versions before 1.1.28 are buggy. Please install libxslt-1.1.28.
+                die +{ type => "ver", msg => <<'EOF'};
+libxslt versions before 1.1.18 are buggy. Please install the latest version
 EOF
             }
+            elsif ($major == 1 and $minor == 1 and $point == 25)
+            {
+                die +{ type => "ver", msg => <<'EOF'};
+libxslt-1.1.25 contains a deadlock that breaks the tests, and is not supported.
+See: https://rt.cpan.org/Ticket/Display.html?id=50487 .
+EOF
+            }
+            elsif ($major == 1 and $minor == 1 and $point == 27)
+            {
+                die +{ type => "ver", msg => <<'EOF'};
+libxslt-1.1.27 does not handle namespaces well, and is not supported.
+See: https://bugzilla.gnome.org/show_bug.cgi?id=684564 .
+EOF
+            }
+
             $config{LIBS} ||= backtick("$xsltcfg --libs");
             $config{INC} ||= backtick("$xsltcfg --cflags");
             print "ok\n";
         };
-        if ($@) {
+        my $Err = $@;
+        if ($Err) {
             print "failed\n";
-            if ($@ =~ /^libxslt versions before/) {
-                print STDERR "XML::LibXSLT needs libxslt version 1.1.28 or higher\n";
+            if ((ref($Err) eq 'HASH') && (($Err->{type} || '') eq 'ver')) {
+                print {*STDERR} ($Err->{msg}, "\n");
                 exit 0; # 0 recommended by http://cpantest.grango.org (Notes for CPAN Authors)
             }
             warn "*** ", $@ if $DEBUG;
