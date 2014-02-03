@@ -1,5 +1,12 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.87            Mon  3 Feb 10:07:31 IST 2014
+    - Decrease the minimum libxslt version again.
+        - Setting it as 1.1.28 did not fix the failures, and now we have
+        some more tests to test against it.
+        - https://rt.cpan.org/Ticket/Display.html?id=92659
+        - Thanks to Slaven Rezic for the report.
+
 1.86            Sun  2 Feb 17:06:07 IST 2014
     - Add t/xml-grammar-failures.t to catch test failures in dependent modules.
         - Add some data files for it under t/data/*.
