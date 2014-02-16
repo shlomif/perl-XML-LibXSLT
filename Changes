@@ -1,5 +1,11 @@
 Revision history for Perl extension XML::LibXSLT.
 
+not yet released
+    - Fix memory leak with extension functions returning node lists
+        - https://rt.cpan.org/Public/Bug/Display.html?id=55623
+        - https://rt.cpan.org/Public/Bug/Display.html?id=76596
+        - Thanks to Jozef Kutej and Slaven Rezic for the reports.
+
 1.88            Mon 17 Feb 14:44:34 IST 2014
     - Fix t/xml-grammar-failures.t based on the xml:space commentary here:
         - https://mail.gnome.org/archives/xml/2014-February/msg00000.html
