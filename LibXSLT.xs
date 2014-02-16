@@ -348,17 +348,15 @@ LibXSLT__function (xmlXPathParserContextPtr ctxt, int nargs, SV *perl_function) 
             while (av_len(array_result) >= 0) {
 	      tmp_node1 = (xmlNodePtr)x_PmmSvNode(sv_2mortal(av_shift(array_result)));
 	      if (tmp_node1) {
-		  container = xsltCreateRVT(tctxt);
+		container = xsltCreateRVT(tctxt);
 		if (container == NULL) {
-		  if (container == NULL) {
-		    croak("LibXSLT: perl-dispatcher: cannot create container RVT\n");
-		  }
-#if LIBXSLT_VERSION < 10118
-		  xsltRegisterTmpRVT(tctxt,container);
-#else
-		  xsltRegisterLocalRVT(tctxt,container);
-#endif
+		  croak("LibXSLT: perl-dispatcher: cannot create container RVT\n");
 		}
+#if LIBXSLT_VERSION < 10118
+		xsltRegisterTmpRVT(tctxt,container);
+#else
+		xsltRegisterLocalRVT(tctxt,container);
+#endif
 		tmp_node = xmlDocCopyNode(tmp_node1, container, 1);
 		/* a wraper element is needed to wrap attributes and
 		   prevent libxml2 from merging adjacent text nodes */
