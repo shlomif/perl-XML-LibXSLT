@@ -1,6 +1,8 @@
 Revision history for Perl extension XML::LibXSLT.
 
 not yet released
+    - Don't register libxml2 input callbacks twice
+        - https://rt.cpan.org/Public/Bug/Display.html?id=60313
     - Fix memory leak with extension functions returning node lists
         - https://rt.cpan.org/Public/Bug/Display.html?id=55623
         - https://rt.cpan.org/Public/Bug/Display.html?id=76596
