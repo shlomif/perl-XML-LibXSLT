@@ -97,36 +97,38 @@ $stylesheet = undef;
 $xslt = XML::LibXSLT->new();
 $stylesheet = $xslt->parse_stylesheet($parser->parse_string($stylsheetstring));
 
-# setting callbacks
-local $XML::LibXML::match_cb = \&match_cb;
-local $XML::LibXML::open_cb = \&open_cb;
-local $XML::LibXML::close_cb = \&close_cb;
-local $XML::LibXML::read_cb = \&read_cb;
-
-# warn "transform!\n";
-$results = $stylesheet->transform($doc);
-
-# results
-# TEST
-ok ($results, 'results is OK - 2.');
-
-$output = $stylesheet->output_string($results);
-
-# warn "output: $output\n";
-# output
-# TEST
-ok ($output, 'output is OK - 2.');
-
-$XML::LibXML::open_cb = \&dying_open_cb;
-
-# check if the transform throws an exception
-eval {
-    $stylesheet->transform($doc);
-};
 {
-    my $E = $@;
+    # setting callbacks
+    local $XML::LibXML::match_cb = \&match_cb;
+    local $XML::LibXML::open_cb = \&open_cb;
+    local $XML::LibXML::close_cb = \&close_cb;
+    local $XML::LibXML::read_cb = \&read_cb;
+
+    # warn "transform!\n";
+    $results = $stylesheet->transform($doc);
+
+    # results
     # TEST
-    ok ($E, "Transform Threw: $E");
+    ok ($results, 'results is OK - 2.');
+
+    $output = $stylesheet->output_string($results);
+
+    # warn "output: $output\n";
+    # output
+    # TEST
+    ok ($output, 'output is OK - 2.');
+
+    $XML::LibXML::open_cb = \&dying_open_cb;
+
+    # check if the transform throws an exception
+    eval {
+        $stylesheet->transform($doc);
+    };
+    {
+        my $E = $@;
+        # TEST
+        ok ($E, "Transform Threw: $E");
+    }
 }
 
 #
