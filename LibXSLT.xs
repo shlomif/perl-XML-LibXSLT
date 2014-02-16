@@ -1398,7 +1398,7 @@ _output_string(self, sv_doc, bytes_vs_chars=0)
         XSLT_GET_IMPORT_PTR(encoding, self, encoding)
         if (encoding != NULL) {
             encoder = xmlFindCharEncodingHandler((char *)encoding);
-        if ((encoder != NULL) &&
+            if ((encoder != NULL) &&
                  (xmlStrEqual((const xmlChar *)encoder->name,
                               (const xmlChar *) "UTF-8")))
                 encoder = NULL;
@@ -1443,7 +1443,7 @@ output_fh(self, sv_doc, fh)
         XSLT_GET_IMPORT_PTR(encoding, self, encoding)
         if (encoding != NULL) {
             encoder = xmlFindCharEncodingHandler((char *)encoding);
-        if ((encoder != NULL) &&
+            if ((encoder != NULL) &&
                  (xmlStrEqual((const xmlChar *)encoder->name,
                               (const xmlChar *) "UTF-8")))
                 encoder = NULL;
