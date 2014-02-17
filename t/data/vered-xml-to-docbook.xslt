@@ -85,11 +85,11 @@
 </xsl:template>
 
 <xsl:template match="vrd:bad_code">
-    <db:programlisting xml:space="preserve" role="bad_code">
+    <db:programlisting role="bad_code">
         <xsl:attribute name="language">
             <xsl:value-of select="@syntax" />
         </xsl:attribute>
-        <xsl:text># Bad code
+        <xsl:text xml:space="preserve"># Bad code
 
 </xsl:text>
         <xsl:apply-templates/>
@@ -97,11 +97,11 @@
 </xsl:template>
 
 <xsl:template match="vrd:code_blk">
-    <db:programlisting xml:space="preserve">
+    <db:programlisting>
         <xsl:attribute name="language">
             <xsl:value-of select="@syntax" />
         </xsl:attribute>
-        <xsl:apply-templates/>
+        <xsl:apply-templates xml:space="preserve"/>
     </db:programlisting>
 </xsl:template>
 
