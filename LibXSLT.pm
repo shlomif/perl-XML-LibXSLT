@@ -27,7 +27,7 @@ use Carp;
 
 require Exporter;
 
-$VERSION = '1.87';
+$VERSION = '1.88';
 
 require DynaLoader;
 
