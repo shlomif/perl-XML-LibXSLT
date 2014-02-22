@@ -242,6 +242,10 @@ WriteMakefile(
         'warnings' => 0,
     },
     'OBJECT'     => '$(O_FILES)',
+    (($ExtUtils::MakeMaker::VERSION >= 6.48)
+        ? (MIN_PERL_VERSION => '5.008001',)
+        : ()
+    ),
     %config,
 );
 
