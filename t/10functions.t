@@ -1,8 +1,8 @@
 use strict;
 use warnings;
 
-# Should be 38.
-use Test::More tests => 38;
+# Should be 39.
+use Test::More tests => 39;
 use XML::LibXSLT;
 
 {
@@ -356,6 +356,57 @@ EOF
   my $val = $result->findvalue("/root");
   # TEST
   is ($val, 10, "contextual register_element");
+}
+
+{
+    # GNOME Bugzilla bug #562302
+    my $parser = new XML::LibXML;
+    my $xslt = new XML::LibXSLT;
+
+    # registering function
+    XML::LibXSLT->register_function("urn:perl", 'cfg', sub {
+        return $parser->parse_string('<xml_storage/>');
+    });
+
+    # loading and parsing stylesheet
+    my $style_doc = $parser->parse_string(<<'EOF');
+<xsl:stylesheet version="1.0"
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns:exslt="http://exslt.org/common"
+    xmlns:perl="urn:perl"
+    exclude-result-prefixes="exslt perl">
+
+<xsl:variable name="xml_storage" select="perl:cfg()/xml_storage" />
+
+<xsl:variable name="page-data-tree">
+    <title><xsl:value-of select="$xml_storage"/></title>
+    <crumbs>
+        <page><url>hello</url></page>
+        <page><url>bye</url></page>
+    </crumbs>
+</xsl:variable>
+<xsl:variable name="page-data" select="exslt:node-set($page-data-tree)" />
+
+<xsl:template match="/">
+    <result><xsl:copy-of select="$xml_storage"/></result>
+</xsl:template>
+
+</xsl:stylesheet>
+EOF
+
+    my $stylesheet = $xslt->parse_stylesheet($style_doc);
+
+    # performing transform
+    my $source = XML::LibXML::Document->new;
+    my $results = $stylesheet->transform($source);
+
+    my $string = $stylesheet->output_string($results);
+    my $expected = <<'EOF';
+<?xml version="1.0"?>
+<result><xml_storage/></result>
+EOF
+    # TEST
+    is ($string, $expected, 'GNOME Bugzilla bug #562302');
 }
 
 # TEST
