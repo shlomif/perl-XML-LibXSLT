@@ -368,6 +368,11 @@ LibXSLT__function (xmlXPathParserContextPtr ctxt, int nargs, SV *perl_function) 
 		croak("LibXSLT: perl-dispatcher returned nodelist with non-node elements\n");
 	      }
 	    }
+            /*
+             * Mark it as a function result in order to avoid garbage
+             * collecting of tree fragments.
+             */
+            xsltExtensionInstructionResultRegister(tctxt, ret);
             goto FINISH;
         } 
         else if (sv_derived_from(perl_result, "XML::LibXML::Node")) {
@@ -403,6 +408,11 @@ LibXSLT__function (xmlXPathParserContextPtr ctxt, int nargs, SV *perl_function) 
 	  } else {
 	    croak("LibXSLT: perl-dispatcher returned a null XML::LibXML::Node object\n");
 	  }
+          /*
+           * Mark it as a function result in order to avoid garbage
+           * collecting of tree fragments.
+           */
+          xsltExtensionInstructionResultRegister(tctxt, ret);
 	  goto FINISH;
         }
         else if (sv_derived_from(perl_result, "XML::LibXML::Boolean")) {
