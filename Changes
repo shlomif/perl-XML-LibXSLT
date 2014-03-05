@@ -1,5 +1,20 @@
 Revision history for Perl extension XML::LibXSLT.
 
+not yet released
+    - Fix memory management of node-sets returned from extension functions.
+      Without calling xsltExtensionInstructionResultRegister, node-sets
+      could be freed too early, leading to strange errors or segfaults.
+        - https://bugzilla.gnome.org/show_bug.cgi?id=562302
+        - https://rt.cpan.org/Ticket/Display.html?id=93349
+        - Thanks to Alexander Schepanovski for the report.
+    - Document input_callbacks methods
+    - Don't register libxml2 input callbacks twice
+        - https://rt.cpan.org/Public/Bug/Display.html?id=60313
+    - Fix memory leak with extension functions returning node lists
+        - https://rt.cpan.org/Public/Bug/Display.html?id=55623
+        - https://rt.cpan.org/Public/Bug/Display.html?id=76596
+        - Thanks to Jozef Kutej and Slaven Rezic for the reports.
+
 1.88            Mon 17 Feb 14:44:34 IST 2014
     - Fix t/xml-grammar-failures.t based on the xml:space commentary here:
         - https://mail.gnome.org/archives/xml/2014-February/msg00000.html
