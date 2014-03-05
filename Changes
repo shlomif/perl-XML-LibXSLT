@@ -1,6 +1,6 @@
 Revision history for Perl extension XML::LibXSLT.
 
-not yet released
+1.89            Wed  5 Mar 16:16:17 IST 2014
     - Fix memory management of node-sets returned from extension functions.
       Without calling xsltExtensionInstructionResultRegister, node-sets
       could be freed too early, leading to strange errors or segfaults.
@@ -14,6 +14,7 @@ not yet released
         - https://rt.cpan.org/Public/Bug/Display.html?id=55623
         - https://rt.cpan.org/Public/Bug/Display.html?id=76596
         - Thanks to Jozef Kutej and Slaven Rezic for the reports.
+    - Thanks to Nick Wellnhofer for the pull requests and fixes.
 
 1.88            Mon 17 Feb 14:44:34 IST 2014
     - Fix t/xml-grammar-failures.t based on the xml:space commentary here:
