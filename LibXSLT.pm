@@ -232,7 +232,6 @@ sub _init_callbacks{
         $icb->register_callbacks( [$mcb, $ocb, $rcb, $ccb] );
     }
 
-    $self->lib_init_callbacks();
     $icb->init_callbacks();
 }
 
@@ -440,7 +439,6 @@ sub _init_callbacks {
     if ( defined $mcb and defined $ocb and defined $rcb and defined $ccb ) {
         $icb->register_callbacks( [$mcb, $ocb, $rcb, $ccb] );
     }
-    $self->XML::LibXSLT::lib_init_callbacks();
     $icb->init_callbacks();
 
     my $scb = $self->{XML_LIBXSLT_SECPREFS};
@@ -770,6 +768,13 @@ To define XML::LibXSLT or XML::LibXSLT::Stylesheet specific input
 callbacks, reuse the XML::LibXML input callback API as described in
 L<XML::LibXML::InputCallback(3)>.
 
+=item input_callbacks($icb)
+
+Enable the callbacks in C<$icb> only for this XML::LibXSLT object.
+C<$icb> should be a C<XML::LibXML::InputCallback> object. This will
+call C<init_callbacks> and C<cleanup_callbacks> automatically during
+parsing or transformation.
+
 =head1 Security Callbacks
 
 To create security preferences for the transformation see
@@ -859,6 +864,13 @@ Returns the value of the C<media-type> attribute from
 C<xsl:output>. If this attribute is unspecified, the default media
 type is initially C<text/xml>. This default changes to C<text/html>
 under the same conditions as L<output_method>.
+
+=item input_callbacks($icb)
+
+Enable the callbacks in C<$icb> only for this stylesheet. C<$icb>
+should be a C<XML::LibXML::InputCallback> object. This will call
+C<init_callbacks> and C<cleanup_callbacks> automatically during
+transformation.
 
 =back
 

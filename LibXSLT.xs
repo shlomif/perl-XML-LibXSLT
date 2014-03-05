@@ -348,17 +348,15 @@ LibXSLT__function (xmlXPathParserContextPtr ctxt, int nargs, SV *perl_function) 
             while (av_len(array_result) >= 0) {
 	      tmp_node1 = (xmlNodePtr)x_PmmSvNode(sv_2mortal(av_shift(array_result)));
 	      if (tmp_node1) {
-		  container = xsltCreateRVT(tctxt);
+		container = xsltCreateRVT(tctxt);
 		if (container == NULL) {
-		  if (container == NULL) {
-		    croak("LibXSLT: perl-dispatcher: cannot create container RVT\n");
-		  }
-#if LIBXSLT_VERSION < 10118
-		  xsltRegisterTmpRVT(tctxt,container);
-#else
-		  xsltRegisterLocalRVT(tctxt,container);
-#endif
+		  croak("LibXSLT: perl-dispatcher: cannot create container RVT\n");
 		}
+#if LIBXSLT_VERSION < 10118
+		xsltRegisterTmpRVT(tctxt,container);
+#else
+		xsltRegisterLocalRVT(tctxt,container);
+#endif
 		tmp_node = xmlDocCopyNode(tmp_node1, container, 1);
 		/* a wraper element is needed to wrap attributes and
 		   prevent libxml2 from merging adjacent text nodes */
@@ -370,6 +368,11 @@ LibXSLT__function (xmlXPathParserContextPtr ctxt, int nargs, SV *perl_function) 
 		croak("LibXSLT: perl-dispatcher returned nodelist with non-node elements\n");
 	      }
 	    }
+            /*
+             * Mark it as a function result in order to avoid garbage
+             * collecting of tree fragments.
+             */
+            xsltExtensionInstructionResultRegister(tctxt, ret);
             goto FINISH;
         } 
         else if (sv_derived_from(perl_result, "XML::LibXML::Node")) {
@@ -405,6 +408,11 @@ LibXSLT__function (xmlXPathParserContextPtr ctxt, int nargs, SV *perl_function) 
 	  } else {
 	    croak("LibXSLT: perl-dispatcher returned a null XML::LibXML::Node object\n");
 	  }
+          /*
+           * Mark it as a function result in order to avoid garbage
+           * collecting of tree fragments.
+           */
+          xsltExtensionInstructionResultRegister(tctxt, ret);
 	  goto FINISH;
         }
         else if (sv_derived_from(perl_result, "XML::LibXML::Boolean")) {
@@ -583,187 +591,6 @@ LibXSLT_context_element(xsltTransformContextPtr ctxt, xmlNodePtr node, xmlNodePt
 
     FREETMPS;
     LEAVE;
-}
-
-
-int
-LibXSLT_input_match(char const * filename)
-{
-    int results;
-    int count;
-    SV * res;
-
-    results = 0;
-
-    {
-        dTHX;
-        dSP;
-
-        ENTER;
-        SAVETMPS;
-
-        PUSHMARK(SP);
-        EXTEND(SP, 1);
-        PUSHs(sv_2mortal(newSVpv((char*)filename, 0)));
-        PUTBACK;
-
-        count = call_pv("XML::LibXML::InputCallback::_callback_match", 
-                             G_SCALAR | G_EVAL);
-
-        SPAGAIN;
-
-        if (count != 1) {
-            croak("match callback must return a single value");
-        }
-
-        if (SvTRUE(ERRSV)) {
-            (void) POPs ;
-            croak("input match callback died: %s", SvPV_nolen(ERRSV));
-        }
-
-        res = POPs;
-
-        if (SvTRUE(res)) {
-            results = 1;
-        }
-
-        PUTBACK;
-        FREETMPS;
-        LEAVE;
-    }
-    return results;
-}
-
-void *
-LibXSLT_input_open(char const * filename)
-{
-    SV * results;
-    int count;
-
-    dTHX;
-    dSP;
-
-    ENTER;
-    SAVETMPS;
-
-    PUSHMARK(SP);
-    EXTEND(SP, 1);
-    PUSHs(sv_2mortal(newSVpv((char*)filename, 0)));
-    PUTBACK;
-
-    count = call_pv("XML::LibXML::InputCallback::_callback_open", 
-                              G_SCALAR | G_EVAL);
-
-    SPAGAIN;
-
-    if (count != 1) {
-        croak("open callback must return a single value");
-    }
-
-    if (SvTRUE(ERRSV)) {
-        (void) POPs ;
-        croak("input callback died: %s", SvPV_nolen(ERRSV));
-    }
-
-    results = POPs;
-
-    SvREFCNT_inc(results);
-
-    PUTBACK;
-    FREETMPS;
-    LEAVE;
-
-    return (void *)results;
-}
-
-int
-LibXSLT_input_read(void * context, char * buffer, int len)
-{
-    STRLEN res_len;
-    const char * output;
-    SV * ctxt;
-
-    res_len = 0;
-    ctxt = (SV *)context;
-
-    {
-        int count;
-
-        dTHX;
-        dSP;
-
-        ENTER;
-        SAVETMPS;
-
-        PUSHMARK(SP);
-        EXTEND(SP, 2);
-        PUSHs(ctxt);
-        PUSHs(sv_2mortal(newSViv(len)));
-        PUTBACK;
-
-        count = call_pv("XML::LibXML::InputCallback::_callback_read", 
-                             G_SCALAR | G_EVAL);
-
-        SPAGAIN;
-
-        if (count != 1) {
-            croak("read callback must return a single value");
-        }
-
-        if (SvTRUE(ERRSV)) {
-            (void) POPs ;
-            croak("read callback died: %s", SvPV_nolen(ERRSV));
-        }
-
-        output = POPp;
-        if (output != NULL) {
-            res_len = strlen(output);
-            if (res_len) {
-                strncpy(buffer, output, res_len);
-            }
-            else {
-                buffer[0] = 0;
-            }
-        }
-
-	PUTBACK;
-        FREETMPS;
-        LEAVE;
-    }
-    return res_len;
-}
-
-void
-LibXSLT_input_close(void * context)
-{
-    SV * ctxt;
-
-    ctxt = (SV *)context;
-
-    {
-        dTHX;
-        dSP;
-
-        ENTER;
-        SAVETMPS;
-
-        PUSHMARK(SP);
-        EXTEND(SP, 1);
-        PUSHs(ctxt);
-        PUTBACK;
-
-        call_pv("XML::LibXML::InputCallback::_callback_close", 
-                             G_SCALAR | G_EVAL | G_DISCARD);
-
-        SvREFCNT_dec(ctxt);
-
-        if (SvTRUE(ERRSV)) {
-            croak("close callback died: %s", SvPV_nolen(ERRSV));
-        }
-
-        FREETMPS;
-        LEAVE;
-    }
 }
 
 int
@@ -1153,24 +980,6 @@ _parse_stylesheet_file(self, filename)
         RETVAL
 
 void
-lib_init_callbacks( self )
-        SV * self
-    CODE:
-        PERL_UNUSED_VAR(self);
-        xmlRegisterInputCallbacks((xmlInputMatchCallback) LibXSLT_input_match,
-                                  (xmlInputOpenCallback) LibXSLT_input_open,
-                                  (xmlInputReadCallback) LibXSLT_input_read,
-                                  (xmlInputCloseCallback) LibXSLT_input_close);
-
-void
-lib_cleanup_callbacks( self )
-        SV * self
-    CODE:
-        PERL_UNUSED_VAR(self);
-        xmlCleanupInputCallbacks();
-        xmlRegisterDefaultInputCallbacks();
-
-void
 INIT_THREAD_SUPPORT()
     CODE:
        if (x_PROXY_NODE_REGISTRY_MUTEX != NULL) {
@@ -1400,7 +1209,7 @@ _output_string(self, sv_doc, bytes_vs_chars=0)
         XSLT_GET_IMPORT_PTR(encoding, self, encoding)
         if (encoding != NULL) {
             encoder = xmlFindCharEncodingHandler((char *)encoding);
-        if ((encoder != NULL) &&
+            if ((encoder != NULL) &&
                  (xmlStrEqual((const xmlChar *)encoder->name,
                               (const xmlChar *) "UTF-8")))
                 encoder = NULL;
@@ -1445,7 +1254,7 @@ output_fh(self, sv_doc, fh)
         XSLT_GET_IMPORT_PTR(encoding, self, encoding)
         if (encoding != NULL) {
             encoder = xmlFindCharEncodingHandler((char *)encoding);
-        if ((encoder != NULL) &&
+            if ((encoder != NULL) &&
                  (xmlStrEqual((const xmlChar *)encoder->name,
                               (const xmlChar *) "UTF-8")))
                 encoder = NULL;

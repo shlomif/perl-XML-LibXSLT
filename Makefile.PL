@@ -246,6 +246,18 @@ WriteMakefile(
         ? (MIN_PERL_VERSION => '5.008001',)
         : ()
     ),
+    'META_MERGE' => {
+        'meta-spec' => {
+            'version' => 2,
+        },
+        'resources' => {
+            'repository' => {
+                'type' => 'hg',
+                'url'  => 'https://bitbucket.org/shlomif/perl-xml-libxslt',
+                'web'  => 'https://bitbucket.org/shlomif/perl-xml-libxslt',
+            },
+        },
+    },
     %config,
 );
 

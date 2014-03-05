@@ -1,8 +1,8 @@
 use strict;
 use warnings;
 
-# Should be 25.
-use Test::More tests => 25;
+# Should be 28.
+use Test::More tests => 28;
 use XML::LibXSLT;
 use XML::LibXML 1.59;
 
@@ -97,36 +97,38 @@ $stylesheet = undef;
 $xslt = XML::LibXSLT->new();
 $stylesheet = $xslt->parse_stylesheet($parser->parse_string($stylsheetstring));
 
-# setting callbacks
-local $XML::LibXML::match_cb = \&match_cb;
-local $XML::LibXML::open_cb = \&open_cb;
-local $XML::LibXML::close_cb = \&close_cb;
-local $XML::LibXML::read_cb = \&read_cb;
-
-# warn "transform!\n";
-$results = $stylesheet->transform($doc);
-
-# results
-# TEST
-ok ($results, 'results is OK - 2.');
-
-$output = $stylesheet->output_string($results);
-
-# warn "output: $output\n";
-# output
-# TEST
-ok ($output, 'output is OK - 2.');
-
-$XML::LibXML::open_cb = \&dying_open_cb;
-
-# check if the transform throws an exception
-eval {
-    $stylesheet->transform($doc);
-};
 {
-    my $E = $@;
+    # setting callbacks
+    local $XML::LibXML::match_cb = \&match_cb;
+    local $XML::LibXML::open_cb = \&open_cb;
+    local $XML::LibXML::close_cb = \&close_cb;
+    local $XML::LibXML::read_cb = \&read_cb;
+
+    # warn "transform!\n";
+    $results = $stylesheet->transform($doc);
+
+    # results
     # TEST
-    ok ($E, "Transform Threw: $E");
+    ok ($results, 'results is OK - 2.');
+
+    $output = $stylesheet->output_string($results);
+
+    # warn "output: $output\n";
+    # output
+    # TEST
+    ok ($output, 'output is OK - 2.');
+
+    $XML::LibXML::open_cb = \&dying_open_cb;
+
+    # check if the transform throws an exception
+    eval {
+        $stylesheet->transform($doc);
+    };
+    {
+        my $E = $@;
+        # TEST
+        ok ($E, "Transform Threw: $E");
+    }
 }
 
 #
@@ -172,6 +174,50 @@ $stylesheet = $xslt->parse_stylesheet($parser->parse_string($stylsheetstring));
 ok ($stylesheet, 'stylesheet is OK - 2.');
 
 #
+# Test not matching callback
+# This also verifies that all the previous callbacks were unregistered.
+#
+
+$xslt = undef;
+$stylesheet = undef;
+$icb = undef;
+
+$xslt = XML::LibXSLT->new();
+$icb = XML::LibXML::InputCallback->new();
+
+# registering callbacks
+$icb->register_callbacks( [ \&match_cb, \&stylesheet_open_cb,
+                            \&read_cb, \&close_cb ] );
+
+$xslt->input_callbacks($icb);
+
+my $no_match_count = 0;
+
+$stylsheetstring = <<'EOT';
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+    <xsl:template match="/">
+        <result>
+            <xsl:apply-templates select="document('not-found.xml')/*"/>
+        </result>
+    </xsl:template>
+</xsl:stylesheet>
+EOT
+
+$stylesheet = $xslt->parse_stylesheet($parser->parse_string($stylsheetstring));
+# stylesheet
+# TEST
+ok ($stylesheet, 'stylesheet is OK - 3.');
+
+$results = $stylesheet->transform($doc);
+# results
+# TEST
+ok ($results, 'results is OK - 3.');
+
+# no_match_count
+# TEST
+is ($no_match_count, 1, 'match_cb called once if no match');
+
+#
 # input callback functions
 #
 
@@ -182,6 +228,10 @@ sub match_cb {
         # TEST*5
         ok(1, 'URI is OK in match_cb.');
         return 1;
+    }
+    if ($uri eq "not-found.xml") {
+        ++$no_match_count;
+        return 0;
     }
     return 0;
 }
