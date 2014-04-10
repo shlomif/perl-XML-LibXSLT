@@ -4,6 +4,8 @@ Revision history for Perl extension XML::LibXSLT.
     - Handle $Config{dlext} correctly on Windows.
         - https://rt.cpan.org/Ticket/Display.html?id=94516
         - Thanks to kmx for the report and fix.
+    - Add t/pod.t .
+        - Fix some POD problems.
 
 1.89            Wed  5 Mar 16:16:17 IST 2014
     - Fix memory management of node-sets returned from extension functions.
