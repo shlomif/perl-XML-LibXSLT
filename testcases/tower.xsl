@@ -6,7 +6,7 @@
             <xsl:with-param name="height1" select="."/>
             <xsl:with-param name="height2" select="0"/>
             <xsl:with-param name="height3" select="0"/>
-        </xsl:call-template>        
+        </xsl:call-template>
         <xsl:call-template name="transferstack">
             <xsl:with-param name="source" select="1"/>
             <xsl:with-param name="target" select="2"/>
@@ -38,23 +38,23 @@
             <xsl:with-param name="howmany" select="$howmany - 1"/>
         </xsl:call-template>
         <xsl:call-template name="print">
-            <xsl:with-param name="height1" 
+            <xsl:with-param name="height1"
                 select="($source = 1) * ($height1 - $howmany) + ($target = 1) * ($height1 + 1) + ($spare = 1) * ($height1 + $howmany - 1)"/>
-            <xsl:with-param name="height2" 
+            <xsl:with-param name="height2"
                 select="($source = 2) * ($height2 - $howmany) + ($target = 2) * ($height2 + 1) + ($spare = 2) * ($height2 + $howmany - 1)"/>
-            <xsl:with-param name="height3" 
+            <xsl:with-param name="height3"
                 select="($source = 3) * ($height3 - $howmany) + ($target = 3) * ($height3 + 1) + ($spare = 3) * ($height3 + $howmany - 1)"/>
-        </xsl:call-template>        
-        
+        </xsl:call-template>
+
         <xsl:call-template name="transferstack">
             <xsl:with-param name="source" select="$spare"/>
             <xsl:with-param name="target" select="$target"/>
             <xsl:with-param name="spare" select="$source"/>
-            <xsl:with-param name="height1" 
+            <xsl:with-param name="height1"
                 select="($source = 1) * ($height1 - $howmany) + ($target = 1) * ($height1 + 1) + ($spare = 1) * ($height1 + $howmany - 1)"/>
-            <xsl:with-param name="height2" 
+            <xsl:with-param name="height2"
                 select="($source = 2) * ($height2 - $howmany) + ($target = 2) * ($height2 + 1) + ($spare = 2) * ($height2 + $howmany - 1)"/>
-            <xsl:with-param name="height3" 
+            <xsl:with-param name="height3"
                 select="($source = 3) * ($height3 - $howmany) + ($target = 3) * ($height3 + 1) + ($spare = 3) * ($height3 + $howmany - 1)"/>
             <xsl:with-param name="howmany" select="$howmany - 1"/>
         </xsl:call-template>

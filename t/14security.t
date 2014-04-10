@@ -206,7 +206,7 @@ print "# net read denied\n";
 {
     my $E = $@;
 # TEST
-like($E, qr|read for http://localhost/deny\.xml refused|, 
+like($E, qr|read for http://localhost/deny\.xml refused|,
     'Exception read for refused.'
 );
 }
@@ -224,7 +224,7 @@ like($E, qr|read for http://localhost/deny\.xml refused|,
     # We need to go to additional lengths to reserve a port due to:
     # - https://rt.cpan.org/Ticket/Display.html?id=71456
     # - http://stackoverflow.com/questions/7704228/perl-how-to-portably-reserve-a-tcp-port-so-there-will-be-a-non-available-url
- 
+
 my $listen_sock = IO::Socket::INET->new(
     Listen => 1,
     Proto => 'tcp',
@@ -251,7 +251,7 @@ print "# net write allowed\n";
 {
     my $E = $@;
 # TEST
-like ($E, qr/unable to save to \Q$file\E/, 
+like ($E, qr/unable to save to \Q$file\E/,
     'unable to save excpetion');
 }
 }
@@ -286,7 +286,7 @@ eval {
 {
     my $E = $@;
 # TEST
-like ($E, qr/Test die from security callback/, 
+like ($E, qr/Test die from security callback/,
     'Exception Test die from security callback.');
 
 }

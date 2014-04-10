@@ -1,4 +1,4 @@
-<?xml version="1.0"?> 
+<?xml version="1.0"?>
 
 <!-- string flipper -->
 
@@ -8,7 +8,7 @@
 
 <xsl:template name="textflipper">
   <xsl:param name="instring" select='""'/>
- 
+
   <xsl:variable name="firstword" select='substring-before($instring," ")'/>
 
   <xsl:choose>
@@ -16,7 +16,7 @@
       <xsl:call-template name="textflipper">
         <xsl:with-param name="instring" select="substring($instring,string-length($firstword)+2)"/>
       </xsl:call-template>
-      <xsl:text> </xsl:text> 
+      <xsl:text> </xsl:text>
       <xsl:value-of select="$firstword"/>
     </xsl:when>
     <xsl:otherwise>

@@ -43,6 +43,7 @@ t/data/vered-xml-to-docbook.xslt
 t/pod.t
 t/rt71345_a.t
 t/rt71345_b.t
+t/style-trailing-space.t
 t/xml-grammar-failures.t
 testcases/default.conf
 typemap

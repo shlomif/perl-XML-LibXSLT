@@ -7,7 +7,7 @@ use Test::More tests => 6;
 
 use vars (qw($loaded));
 
-END { 
+END {
     # TEST
     ok($loaded, 'Everything was properly loaded.');
 }

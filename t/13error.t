@@ -145,8 +145,8 @@ my $E = $@;
 ok( $E, ' TODO : Add test name' );
 
 # TEST
-like ( $E, 
-    qr/unregistered variable foo|variable 'foo' has not been declared/i, 
+like ( $E,
+    qr/unregistered variable foo|variable 'foo' has not been declared/i,
     'Exception matches.' );
 # TEST
 like ( $E, qr/element value-of/, 'Exception matches "element value-of"' );

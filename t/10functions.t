@@ -9,36 +9,36 @@ use XML::LibXSLT;
   my $parser = XML::LibXML->new();
   my $xslt = XML::LibXSLT->new();
   # TEST
-  ok($parser, '$parser was initted'); 
+  ok($parser, '$parser was initted');
   # TEST
   ok($xslt, '$xslt was initted');
-  
-  $xslt->register_function('urn:foo' => 'test', sub { 
+
+  $xslt->register_function('urn:foo' => 'test', sub {
           # TEST*4
-          ok(1, 'urn:foo was reached.'); 
+          ok(1, 'urn:foo was reached.');
           return $_[1] ?  ($_[0] . $_[1]) : $_[0];
       }
   );
-  $xslt->register_function('urn:foo' => 'test2', sub { 
+  $xslt->register_function('urn:foo' => 'test2', sub {
           # TEST*2
-          is(ref($_[0]), 'XML::LibXML::NodeList', 'First argument is a NodeList'); 
-          ref($_[0]) 
+          is(ref($_[0]), 'XML::LibXML::NodeList', 'First argument is a NodeList');
+          ref($_[0])
       }
   );
-  $xslt->register_function('urn:foo' => 'test3', sub { 
+  $xslt->register_function('urn:foo' => 'test3', sub {
           # TEST*2
-          is(scalar(@_), 0, 'No arguments were received.'); 
-          return; 
+          is(scalar(@_), 0, 'No arguments were received.');
+          return;
       }
   );
-  
+
   my $source = $parser->parse_string(<<'EOT');
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <document></document>
 EOT
 
   my $style = $parser->parse_string(<<'EOT');
-<xsl:stylesheet 
+<xsl:stylesheet
     version="1.0"
     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:foo="urn:foo"
@@ -50,7 +50,7 @@ EOT
   (( <xsl:value-of select="foo:test('Foo', '!')"/> ))
   (( <xsl:value-of select="foo:test('Foo', '!')"/> ))
        <!-- this works -->
-     <xsl:value-of select="foo:test(string($FOO))"/>   
+     <xsl:value-of select="foo:test(string($FOO))"/>
        <!-- this only works in 1.52 -->
      <xsl:value-of select="foo:test($FOO)"/>
   [[ <xsl:value-of select="foo:test2(/*)"/> ]]
@@ -110,14 +110,14 @@ EOT
     # TEST*$n
     ok($results, '$results is true - 2 (' . $n . ')');
     # TEST*$n
-    like($stylesheet->output_string($results), 
-        qr(<li>one</li>), 
+    like($stylesheet->output_string($results),
+        qr(<li>one</li>),
         'Matches li-one - ' . $n
     );
     # TEST*$n
     like (
-        $stylesheet->output_string($results), 
-        qr(<li>one</li><li>two</li><li>three</li>), 
+        $stylesheet->output_string($results),
+        qr(<li>one</li><li>two</li><li>three</li>),
         'Output matches multiple lis - ' . $n
     );
   }
@@ -166,7 +166,7 @@ XML
     my $expect = qq(<html xmlns:foo="http://foo"><head><foo>1st</foo><foo>2nd</foo></head></html>\n);
     # TEST
     like ($result->serialize,
-        qr{(\Q<?xml version="1.0"?>\n\E)?\Q$expect\E}, 
+        qr{(\Q<?xml version="1.0"?>\n\E)?\Q$expect\E},
         'Results serialize matches text.'
     );
   }
@@ -209,7 +209,7 @@ XSLT
 XML
   # TEST
   is ($result->serialize,
-      qq(<?xml version="1.0"?>\n<out><b><b/></b><b><c/></b></out>\n), 
+      qq(<?xml version="1.0"?>\n<out><b><b/></b><b><c/></b></out>\n),
       'result is right.'
   );
 }
@@ -239,7 +239,7 @@ XML
   my $xsltdoc = $p->parse_string(<<'EOF');
 <?xml version="1.0" encoding="utf-8"?>
 <xsl:stylesheet version="1.0"
-     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"  
+     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
      xmlns:x="http://x/x"
 >
 
@@ -281,7 +281,7 @@ EOF
   # TEST
   ok ($val, 'val is true.');
   # TEST
-  is ($val, "foo,barzzz,bak,bar;foo,barzzz,bak,bar;barbakzzz", 
+  is ($val, "foo,barzzz,bak,bar;foo,barzzz,bak,bar;barbakzzz",
       'val has the right value.')
     or print $stylesheet->output_as_bytes($result);
 
@@ -296,7 +296,7 @@ EOF
   my $xsltdoc = $p->parse_string(<<EOF);
 <?xml version="1.0" encoding="utf-8"?>
 <xsl:stylesheet version="1.0"
-     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"  
+     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
      xmlns:foo="$ns"
 >
 
@@ -330,7 +330,7 @@ EOF
   my $xsltdoc = $p->parse_string(<<EOF);
 <?xml version="1.0" encoding="utf-8"?>
 <xsl:stylesheet version="1.0"
-     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"  
+     xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
      xmlns:foo="$ns"
 	 extension-element-prefixes="foo"
 >

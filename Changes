@@ -7,6 +7,8 @@ Revision history for Perl extension XML::LibXSLT.
     - Add t/pod.t .
         - Fix some POD problems.
     - Add t/cpan-changes.t and convert Changes to CPAN::Changes format.
+    - Add t/style-trailing-space.t.
+        - Remove trailing whitespace.
 
 1.89    2014-03-05
     - Fix memory management of node-sets returned from extension functions.

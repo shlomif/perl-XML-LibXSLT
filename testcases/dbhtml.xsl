@@ -5,7 +5,7 @@
 <xsl:template match="table">
   <html>
     <head>
-      <title>XSLT-generated HTML Table</title>  
+      <title>XSLT-generated HTML Table</title>
     </head>
     <body>
       <table>

@@ -1,10 +1,10 @@
-<?xml version="1.0"?> 
+<?xml version="1.0"?>
 
 
 
 <!--
 <?xml version="1.0" encoding="ISO-8859-1"?>
-Copyright (C) 1999 Capella Computers Ltd. 
+Copyright (C) 1999 Capella Computers Ltd.
 
 Author: Oren Ben-Kiki
 Date: 1999-06-14

@@ -59,11 +59,11 @@ while(my $line = <CONFIG>) {
         push @config, $current;
         $current = {};
     }
-    
+
     # ignore comments and full line comments
     $line =~ s/#.*$//;
     next unless $line =~ /\S/;
-    
+
     if ($line =~ /^\s*\[(.*)\]\s*$/) {
         $current->{component} = $1;
     }
@@ -74,15 +74,15 @@ while(my $line = <CONFIG>) {
 
 for my $driver (@{$options{d}}) {
     my $pkg = "Driver::${driver}";
-    
+
     $pkg->can('init')->(verbose => $options{v});
-    
+
     $pkg->can('chdir')->($basedir);
-    
+
     print "Testing: $driver\n\n";
 
     print_header();
-    
+
     my %totals;
 
     COMPONENT:
@@ -110,14 +110,14 @@ for my $driver (@{$options{d}}) {
                 my $bench = timeit($iter, sub {
                         $pkg->can('run_transform')->($cmp->{output});
                     });
-                
+
                 my $str = timestr($bench, 'all', '5.4f');
-                
+
                 if ($str =~ /\((\d+\.\d+)/) {
                     $ms = $1;
                     $ms *= 1000;
                 }
-                
+
                 $kb_in = (stat($cmp->{input}))[7];
 
                 if ($options{x}) {
@@ -127,7 +127,7 @@ for my $driver (@{$options{d}}) {
                     $kb_in += (stat($cmp->{stylesheet}))[7];
                     $kb_in /= 1024;
                 }
-                
+
                 $kb_in *= $iter;
 
                 $kb_out = (stat($cmp->{output}))[7];
@@ -192,7 +192,7 @@ for my $driver (@{$options{d}}) {
                 warn "$component failed: $@" if $options{v};
                 $result = 'ERROR';
             }
-            
+
             if (($result =~ /OK/) || ($result eq 'NO REFERENCE')) {
                 $totals{iter} += $iter;
                 $totals{ms} += $ms;
@@ -203,18 +203,18 @@ for my $driver (@{$options{d}}) {
             print_output() unless $cmp->{written};
             $cmp->{written}++;
         } # $options{n} loop
-        
+
         delete $cmp->{written};
     } # each component
-    
+
     $pkg->can('shutdown')->();
-    
+
     $component = 'total';
     $iter = $totals{iter};
     $ms = $totals{ms};
     $kb_in = $totals{kb_in};
     $kb_out = $totals{kb_out};
-    $kb_sec = ($kb_in + $kb_out) / 
+    $kb_sec = ($kb_in + $kb_out) /
                 ( $ms / 500 );
     $ref_size = 0;
     $result = '';
@@ -229,23 +229,23 @@ usage: $0 [options]
 
         -c <file>   load configuration from <file>
                     defaults to testcases/default.conf
-                    
+
         -n <num>    run each test case <num> times. Default = 1.
-        
+
         -t          only one iteration per test case (note this
                     is different to -n 1)
-        
+
         -d <Driver> test <Driver>. Use multiple -d options to test
                     more than one driver. Defaults are set in this
                     script (the \@default_drivers variable).
-        
+
         -x          XSLTMark emulation. Infuriatingly XSLTMark thinks
                     there are 1000 bytes in a Kilobyte. Someone please
                     tell them some basic computer science...
-                    
+
                     Without this option, this benchmark also includes
                     the size of the stylesheet in the KB In figure.
-                    
+
         -v          be verbose.
 
 Copyright 2001 AxKit.com Ltd. This is free software, you may use it and

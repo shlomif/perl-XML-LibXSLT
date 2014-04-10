@@ -1,7 +1,7 @@
 This module is a fast XSLT library, based on the GNOME libxslt engine
 that you can find at http://www.xmlsoft.org/XSLT/
 
-Performance is currently about twice that of XML::Sablotron (based on 
+Performance is currently about twice that of XML::Sablotron (based on
 XSLTMark tests converted to Perl).
 
 The libxslt processor is also highly standards compliant
@@ -28,7 +28,7 @@ The Makefile.PL tries to determine the correct compiler and linker
 flags for its library dependencies using pkg-config and
 xslt-config. If this fails, you may override the values like this
 
-  perl Makefile.PL INC="..." LIBS="..." 
+  perl Makefile.PL INC="..." LIBS="..."
 
 where INC contains flags for the compiler (such as -I/some_path/include etc.) and LIBS contains linker flags (such as -L/some_path/lib -llibsomething ...).
 
@@ -53,7 +53,7 @@ As XML::LibXSLT is open source software help and patches are appreciated. If you
 find a bug in the current release, make sure this bug still exists in the
 developer version of XML::LibXSLT. This version can be downloaded from its
 Mercurial repository. The repository can be cloned via:
-    
+
     hg clone ssh://hg@bitbucket.org/shlomif/perl-xml-libxslt
 
 Note this account does not allow direct commits.

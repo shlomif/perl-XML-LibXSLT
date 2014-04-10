@@ -1,4 +1,4 @@
-<?xml version="1.0"?> 
+<?xml version="1.0"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
   <xsl:output method="html" encoding="utf-8"/>
@@ -25,7 +25,7 @@
               <xsl:value-of select="$indent + 1"/>
             </xsl:with-param>
           </xsl:call-template>
-        </xsl:for-each>              
+        </xsl:for-each>
         <xsl:text>
 </xsl:text>
         <xsl:value-of select="substring ('                                                                                                ', 0, $indent * 3)"/>
@@ -33,7 +33,7 @@
           <xsl:value-of select="concat('&lt;/',name(.),'&gt;')"/>
         </span>
       </xsl:when>
-    </xsl:choose>      
+    </xsl:choose>
   </xsl:template>
 
 
@@ -52,7 +52,7 @@ body      { background-color: #ffffff; }
                 1
               </xsl:with-param>
             </xsl:call-template>
-          </xsl:for-each>              
+          </xsl:for-each>
         </pre>
       </body>
     </html>

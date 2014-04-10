@@ -1,4 +1,4 @@
-<?xml version="1.0"?> 
+<?xml version="1.0"?>
 
 <!-- reassembles an xml tree in reverse order -->
 
@@ -9,8 +9,8 @@
 <xsl:template match="*">
   <xsl:copy>
     <xsl:apply-templates select="node()">
-      <xsl:sort select="position()" data-type="number" order="descending"/> 
-    </xsl:apply-templates> 
+      <xsl:sort select="position()" data-type="number" order="descending"/>
+    </xsl:apply-templates>
   </xsl:copy>
 </xsl:template>
 

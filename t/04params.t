@@ -17,9 +17,9 @@ my $source = $parser->parse_string(<<'EOF');
 <bottom myid="last">LAST</bottom>
 </top>
 EOF
-        
+
 # TEST
-        
+
 ok($source, ' TODO : Add test name');
 
 my $style_doc = $parser->parse_string(<<'EOF');
