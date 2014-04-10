@@ -209,7 +209,7 @@ if ($ldflags) {
 # To handle this we are gonna rename module's DLL to LibXSLT.xs.dll.
 if ($::is_Win32) {
   if ($] eq '5.010000') {
-    print STDERR <<5100BUG;
+    print STDERR <<'BUG';
 ******************************** !!!WARNING!!! ********************************
 According to the version string you are running a win32 perl 5.10.0 that is
 known to be suffering from dynaloader bug that prevents using non-default
@@ -221,7 +221,7 @@ make the proposed changes you will got during the tests many error popups with
 slightly confusing message about "xsltApplyOneTemplate" function.
 This bug is not present in perl 5.8.* and will be fixed in 5.10.1.
 *******************************************************************************
-5100BUG
+BUG
   }
   else {
     $config{DLEXT} = 'xs.dll' if ($::is_Win32);
