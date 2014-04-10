@@ -1,13 +1,14 @@
 Revision history for Perl extension XML::LibXSLT.
 
-1.90
+1.90    2014-04-10
     - Handle $Config{dlext} correctly on Windows.
         - https://rt.cpan.org/Ticket/Display.html?id=94516
         - Thanks to kmx for the report and fix.
     - Add t/pod.t .
         - Fix some POD problems.
+    - Add t/cpan-changes.t and convert Changes to CPAN::Changes format.
 
-1.89            Wed  5 Mar 16:16:17 IST 2014
+1.89    2014-03-05
     - Fix memory management of node-sets returned from extension functions.
       Without calling xsltExtensionInstructionResultRegister, node-sets
       could be freed too early, leading to strange errors or segfaults.
@@ -23,73 +24,73 @@ Revision history for Perl extension XML::LibXSLT.
         - Thanks to Jozef Kutej and Slaven Rezic for the reports.
     - Thanks to Nick Wellnhofer for the pull requests and fixes.
 
-1.88            Mon 17 Feb 14:44:34 IST 2014
+1.88    2014-02-17
     - Fix t/xml-grammar-failures.t based on the xml:space commentary here:
         - https://mail.gnome.org/archives/xml/2014-February/msg00000.html
         - Caused some failures which were ultimately our fault.
 
-1.87            Mon  3 Feb 10:07:31 IST 2014
+1.87    2014-02-03
     - Decrease the minimum libxslt version again.
         - Setting it as 1.1.28 did not fix the failures, and now we have
         some more tests to test against it.
         - https://rt.cpan.org/Ticket/Display.html?id=92659
         - Thanks to Slaven Rezic for the report.
 
-1.86            Sun  2 Feb 17:06:07 IST 2014
+1.86    2014-02-02
     - Add t/xml-grammar-failures.t to catch test failures in dependent modules.
         - Add some data files for it under t/data/*.
         - This fails on FreeBSD 9.2 currently.
 
-1.85            Sat  1 Feb 16:23:43 IST 2014
+1.85    2014-02-01
     - Add "use strict;" and "use warnings;" globally (CPANTS).
     - Add LICENSE to the MANIFEST.
 
-1.84            Thu 26 Dec 14:19:19 IST 2013
+1.84    2013-12-26
     - Hopefully fix a segmentation fault on Win32 introduced in the last ver.
         - https://rt.cpan.org/Ticket/Display.html?id=91652
         - Thanks to Alexandr Ciornii for the report, and to Nikolay Sivov
         for providing help.
 
-1.83            Sun 22 Dec 18:20:23 IST 2013
+1.83    2013-12-22
     - Get rid of compiler warnings when compiling using CLANG.
         - https://rt.cpan.org/Public/Bug/Display.html?id=91118
         - Thanks to Daniel Macks for the report.
 
-1.82            Wed  6 Nov 13:17:39 IST 2013
+1.82    2013-11-06
     - Makefile.PL: Report LibXSLT mismatch correctly.
         - https://rt.cpan.org/Ticket/Display.html?id=90085
         - Thanks to David Schmidt for the report, and to joel and brother
         from the channel #perl-help for analysis.
 
-1.81            Fri  5 Jul 10:13:36 IDT 2013
+1.81    2013-07-05
     - Fix a typo reported by dsteinbrunner:
         - https://rt.cpan.org/Ticket/Display.html?id=86689
 
-1.80            Wed 23 Jan 07:53:57 IST 2013
+1.80    2013-01-23
     - Bump the minimum version of libxslt2 to 1.1.28.
         - due to failures such as http://www.cpantesters.org/cpan/report/6f5029ee-639a-11e2-8465-2a97270fb964
 
-1.79            Mon 26 Nov 12:15:35 IST 2012
+1.79    2012-11-26
     - Die when libxslt is 1.1.27.
         - Due to this bug - https://bugzilla.gnome.org/show_bug.cgi?id=684564
 
-1.78            Thu  6 Sep 13:17:28 IDT 2012
+1.78    2012-09-06
     - Add output_method method, update documentation of media_type
     (dorian@cpan).
         - Thanks, Dorian!
 
-1.77            Sat Feb 25 16:23:57 IST 2012
+1.77    2012-02-25
     - Apply a patch from Michael Ludwig clarifying the quoting of string
     parameters to the XSLT transformation.
         - Thanks, Michael!
 
-1.76            Thu Jan 12 19:15:03 IST 2012
+1.76    2012-01-12
     - Made LibXSLT.xs compile with C compilers that don't accept declarations
     inside blocks:
         - https://rt.cpan.org/Public/Bug/Display.html?id=73905
         - These include Microsoft Visual C++ (in C-mode).
 
-1.75            Fri Oct 28 17:26:57 IST 2011
+1.75    2011-10-28
     - Convert the following test scripts from Test.pm to Test::More :
         - t/03input.t
     - Fix for https://rt.cpan.org/Public/Bug/Display.html?id=71345 by Tim
@@ -97,7 +98,7 @@ Revision history for Perl extension XML::LibXSLT.
         - «segfault in free()»
         - Thanks, Tim!
 
-1.74            Tue Oct 25 21:48:48 IST 2011
+1.74    2011-10-25
     - Convert the following test scripts from Test.pm to Test::More :
         - t/01basic.t
         - t/02dromeds.t
@@ -121,12 +122,12 @@ Revision history for Perl extension XML::LibXSLT.
     - Add the "make runtest" and "make distruntest" targets to test using
     Test-Run.
 
-1.73            Sun Oct  9 17:32:30 IST 2011
+1.73    2011-10-09
     - Possible fix for https://rt.cpan.org/Ticket/Display.html?id=71456 :
         - made the port reservation on t/14security.t for the non-existent
         URL more robust.
 
-1.72            Thu Oct  6 13:37:13 IST 2011
+1.72    2011-10-06
     - Moved the benchmarking code under benchmark/ so it won't be indexed
     by CPAN (Tim Brody).
     - Avoid leaking memory inside extension elements by cleaning up on
@@ -140,7 +141,7 @@ Revision history for Perl extension XML::LibXSLT.
     may leak memory though - nothing frees the _private attributes of the
     node + document owner for the passed arguments? (Tim Brody)
 
-1.71            Sat Sep 10 20:38:23 IDT 2011
+1.71    2011-09-10
     - Fixed https://rt.cpan.org/Ticket/Display.html?id=50487 :
         - add a blacklist for libxslt-1.1.25 which has a deadlock that
         hangs a test.
@@ -148,7 +149,7 @@ Revision history for Perl extension XML::LibXSLT.
         - Unexpected webserver dependency in test
     - Updated the version control instructions in the README to bitbucket.org.
 
-1.70
+1.70     Unknown
      - fixed various bugs
      - documentation updates
      - #48247: Win32 patch kindly provided by KMX@cpan.org
@@ -158,25 +159,25 @@ Revision history for Perl extension XML::LibXSLT.
      - address #41542: restore internalDTD subset on the source
        document of a transformation (libxslt unlinks it)
 
-1.68
+1.68     Unknown
      - fix compilation problems
      - skip exslt tests if not available
      - added XML::LibXSLT::HAVE_EXSLT() (1/0)
 
-1.67
+1.67     Unknown
      - sync the binary internals to those of XML::LibXML 1.67
      - update regression tests for compatibility with up-to-date libxslt
 
-1.66
+1.66     Unknown
      - bump requirements to libxslt 1.1.8
      - sync the binary internals to those of XML::LibXML 1.66
 
-1.63
+1.63     Unknown
      - fix SIGSEGV regarding freeing nodes created by extension functions
        (reported by Elizabeth Mattijsen)
      - use pkg-config to determine linker flags for libexslt
 
-1.62
+1.62     Unknown
      - security callback interface contributed by Shane Corgatelli
      - check libxslt version
      - added XML::LibXML-like API to retrieve libxslt version
@@ -187,11 +188,11 @@ Revision history for Perl extension XML::LibXSLT.
      - POD uses items instead of headings
      - fixed media_type and output_encoding for imported stylesheets [rt.cpan.org #23440]
 
-1.61
+1.61     Unknown
      - fixed error reporting: die on fatal errors, warn otherwise
        (in particular, warn rather than die on <xsl:message terminate="no">)
 
-1.60
+1.60     Unknown
      - fix a huge memory leak in transform_file (bug #1314)
      - make it clear from the docs that output_string returns bytes (bug #8875)
      - added missing type-casting to fix compile-time warnings (bug #18508)
@@ -204,12 +205,13 @@ Revision history for Perl extension XML::LibXSLT.
      - fix leaks in parse_stylesheet
      - error reporting
 
-1.59
-    - (revision bumped to match XML::LibXML)
+1.59     Unknown
+    - (revision bumped to match XML::LibCould not parse Line '0.95 & 0.96' at /home/shlomif/bin/upgrade-to-CPAN-Changes line 40, <STDIN> line 300.
+XML)
     - adapted for new XML::LibXML::InputCallback API
     - support for static linking against libxml2
 
-1.57
+1.57     Unknown
     - (revision bumped to match XML::LibXML)
     - Some minor fixes to perl extension functions support
     - Fixed callbacks support
@@ -217,94 +219,85 @@ Revision history for Perl extension XML::LibXSLT.
     - Fixed some memory leaks
     - Fixed some segfaults
 
-1.53
+1.53     Unknown
     - Fixed ordering of params to perl extension funcs
     - Implemented nodelist and other data type passing to
       extension functions, and returning nodelist and elements
       (some code from Ido Ben-Zvi)
     - Slightly better error handling
 
-1.52
+1.52     Unknown
     - Perl extension functions (whee!)
 
-1.51
+1.51     Unknown
     - Mac OS X fixes
     - Cleaned up XPath quoting
     - Fixed document('') test (though if it still doesn't work
       in your code, see t/07blankdoc.t for details about how to
       make it work).
 
-1.50
+1.50     Unknown
     - Cleaned up media_type method so it doesn't segfault.
 
-1.49
+1.49     Unknown
     - Migrated to new XML::LibXML 1.49 (with new memory stuff)
 
-1.31
+1.31     Unknown
     - removed global callbacks
     - changed callbacks to using LibXML globals
 
-1.30
+1.30     Unknown
     - Compatibility with XML::LibXML 1.30 (esp callbacks)
     - EXSLT support
     - Better test files
 
-1.09
+1.09     Unknown
     - Some fixes and tests for document('')
     - Better have_library implementation in Makefile.PL
 
-1.08
+1.08     Unknown
     - Fixed Makefile.PL check for libxslt > 0.7.0 to work with 1.0.0
 
-1.07
+1.07     Unknown
     - Fixes to work with XML::LibXML 0.94
 
-1.06
+1.06     Unknown
     - Support text/html defaulting for media_type when document element
       is <html>.
     - Support building on Win32
 
-1.05
+1.05     Unknown
     - More tests and fixes for media_type
 
-1.04
+1.04     Unknown
     - Fixed media_type method
 
-1.03
+1.03     Unknown
     - Added output_encoding and media_type methods
 
-1.02
+1.02     Unknown
     - Fixed Makefile.PL to work with libxslt 0.10
 
-1.01
+1.01     Unknown
     - Removed hack where we set dom->standalone = 42 to prevent
       XML::LibXML from garbage collecting
     - Removed XML::LibXML from the distribution. Now separate.
 
-1.00
+1.00     Unknown
     - More segfault fixes
     - Benchmark updates
 
-0.99_01
+0.99_01  Unknown
     - More segfault fixes
 
-0.99
+0.99     Unknown
     - Fixed segfaults on 5.00503
 
-0.98
+0.98     Unknown
     - Fixed output encoding problems
 
-0.97
+0.97     Unknown
     - Now needs libxslt 0.7.0
     - Removed add_param() (now passed to transform())
     - Makefile.PL works without gnome-config now
-
-0.95 & 0.96
-    - Various cleanups and code additions to make stable.
-
-0.94  Tue Mar 13 2001
-    - First release to CPAN
-
-0.01  Sat Mar  3 17:08:00 2001
-	- original version; created by h2xs 1.19
 
