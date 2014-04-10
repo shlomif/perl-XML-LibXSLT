@@ -39,6 +39,7 @@ t/14security.t
 t/15misc.t
 t/data/perl-begin-page.xml-grammar-vered.xml
 t/data/vered-xml-to-docbook.xslt
+t/pod.t
 t/rt71345_a.t
 t/rt71345_b.t
 t/xml-grammar-failures.t

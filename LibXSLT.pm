@@ -768,12 +768,16 @@ To define XML::LibXSLT or XML::LibXSLT::Stylesheet specific input
 callbacks, reuse the XML::LibXML input callback API as described in
 L<XML::LibXML::InputCallback(3)>.
 
+=over 4
+
 =item input_callbacks($icb)
 
 Enable the callbacks in C<$icb> only for this XML::LibXSLT object.
 C<$icb> should be a C<XML::LibXML::InputCallback> object. This will
 call C<init_callbacks> and C<cleanup_callbacks> automatically during
 parsing or transformation.
+
+=back
 
 =head1 Security Callbacks
 
