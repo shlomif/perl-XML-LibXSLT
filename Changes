@@ -1,5 +1,10 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.90
+    - Handle $Config{dlext} correctly on Windows.
+        - https://rt.cpan.org/Ticket/Display.html?id=94516
+        - Thanks to kmx for the report and fix.
+
 1.89            Wed  5 Mar 16:16:17 IST 2014
     - Fix memory management of node-sets returned from extension functions.
       Without calling xsltExtensionInstructionResultRegister, node-sets
