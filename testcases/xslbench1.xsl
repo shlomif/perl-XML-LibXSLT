@@ -23,7 +23,7 @@
     <META content="TFI Technology" name="DC.Publisher"/>
     <META content="TFI Technology" name="DC.Contributors"/>
     <SCRIPT language="JavaScript">
-<![CDATA[ 
+<![CDATA[
 
 	if (document.images)
 	{
@@ -108,12 +108,12 @@ function inact(imgName)
             <TABLE border="0" cellPadding="4" cellSpacing="0" width="100%">
               <TBODY>
                 <TR>
-                  <TD height="223" vAlign="top" width="6%">  
+                  <TD height="223" vAlign="top" width="6%"> 
                     <P>
                       <IMG align="middle" height="120" src="TFI Technology Products_files/vbarsm.gif" width="3"/>
                     </P>
                   </TD>
-                  <TD background="TFI Technology Products_files/bar2.gif" height="223" vAlign="top" width="94%">  
+                  <TD background="TFI Technology Products_files/bar2.gif" height="223" vAlign="top" width="94%"> 
                     <P>
                       <A href="http://www.tfi-technology.com/products.htm" onmouseout="inact('Products')" onmouseover="act('Products')">
                         <IMG align="middle" alt="Products" border="0" height="20" hspace="0" name="Products" src="TFI Technology Products_files/productssm.gif" width="95"/>
@@ -133,20 +133,20 @@ function inact(imgName)
                       </A>
                       <A href="http://www.tfi-technology.com/newsroom.htm" onmouseout="inact('Newswire')" onmouseover="act('Newswire')">
                         <IMG align="middle" alt="News Room" border="0" height="20" hspace="0" name="Newswire" src="TFI Technology Products_files/newswiresm.gif" width="95"/>
-                      </A> 
+                      </A>
                     </P>
                   </TD>
                 </TR>
                 <TR>
-                  <TD align="center" colSpan="2">  
+                  <TD align="center" colSpan="2"> 
                     <FORM action="http://cgi.www.tfi-technology.com/cgi-bin/www.tfi-technology.com/subscribe.pl" method="post">
                       <P>
                         <FONT face="Arial, Helvetica, sans-serif" size="1">
                           <B>Keep up to date!</B>
                           <BR/>Submit your e-mail address below.
                           <BR/>
-                          <INPUT name="email" size="12"/> 
-                          <INPUT name="B1" type="submit" value="Submit"/> 
+                          <INPUT name="email" size="12"/>
+                          <INPUT name="B1" type="submit" value="Submit"/>
                           <BR/>
                         </FONT>
                       </P>
@@ -154,7 +154,7 @@ function inact(imgName)
                   </TD>
                 </TR>
                 <TR>
-                  <TD colSpan="2" width="100">  
+                  <TD colSpan="2" width="100"> 
                     <P> </P>
                     <P> </P>
                     <P>
@@ -183,7 +183,7 @@ function inact(imgName)
             <P align="left">
               <IMG alt="hbar.gif (979 bytes)" height="8" src="TFI Technology Products_files/hbar.gif" width="458"/>
             </P>
-               
+
           </TD>
         </TR>
       </TBODY>

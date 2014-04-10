@@ -26,7 +26,7 @@ EOT
 my $foodoc = <<'EOT';
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" 
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 xmlns:data="data.uri" version="1.0">
 <xsl:output encoding="ISO-8859-1" method="text"/>
 
@@ -54,7 +54,7 @@ my $results = $stylesheet->transform($source);
 # TEST
 ok ($results, 'Results are true.');
 # TEST
-like ($results->toString, qr/typed data in stylesheet/, 
+like ($results->toString, qr/typed data in stylesheet/,
     'found "typed data in stylesheet"');
 
 ###############################################################

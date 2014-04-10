@@ -9,7 +9,7 @@
 </xsl:template>
 
 <xsl:template match="row">
-  <address id="{id}" 
+  <address id="{id}"
            firstname="{firstname}"
            lastname="{lastname}"
            street="{street}"

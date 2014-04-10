@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
 
-<!-- 
+<!--
 	*** Stylesheet to convert Apache "in the news" XML data into the page
 	*** www.apache.org/in_the_news.html
 	***
@@ -34,7 +34,7 @@
 	<P>
 	Since becoming the #1 Web server, Apache has featured in a number
 	of reviews and articles.  If you have seen a story about Apache on
-	the Web or in the press 
+	the Web or in the press
 	<A HREF="mailto:mjc@apache.org">let us know</A>
 	so that we can include it here.
 	</P>

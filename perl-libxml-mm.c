@@ -31,17 +31,17 @@ extern "C" {
 #endif
 
 #ifdef XS_WARNINGS
-#define xs_warn(string) warn(string) 
+#define xs_warn(string) warn(string)
 /* #define xs_warn(string) fprintf(stderr, string) */
 #else
 #define xs_warn(string)
 #endif
 
 /**
- * this is a wrapper function that does the type evaluation for the 
+ * this is a wrapper function that does the type evaluation for the
  * node. this makes the code a little more readable in the .XS
- * 
- * the code is not really portable, but i think we'll avoid some 
+ *
+ * the code is not really portable, but i think we'll avoid some
  * memory leak problems that way.
  **/
 const char*
@@ -51,7 +51,7 @@ x_PmmNodeTypeName( xmlNodePtr elem ){
     if ( elem != NULL ) {
         switch ( elem->type ) {
         case XML_ELEMENT_NODE:
-            name = "XML::LibXML::Element";   
+            name = "XML::LibXML::Element";
             break;
         case XML_TEXT_NODE:
             name = "XML::LibXML::Text";
@@ -63,7 +63,7 @@ x_PmmNodeTypeName( xmlNodePtr elem ){
             name = "XML::LibXML::CDATASection";
             break;
         case XML_ATTRIBUTE_NODE:
-            name = "XML::LibXML::Attr"; 
+            name = "XML::LibXML::Attr";
             break;
         case XML_DOCUMENT_NODE:
         case XML_HTML_DOCUMENT_NODE:
@@ -248,7 +248,7 @@ x_PmmNewNode(xmlNodePtr node)
 }
 
 ProxyNodePtr
-x_PmmNewFragment(xmlDocPtr doc) 
+x_PmmNewFragment(xmlDocPtr doc)
 {
     ProxyNodePtr retval = NULL;
     xmlNodePtr frag = NULL;
@@ -286,7 +286,7 @@ x_PmmNewFragment(xmlDocPtr doc)
  * nodes.
  */
 SV*
-x_PmmNodeToSv( xmlNodePtr node, ProxyNodePtr owner ) 
+x_PmmNodeToSv( xmlNodePtr node, ProxyNodePtr owner )
 {
     ProxyNodePtr dfProxy= NULL;
     SV * retval = &PL_sv_undef;
@@ -302,7 +302,7 @@ x_PmmNodeToSv( xmlNodePtr node, ProxyNodePtr owner )
         xs_warn("x_PmmNodeToSv: return new perl node of class:\n");
         xs_warn( CLASS );
 
-        if ( node->_private != NULL ) { 
+        if ( node->_private != NULL ) {
             dfProxy = x_PmmNewNode(node);
             /* warn(" at 0x%08.8X\n", dfProxy); */
         }
@@ -330,7 +330,7 @@ x_PmmNodeToSv( xmlNodePtr node, ProxyNodePtr owner )
 	if( x_PmmUSEREGISTRY )
 	    x_PmmRegistryREFCNT_inc(dfProxy);
 #endif
-        x_PmmREFCNT_inc(dfProxy); 
+        x_PmmREFCNT_inc(dfProxy);
         /* fprintf(stderr, "REFCNT incremented on node: 0x%08.8X\n", dfProxy); */
 
         switch ( node->type ) {
@@ -361,7 +361,7 @@ x_PmmNodeToSv( xmlNodePtr node, ProxyNodePtr owner )
  */
 
 xmlNodePtr
-x_PmmSvNodeExt( SV* perlnode, int copy ) 
+x_PmmSvNodeExt( SV* perlnode, int copy )
 {
     xmlNodePtr retval = NULL;
     ProxyNodePtr proxy = NULL;
@@ -390,7 +390,7 @@ x_PmmSvNodeExt( SV* perlnode, int copy )
         else if ( sv_derived_from( perlnode, "XML::GDOME::Node" ) ) {
             GdomeNode* gnode = (GdomeNode*)SvIV((SV*)SvRV( perlnode ));
             if ( gnode == NULL ) {
-                warn( "no XML::GDOME data found (datastructure empty)" );    
+                warn( "no XML::GDOME data found (datastructure empty)" );
             }
             else {
                 retval = gdome_xml_n_get_xmlNode( gnode );
@@ -411,7 +411,7 @@ x_PmmSvNodeExt( SV* perlnode, int copy )
 /* extracts the libxml2 owner node from a perl reference
  */
 xmlNodePtr
-x_PmmSvOwner( SV* perlnode ) 
+x_PmmSvOwner( SV* perlnode )
 {
     xmlNodePtr retval = NULL;
     if ( perlnode != NULL

@@ -30,10 +30,10 @@ extern "C" {
 #endif
 
 /*
- * NAME xs_warn 
+ * NAME xs_warn
  * TYPE MACRO
- * 
- * this makro is for XML::LibXML development and debugging. 
+ *
+ * this makro is for XML::LibXML development and debugging.
  *
  * SYNOPSIS
  * xs_warn("my warning")
@@ -41,12 +41,12 @@ extern "C" {
  * this makro takes only a single string(!) and passes it to perls
  * warn function if the XS_WARNRINGS pragma is used at compile time
  * otherwise any xs_warn call is ignored.
- * 
+ *
  * pay attention, that xs_warn does not implement a complete wrapper
  * for warn!!
  */
 #ifdef XS_WARNINGS
-#define xs_warn(string) warn("%s",string) 
+#define xs_warn(string) warn("%s",string)
 #else
 #define xs_warn(string)
 #endif
@@ -146,7 +146,7 @@ void
 x_PmmFixProxyEncoding( ProxyNodePtr dfProxy );
 
 /* x_PmmSvNodeExt
- * TYPE 
+ * TYPE
  *    Function
  * PARAMETER
  *    @perlnode: the perl reference that holds the scalar.
@@ -154,12 +154,12 @@ x_PmmFixProxyEncoding( ProxyNodePtr dfProxy );
  *
  * DESCRIPTION
  *
- * The function recognizes XML::LibXML and XML::GDOME 
+ * The function recognizes XML::LibXML and XML::GDOME
  * nodes as valid input data. The second parameter 'copy'
  * indicates if in case of GDOME nodes the libxml2 node
- * should be copied. In some cases, where the node is 
+ * should be copied. In some cases, where the node is
  * cloned anyways, this flag has to be set to '0', while
- * the default value should be allways '1'. 
+ * the default value should be allways '1'.
  */
 xmlNodePtr
 x_PmmSvNodeExt( SV * perlnode, int copy );
@@ -208,7 +208,7 @@ x_PmmSvContext( SV * perlctxt );
  *
  * DESCRIPTION
  * This function implements a nodetype independant node cloning.
- * 
+ *
  * Note that this function has to stay in this module, since
  * XML::LibXSLT reuses it.
  */
@@ -227,7 +227,7 @@ x_PmmCloneNode( xmlNodePtr node , int deep );
  *
  * the function will only work, if XML::LibXML is compiled with
  * XML::GDOME support.
- *    
+ *
  */
 SV *
 x_PmmNodeToGdomeSv( xmlNodePtr node );
@@ -235,7 +235,7 @@ x_PmmNodeToGdomeSv( xmlNodePtr node );
 /**
  * NAME x_PmmNodeTypeName
  * TYPE function
- * 
+ *
  * returns the perl class name for the given node
  *
  * SYNOPSIS
@@ -257,7 +257,7 @@ x_PmmDecodeString( const char *encoding, const xmlChar *string);
  * TYPE function
  * SYNOPSIS
  * SV *my_sv = c_string_to_sv( "my string", encoding );
- * 
+ *
  * this function converts a libxml2 string to a SV*. although the
  * string is copied, the func does not free the c-string for you!
  *
@@ -273,7 +273,7 @@ C2Sv( const xmlChar *string, const xmlChar *encoding );
  * TYPE function
  * SYNOPSIS
  * SV *my_sv = sv_to_c_string( my_sv, encoding );
- * 
+ *
  * this function converts a SV* to a libxml string. the SV-value will
  * be copied into a *newly* allocated string. (don't forget to free it!)
  *

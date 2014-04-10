@@ -1,4 +1,4 @@
-<?xml version="1.0"?> 
+<?xml version="1.0"?>
 
 <!-- bottles of beer by Cyrus Dolph May 16, 2000 -->
 
@@ -54,7 +54,7 @@ Take one down, pass it around;
            </xsl:otherwise>
        </xsl:choose>
    </xsl:template>
- 
+
    <xsl:template match="/">
        <xsl:call-template name="verse">
            <xsl:with-param name="bottles" select="/bottles"/>

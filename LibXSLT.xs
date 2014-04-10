@@ -75,11 +75,11 @@ int
 LibXSLT_iowrite_scalar(void * context, const char * buffer, int len)
 {
     SV * scalar;
-    
+
     scalar = (SV *)context;
 
     sv_catpvn(scalar, (const char*)buffer, len);
-    
+
     return len;
 }
 
@@ -93,17 +93,17 @@ int
 LibXSLT_iowrite_fh(void * context, const char * buffer, int len)
 {
     dSP;
-    
+
     SV * ioref;
     SV * tbuff;
     SV * results;
     int cnt;
-    
+
     ENTER;
     SAVETMPS;
-    
+
     ioref = (SV *)context;
-    
+
     tbuff = newSVpvn((char*)buffer, len);
 
     PUSHMARK(SP);
@@ -111,26 +111,26 @@ LibXSLT_iowrite_fh(void * context, const char * buffer, int len)
     PUSHs(ioref);
     PUSHs(sv_2mortal(tbuff));
     PUTBACK;
-    
+
     cnt = call_method("print", G_SCALAR | G_EVAL);
-    
+
     SPAGAIN;
-    
+
     if (cnt != 1) {
         croak("fh->print() method call failed");
     }
-    
+
     results = POPs;
-    
+
     if (!SvOK(results)) {
         croak("print to fh failed");
     }
-    
+
     PUTBACK;
-    
+
     FREETMPS;
     LEAVE;
-    
+
     return len;
 }
 
@@ -184,10 +184,10 @@ void
 LibXSLT_debug_handler(void * ctxt, const char * msg, ...)
 {
     dSP;
-    
+
     va_list args;
     SV * sv;
-    
+
     sv = NEWSV(0,512);
 
     va_start(args, msg);
@@ -196,10 +196,10 @@ LibXSLT_debug_handler(void * ctxt, const char * msg, ...)
 
     if (LibXSLT_debug_cb && SvTRUE(LibXSLT_debug_cb)) {
         int cnt = 0;
-    
+
         ENTER;
         SAVETMPS;
-        
+
         PUSHMARK(SP);
         EXTEND(SP, 1);
         PUSHs(sv);
@@ -218,7 +218,7 @@ LibXSLT_debug_handler(void * ctxt, const char * msg, ...)
         FREETMPS;
         LEAVE;
     }
-    
+
     SvREFCNT_dec(sv);
 }
 
@@ -241,11 +241,11 @@ LibXSLT__function (xmlXPathParserContextPtr ctxt, int nargs, SV *perl_function) 
     xmlDocPtr container = NULL;
     xsltTransformContextPtr tctxt = xsltXPathGetTransformContext(ctxt);
     dSP;
-    
+
     ENTER;
     SAVETMPS;
     PUSHMARK(SP);
-    
+
     XPUSHs(perl_function);
 
 	/* clone all of the arguments into a new owning document */
@@ -316,25 +316,25 @@ LibXSLT__function (xmlXPathParserContextPtr ctxt, int nargs, SV *perl_function) 
 
     perl_dispatch = sv_2mortal(newSVpv("XML::LibXSLT::perl_dispatcher",0));
     count = call_sv(perl_dispatch, G_SCALAR|G_EVAL);
-    
+
     SPAGAIN;
 
     if (SvTRUE(ERRSV)) {
         (void) POPs;
         croak("LibXSLT: error coming back from perl-dispatcher in pm file. %s\n", SvPV(ERRSV, n_a));
-    } 
+    }
 
     if (count != 1) croak("LibXSLT: perl-dispatcher in pm file returned more than one argument!\n");
-    
+
     perl_result = POPs;
 
     if (!SvOK(perl_result)) {
-        ret = (xmlXPathObjectPtr)xmlXPathNewCString("");		
+        ret = (xmlXPathObjectPtr)xmlXPathNewCString("");
         goto FINISH;
     }
 
     /* convert perl result structures to LibXML structures */
-    if (sv_isobject(perl_result) && 
+    if (sv_isobject(perl_result) &&
         (SvTYPE(SvRV(perl_result)) == SVt_PVMG ||
          SvTYPE(SvRV(perl_result)) == SVt_PVAV))
     {
@@ -374,7 +374,7 @@ LibXSLT__function (xmlXPathParserContextPtr ctxt, int nargs, SV *perl_function) 
              */
             xsltExtensionInstructionResultRegister(tctxt, ret);
             goto FINISH;
-        } 
+        }
         else if (sv_derived_from(perl_result, "XML::LibXML::Node")) {
 	  tmp_node1 = (xmlNodePtr)x_PmmSvNode(perl_result);
 	  ret =  (xmlXPathObjectPtr)xmlXPathNewNodeSet(NULL);
@@ -456,7 +456,7 @@ LibXSLT_generic_function (xmlXPathParserContextPtr ctxt, int nargs) {
 
     uri = (const char *) ctxt->context->functionURI;
     name = (const char *) ctxt->context->function;
-    
+
     key = newSVpvn("",0);
     sv_catpv(key, "{");
     sv_catpv(key, (const char*)uri);
@@ -500,7 +500,7 @@ LibXSLT_context_function (xmlXPathParserContextPtr ctxt, int nargs) {
 
     uri = (const char *) ctxt->context->functionURI;
     name = (const char *) ctxt->context->function;
-    
+
     sv_setpv(key, "{");
     sv_catpv(key, (const char*)uri);
     sv_catpv(key, "}");
@@ -550,7 +550,7 @@ LibXSLT_context_element(xsltTransformContextPtr ctxt, xmlNodePtr node, xmlNodePt
 
     SvREFCNT_dec(key);
 
-    
+
     ENTER;
     SAVETMPS;
     PUSHMARK(SP);
@@ -580,7 +580,7 @@ LibXSLT_context_element(xsltTransformContextPtr ctxt, xmlNodePtr node, xmlNodePt
 
     if (perlnode != &PL_sv_undef)
     {
-        result = x_PmmSvNodeExt(perlnode, 0); 
+        result = x_PmmSvNodeExt(perlnode, 0);
         if (result == NULL)
             croak("LibXSLT: element callback did not return a XML::Node");
 
@@ -877,7 +877,7 @@ register_function(self, uri, name, callback)
         STRLEN len;
         char *strkey;
 
-        PERL_UNUSED_VAR(self);        
+        PERL_UNUSED_VAR(self);
         /* todo: Add checking of uri and name in here! */
         xsltRegisterExtModuleFunction((const xmlChar *)name,
                         (const xmlChar *)uri,
@@ -1162,7 +1162,7 @@ transform_file(self, wrapper, filename, ...)
 
 	   xmlFreeDoc( source_dom );
         }
-        
+
         if (real_dom == NULL) {
             LibXSLT_report_error_ctx(saved_error,0);
             croak("Unknown error applying stylesheet");
@@ -1221,7 +1221,7 @@ _output_string(self, sv_doc, bytes_vs_chars=0)
         else {
             xsltSetGenericDebugFunc(NULL, NULL);
         }
-        output = xmlOutputBufferCreateIO( 
+        output = xmlOutputBufferCreateIO(
             (xmlOutputWriteCallback) LibXSLT_iowrite_scalar,
             (xmlOutputCloseCallback) LibXSLT_ioclose_scalar,
             (void*)results,
@@ -1266,7 +1266,7 @@ output_fh(self, sv_doc, fh)
         else {
             xsltSetGenericDebugFunc(NULL, NULL);
         }
-        output = xmlOutputBufferCreateIO( 
+        output = xmlOutputBufferCreateIO(
             (xmlOutputWriteCallback) LibXSLT_iowrite_fh,
             (xmlOutputCloseCallback) LibXSLT_ioclose_fh,
             (void*)fh,
@@ -1276,7 +1276,7 @@ output_fh(self, sv_doc, fh)
             croak("output to fh failed");
         }
         xmlOutputBufferClose(output);
-        
+
 void
 output_file(self, sv_doc, filename)
         xsltStylesheetPtr self
@@ -1301,7 +1301,7 @@ media_type(self)
     	xmlChar *method;
     CODE:
     	XSLT_GET_IMPORT_PTR(mediaType, self, mediaType);
-	
+
 	if(mediaType == NULL) {
     	    XSLT_GET_IMPORT_PTR(method, self, method);
             RETVAL = "text/xml";
@@ -1328,7 +1328,7 @@ output_method(self)
     	xmlChar *method;
     CODE:
     	XSLT_GET_IMPORT_PTR(method, self, method)
-	
+
         RETVAL = (char*) method;
         if (RETVAL == NULL) {
             /* read http://www.w3.org/TR/xslt#output and tell me how
@@ -1345,7 +1345,7 @@ output_encoding(self)
     	xmlChar *encoding;
     CODE:
     	XSLT_GET_IMPORT_PTR(encoding, self, encoding)
-	
+
         RETVAL = (char*) encoding;
         if (RETVAL == NULL) {
             RETVAL = "UTF-8";

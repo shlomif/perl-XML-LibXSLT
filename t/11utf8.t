@@ -95,7 +95,7 @@ XSLT
   # TEST
   ok( $results, ' TODO : Add test name' );
 
-  my $output = $stylesheet->output_string( $results );  
+  my $output = $stylesheet->output_string( $results );
   # TEST
   ok( !Encode::is_utf8($output), ' TODO : Add test name' );
   # TEST

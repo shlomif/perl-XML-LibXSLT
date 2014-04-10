@@ -4,8 +4,8 @@
 
 <xsl:decimal-format name="default"/>
 
-<xsl:decimal-format name="funky" 
-  decimal-separator="&amp;" 
+<xsl:decimal-format name="funky"
+  decimal-separator="&amp;"
   grouping-separator="/"
   infinity="unfunity"
   minus-sign="_"
@@ -14,7 +14,7 @@
   per-mille="!"
   zero-digit="x"
   digit="#"
-  pattern-separator=";"/> 
+  pattern-separator=";"/>
 
 <xsl:decimal-format name="dumb" digit="@" pattern-separator="R"/>
 

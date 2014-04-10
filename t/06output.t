@@ -151,19 +151,19 @@ EOF
 # TEST:$num_style_docs=$n;
 while (@style_docs) {
     my ($media_type, $style_str) = splice(@style_docs, 0, 2);
-    
+
     my $style_doc = $parser->parse_string($style_str);
     # TEST*$num_style_docs
     ok($style_doc, ' TODO : Add test name');
-    
+
     my $stylesheet = $xslt->parse_stylesheet($style_doc);
     # TEST*$num_style_docs
     ok($stylesheet, ' TODO : Add test name');
-    
+
     my $results = $stylesheet->transform($source);
     # TEST*$num_style_docs
     ok($results, ' TODO : Add test name');
-    
+
     # TEST*$num_style_docs
     is($stylesheet->media_type, $media_type, ' TODO : Add test name');
 }

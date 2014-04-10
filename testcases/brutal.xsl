@@ -1,4 +1,4 @@
-<?xml version="1.0"?> 
+<?xml version="1.0"?>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:output method="html" encoding="utf-8"/>
@@ -22,7 +22,7 @@
         </xsl:apply-templates>
         <tr>
           <td class="tablehead">Total:</td>
-          <td class="tablehead" colspan="2"> 
+          <td class="tablehead" colspan="2">
              <xsl:value-of select="sum(items/item/qty)"/> instances of
              <xsl:value-of select="count(items/item)"/> kinds of items.
           </td>
@@ -34,11 +34,11 @@
         <td colspan="4">Need to Reorder:</td>
       </tr>
 <!--        <xsl:copy-of select="$soldout"/> -->
-      
+
       <xsl:apply-templates select="/inventory/warehouse/items/item[qty=0]">
         <xsl:with-param name="pwh" select="1"/>
       </xsl:apply-templates>
-      
+
       <tr>
         <td>Total:</td>
         <td colspan="3">
@@ -62,12 +62,12 @@
         <td class="tablecell">
           <table border="1">
             <tr>
-              <td width="40">     
+              <td width="40">
                  <xsl:value-of select="qty"/>
               </td>
               <td width="{qty}" bgcolor="#ffffff">.</td>
               <td width="{100-qty}" bgcolor="#000000">.</td>
-            </tr>     
+            </tr>
           </table>
         </td>
         <td class="tablecell">
@@ -90,7 +90,7 @@
         </td>
       </xsl:otherwise>
     </xsl:choose>
-  </tr>    
+  </tr>
 </xsl:template>
 
 <!--
@@ -102,7 +102,3 @@
 -->
 
 </xsl:stylesheet>
-
-
-
-    

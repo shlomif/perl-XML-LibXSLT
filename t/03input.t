@@ -51,7 +51,7 @@ $icb->register_callbacks( [ \&match_cb, \&open_cb,
                             \&read_cb, \&close_cb ] );
 
 $xslt->input_callbacks($icb);
-                
+
 my $stylesheet = $xslt->parse_stylesheet($parser->parse_string($stylsheetstring));
 # stylesheet
 # TEST

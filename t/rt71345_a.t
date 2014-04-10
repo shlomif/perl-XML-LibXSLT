@@ -18,7 +18,7 @@ my $stylesheet = $xslt->parse_stylesheet(XML::LibXML->load_xml(string => <<'EOF'
 <xsl:stylesheet version="1.0"
                 extension-element-prefixes="exsl local"
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-                xmlns:exsl="http://exslt.org/common" 
+                xmlns:exsl="http://exslt.org/common"
                 xmlns:local="urn:local">
   <xsl:template match="/">
     <xsl:variable name="foo"><foo a="foo"/></xsl:variable>
