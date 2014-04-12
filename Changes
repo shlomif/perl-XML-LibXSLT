@@ -1,5 +1,10 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.91    2014-04-12
+    - t/cpan-changes.t : minimum version of Test::CPAN::Changes.
+        - This is to avoid test failures such as:
+            - http://www.cpantesters.org/cpan/report/5af7d5eb-6bfa-1014-b84e-eb85912f2992
+
 1.90    2014-04-10
     - Handle $Config{dlext} correctly on Windows.
         - https://rt.cpan.org/Ticket/Display.html?id=94516

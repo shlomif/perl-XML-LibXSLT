@@ -5,7 +5,7 @@ use warnings;
 
 use Test::More;
 
-eval 'use Test::CPAN::Changes';
+eval 'use Test::CPAN::Changes 0.27';
 plan skip_all => 'Test::CPAN::Changes required for this test' if $@;
 
 changes_ok();
