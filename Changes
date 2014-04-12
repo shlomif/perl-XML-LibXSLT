@@ -1,5 +1,8 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.92    2014-04-12
+    - Add scripts/tag-release.pl .
+
 1.91    2014-04-12
     - t/cpan-changes.t : minimum version of Test::CPAN::Changes.
         - This is to avoid test failures such as:
