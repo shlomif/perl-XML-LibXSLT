@@ -21,6 +21,7 @@ example/nonfatal.xsl
 perl-libxml-mm.c
 perl-libxml-mm.h
 ppport.h
+scripts/tag-release.pl
 t/01basic.t
 t/02dromeds.t
 t/03input.t
