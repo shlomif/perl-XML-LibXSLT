@@ -860,7 +860,29 @@ max_depth(self, ...)
         PERL_UNUSED_VAR(self);
         RETVAL = xsltMaxDepth;
         if (items > 1) {
-            xsltMaxDepth = SvIV(ST(1));
+            IV val;
+
+            val = SvIV(ST(1));
+            if (val > 0) {
+                xsltMaxDepth = val;
+            }
+        }
+    OUTPUT:
+        RETVAL
+
+int
+max_vars(self, ...)
+        SV * self
+    CODE:
+        PERL_UNUSED_VAR(self);
+        RETVAL = xsltMaxVars;
+        if (items > 1) {
+            IV val;
+
+            val = SvIV(ST(1));
+            if (val > 0) {
+                xsltMaxVars = val;
+            }
         }
     OUTPUT:
         RETVAL

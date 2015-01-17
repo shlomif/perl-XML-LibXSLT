@@ -1,5 +1,10 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.93    2015-01-17
+    - Add the ->max_vars function to set the MaxVars.
+        - https://rt.cpan.org/Ticket/Display.html?id=101413
+        - Thanks to Thomas Krichel for the report/request.
+
 1.92    2014-04-12
     - Add scripts/tag-release.pl .
 
