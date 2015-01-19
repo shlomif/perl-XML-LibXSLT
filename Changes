@@ -1,5 +1,11 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.94    2015-01-19
+    - Fix builds on older versions of libxslt.
+        - Breakage caused by the MaxVars change.
+        - https://rt.cpan.org/Ticket/Display.html?id=101605
+        - Thanks to Deyan Ginev for the report.
+
 1.93    2015-01-17
     - Add the ->max_vars function to set the MaxVars.
         - https://rt.cpan.org/Ticket/Display.html?id=101413
