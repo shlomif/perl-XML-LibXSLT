@@ -875,6 +875,9 @@ max_vars(self, ...)
         SV * self
     CODE:
         PERL_UNUSED_VAR(self);
+#if LIBXSLT_VERSION < 10127
+        RETVAL = 1;
+#else
         RETVAL = xsltMaxVars;
         if (items > 1) {
             IV val;
@@ -884,6 +887,7 @@ max_vars(self, ...)
                 xsltMaxVars = val;
             }
         }
+#endif
     OUTPUT:
         RETVAL
 
