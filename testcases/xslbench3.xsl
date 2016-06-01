@@ -24,7 +24,6 @@
 		</xsl:for-each>
 	</xsl:for-each>
 	</table>
-	
 </body>
 </html>
 </xsl:template>
