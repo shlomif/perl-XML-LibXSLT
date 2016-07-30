@@ -38,6 +38,10 @@ if ( $] < 5.008 or $config{NO_THREADS} ) {
 }
 delete $config{NO_THREADS};
 
+# We use it several times later. See:
+# https://rt.cpan.org/Public/Bug/Display.html?id=116461
+my $HAVE_USER_DEFINED = (defined($config{LIBS}) or defined($config{INC}) );
+
 unless ( $::is_Win32 ) { # cannot get config in W32
     my $xsltcfg = "xslt-config";
     my $libprefix = $ENV{XSLTPREFIX} || $config{XSLTPREFIX};
@@ -50,7 +54,7 @@ unless ( $::is_Win32 ) { # cannot get config in W32
 
     # if a user defined INC and LIBS on the command line we must not
     # override them
-    if ( not defined $config{LIBS} and not defined $config{INC} ) {
+    if ( ! $HAVE_USER_DEFINED ) {
         # get libs and inc from gnome-config
         eval {
             print "running xslt-config... ";
@@ -167,29 +171,31 @@ exit 0; # 0 recommended by http://cpantest.grango.org (Notes for CPAN Authors)
 
 
 if (have_library($::is_Win32 ? "libexslt" : "exslt")) {
-  my $exslt_defaults = $::is_Win32 ?
-    ($ENV{ACTIVEPERL_MINGW} ? q/-llibexslt.lib/ : q/-llibexslt/) :
-                              q/-lexslt/; # -lgcrypt -lgpg-error/;
-  my $exsltcfg = 'pkg-config libexslt';
-  my ($exslt_libs,$exslt_inc);
-  eval {
-    print "running $exsltcfg... ";
-    $exslt_libs = backtick("$exsltcfg --libs");
-    $exslt_inc = backtick("$exsltcfg --cflags");
-    $exslt_libs =~ s/-l(xml2|xslt|z|m)\s+//g;
-    print "ok\n";
-  };
-  if ($@) {
-    print "failed\n";
-    warn "*** ", $@ if $DEBUG;
-    warn "using fallback values for LIBS and INC\n";
-    # backtick fails if gnome-config didn't exist...
-    $exslt_libs  = $exslt_defaults;
-    $exslt_inc   = '';
-  }
-  $config{LIBS} .= ' '.$exslt_libs;
-  $config{INC} .= ' '.$exslt_inc;
-  $config{DEFINE} .= " -DHAVE_EXSLT"
+    if (! $HAVE_USER_DEFINED) {
+        my $exslt_defaults = $::is_Win32 ?
+        ($ENV{ACTIVEPERL_MINGW} ? q/-llibexslt.lib/ : q/-llibexslt/) :
+        q/-lexslt/; # -lgcrypt -lgpg-error/;
+        my $exsltcfg = 'pkg-config libexslt';
+        my ($exslt_libs,$exslt_inc);
+        eval {
+            print "running $exsltcfg... ";
+            $exslt_libs = backtick("$exsltcfg --libs");
+            $exslt_inc = backtick("$exsltcfg --cflags");
+            $exslt_libs =~ s/-l(xml2|xslt|z|m)\s+//g;
+            print "ok\n";
+        };
+        if ($@) {
+            print "failed\n";
+            warn "*** ", $@ if $DEBUG;
+            warn "using fallback values for LIBS and INC\n";
+            # backtick fails if gnome-config didn't exist...
+            $exslt_libs  = $exslt_defaults;
+            $exslt_inc   = '';
+        }
+        $config{LIBS} .= ' '.$exslt_libs;
+        $config{INC} .= ' '.$exslt_inc;
+    }
+    $config{DEFINE} .= " -DHAVE_EXSLT"
 }
 
 $config{LIBS}.=' '.$Config{libs};
