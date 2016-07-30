@@ -1,5 +1,12 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.95    2016-07-30
+    - Hopefully fix RT#116461
+        - https://rt.cpan.org/Public/Bug/Display.html?id=116461
+        - “Makefile.PL shouldn't run "pkg-config libexslt" if LIBS or INC were
+        provided”
+        - Thanks to NWELLNHOF for the report and a suggested fix.
+
 1.94    2015-01-19
     - Fix builds on older versions of libxslt.
         - Breakage caused by the MaxVars change.
