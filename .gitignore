@@ -1,0 +1,10 @@
+LibXSLT.bs
+LibXSLT.c
+LibXSLT.o
+MYMETA.json
+MYMETA.yml
+Makefile
+blib
+perl-libxml-mm.o
+pm_to_blib
+XML-LibXSLT-*
