@@ -1,5 +1,9 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.96    Unknown
+    - Apply patch from RT#83028
+        - $Config{libs} is not needed
+
 1.95    2016-07-30
     - Hopefully fix RT#116461
         - https://rt.cpan.org/Public/Bug/Display.html?id=116461

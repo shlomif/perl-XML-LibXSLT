@@ -198,8 +198,6 @@ if (have_library($::is_Win32 ? "libexslt" : "exslt")) {
     $config{DEFINE} .= " -DHAVE_EXSLT"
 }
 
-$config{LIBS}.=' '.$Config{libs};
-
 if ($DEBUG) {
   print "LIBS: $config{LIBS}\n";
   print "INC: $config{INC}\n";
