@@ -261,9 +261,9 @@ WriteMakefile(
         },
         'resources' => {
             'repository' => {
-                'type' => 'hg',
-                'url'  => 'https://bitbucket.org/shlomif/perl-xml-libxslt',
-                'web'  => 'https://bitbucket.org/shlomif/perl-xml-libxslt',
+                'type' => 'git',
+                'url'  => 'https://github.com/shlomif/perl-XML-LibXSLT',
+                'web'  => 'https://github.com/shlomif/perl-XML-LibXSLT',
             },
         },
     },
