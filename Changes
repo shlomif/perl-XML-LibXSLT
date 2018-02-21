@@ -1,6 +1,6 @@
 Revision history for Perl extension XML::LibXSLT.
 
-1.96    Unknown
+1.96    2018-02-21
     - Apply patch from RT#83028
         - $Config{libs} is not needed
     - Move to git/GitHub:
