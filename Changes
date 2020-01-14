@@ -1,5 +1,10 @@
 Revision history for Perl extension XML::LibXSLT.
 
+1.97    2020-01-14
+    - Tests hot fix for https://rt.cpan.org/Public/Bug/Display.html?id=131457
+        - Tests failed with XML::LibXML v 2.0202
+        - Thanks to jplesnik from Red Hat.
+
 1.96    2018-02-21
     - Apply patch from RT#83028
         - $Config{libs} is not needed
