@@ -7,7 +7,7 @@ Revision history for Perl extension XML::LibXSLT.
         - These checks were much maligned.
 
 1.98    2020-01-16
-    - Replace xslt-config with plkg-config
+    - Replace xslt-config with pkg-config
         - The former is going away
         - https://github.com/shlomif/perl-XML-LibXSLT/pull/3
         - Thanks to Debian.
