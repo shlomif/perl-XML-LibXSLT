@@ -2,16 +2,17 @@ package XML::LibXSLT::Quick;
 
 use strict;
 use warnings;
+use 5.010;
 
 use XML::LibXML  ();
 use XML::LibXSLT ();
-
-my $xslt = XML::LibXSLT->new;
 
 sub new
 {
     my $class = shift;
     my $args  = +{@_};
+
+    my $xslt = ( $args->{xslt_parser} // XML::LibXSLT->new() );
 
     my $style_doc = XML::LibXML->load_xml(
         location => $args->{location},
