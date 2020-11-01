@@ -461,6 +461,11 @@ sub _cleanup_callbacks {
     }
 }
 
+sub transform_into_chars {
+    my $self = shift;
+    return $self->output_as_chars( $self->transform(@_) );
+}
+
 sub transform {
     my $self = shift;
     my $doc;
@@ -883,6 +888,12 @@ Enable the callbacks in C<$icb> only for this stylesheet. C<$icb>
 should be a C<XML::LibXML::InputCallback> object. This will call
 C<init_callbacks> and C<cleanup_callbacks> automatically during
 transformation.
+
+=item transform_into_chars(doc, %params)
+
+Combines C<transform()> and C<output_as_chars()>.
+
+(Added in version 2.0000 .)
 
 =back
 
