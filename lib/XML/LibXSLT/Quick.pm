@@ -40,4 +40,10 @@ work-in-progress
 
 TBD.
 
+=head1 SEE ALSO
+
+L<XML::LibXSLT::Easy> by Yuval Kogman - requires some MooseX modules.
+
+L<XML::LibXSLT> - used as the backend of this module.
+
 =cut
