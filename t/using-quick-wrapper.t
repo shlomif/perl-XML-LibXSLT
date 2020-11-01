@@ -4,6 +4,8 @@ use warnings;
 
 use Test::More tests => 9;
 
+use XML::LibXML         ();
+use XML::LibXSLT        ();
 use XML::LibXSLT::Quick ();
 
 {
