@@ -19,7 +19,44 @@ sub new
         no_cdata => ( $args->{no_cdata} // 0 ),
     );
     my $stylesheet = $xslt->parse_stylesheet($style_doc);
-    return $stylesheet;
+    my $obj        = bless( +{}, $class );
+    $obj->{_stylesheet} = $stylesheet;
+    return $obj;
+}
+
+sub generic_transform
+{
+    my $self = shift;
+
+    my ( $dest, $source, ) = @_;
+    my $stylesheet = $self->{_stylesheet};
+
+    my $ret;
+    my $results = $stylesheet->transform( $source, );
+    $ret = $stylesheet->output_as_chars( $results, );
+    $dest->print($ret);
+    return $ret;
+}
+
+sub output_as_chars
+{
+    my $self = shift;
+
+    return $self->{_stylesheet}->output_as_chars(@_);
+}
+
+sub transform
+{
+    my $self = shift;
+
+    return $self->{_stylesheet}->transform(@_);
+}
+
+sub transform_into_chars
+{
+    my $self = shift;
+
+    return $self->{_stylesheet}->transform_into_chars(@_);
 }
 
 1;
