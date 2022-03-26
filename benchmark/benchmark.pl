@@ -55,9 +55,10 @@ for my $driver ( @{ $options{d} } )
 
 # load config
 my @config;
-open( CONFIG, $options{c} ) || die "Can't open config file '$options{c}' : $!";
+open( my $CONFIG_fh, '<', $options{c} )
+    || die "Can't open config file '$options{c}' : $!";
 my $current = {};
-while ( my $line = <CONFIG> )
+while ( my $line = <$CONFIG_fh> )
 {
     if ( $line =~ /^\s*$/m && %$current )
     {
@@ -78,7 +79,7 @@ while ( my $line = <CONFIG> )
         $current->{$1} = $2;
     }
 }
-
+close($CONFIG_fh);
 for my $driver ( @{ $options{d} } )
 {
     my $pkg = "Driver::${driver}";
