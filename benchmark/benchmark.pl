@@ -6,7 +6,7 @@ use Getopt::Long qw/ GetOptions /;
 use File::Basename qw();
 use XML::XPath qw();
 
-$|++;
+STDOUT->autoflush(1);
 
 my @default_drivers = qw(
     LibXSLT
@@ -80,6 +80,37 @@ while ( my $line = <$CONFIG_fh> )
     }
 }
 close($CONFIG_fh);
+
+sub _raw_slurp
+{
+    my $filename = shift;
+
+    open my $in, '<:raw', $filename
+        or die "Cannot open '$filename' for slurping - $!";
+
+    local $/;
+    my $contents = <$in>;
+
+    close($in);
+
+    return $contents;
+}
+
+sub _utf8_slurp
+{
+    my $filename = shift;
+
+    open my $in, '<:encoding(utf8)', $filename
+        or die "Cannot open '$filename' for slurping - $!";
+
+    local $/;
+    my $contents = <$in>;
+
+    close($in);
+
+    return $contents;
+}
+
 for my $driver ( @{ $options{d} } )
 {
     my $pkg = "Driver::${driver}";
@@ -160,16 +191,8 @@ COMPONENT:
                     $ref_size = ( stat( $cmp->{reference} ) )[7];
                     $ref_size /= 1024;
 
-                    open( REFERENCE, $cmp->{reference} )
-                        || die "Can't open reference '$cmp->{reference}' : $!";
-                    open( NEW, $cmp->{output} )
-                        || die
-                        "Can't open transform output '$cmp->{output}' : $!";
-                    local $/;
-                    my $ref = <REFERENCE>;
-                    my $new = <NEW>;
-                    close REFERENCE;
-                    close NEW;
+                    my $ref = _raw_slurp( $cmp->{reference} );
+                    my $new = _raw_slurp( $cmp->{output} );
                     $new =~ s/\A<\?xml.*?\?>\s*//;
                     $new =~ s/\A<!DOCTYPE.*?>\s*//;
 
