@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use autodie;
 
-use Test::More tests => 12;
+use Test::More tests => 15;
 
 use XML::LibXML         ();
 use XML::LibXSLT        ();
@@ -81,6 +81,23 @@ my $out_exp;
     $stylesheet->generic_transform( $fh, $source, );
 
     $fh->flush();
+
+    # TEST
+    is( $out_str, $out_exp, 'transform_into_chars' );
+}
+
+{
+    my $stylesheet = XML::LibXSLT::Quick->new( location => 'example/1.xsl' );
+    my $parser     = XML::LibXML->new();
+
+    # TEST
+    ok( $parser, 'parser was initialized' );
+    my $source = $parser->parse_file('example/1.xml');
+
+    # TEST
+    ok( $source, '$source' );
+    my $out_str = '';
+    $stylesheet->generic_transform( ( \$out_str ), $source, );
 
     # TEST
     is( $out_str, $out_exp, 'transform_into_chars' );

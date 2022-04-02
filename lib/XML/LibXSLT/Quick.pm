@@ -34,7 +34,14 @@ sub generic_transform
     my $ret;
     my $results = $stylesheet->transform( $source, );
     $ret = $stylesheet->output_as_chars( $results, );
-    $dest->print($ret);
+    if ( ref($dest) eq "SCALAR" )
+    {
+        $$dest .= $ret;
+    }
+    else
+    {
+        $dest->print($ret);
+    }
     return $ret;
 }
 
