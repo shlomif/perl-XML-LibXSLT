@@ -3,6 +3,9 @@ package XML::LibXSLT::Quick;
 use strict;
 use warnings;
 use 5.010;
+use autodie;
+
+use Carp ();
 
 use XML::LibXML  ();
 use XML::LibXSLT ();
@@ -36,7 +39,16 @@ sub generic_transform
     $ret = $stylesheet->output_as_chars( $results, );
     if ( ref($dest) eq "SCALAR" )
     {
-        $$dest .= $ret;
+        if ( ref($$dest) eq "" )
+        {
+            $$dest .= $ret;
+        }
+        else
+        {
+            Carp::confess(
+                "\$dest as a reference to a non-string scalar is not supported!"
+            );
+        }
     }
     else
     {
