@@ -10,7 +10,7 @@ use XML::LibXSLT        ();
 use XML::LibXSLT::Quick ();
 
 {
-    my $stylesheet = XML::LibXSLT::Quick->new( location => 'example/1.xsl' );
+    my $stylesheet = XML::LibXSLT::Quick->new( {location => 'example/1.xsl',} );
     my $parser     = XML::LibXML->new();
 
     # TEST
@@ -30,8 +30,10 @@ my $out_exp;
 {
     my $xslt_parser = XML::LibXSLT->new();
     my $stylesheet  = XML::LibXSLT::Quick->new(
+        {
         xslt_parser => $xslt_parser,
-        location    => 'example/1.xsl'
+        location    => 'example/1.xsl',
+    }
     );
     my $parser = XML::LibXML->new();
 
@@ -51,7 +53,7 @@ my $out_exp;
 }
 
 {
-    my $stylesheet = XML::LibXSLT::Quick->new( location => 'example/1.xsl' );
+    my $stylesheet = XML::LibXSLT::Quick->new( {location => 'example/1.xsl',} );
     my $parser     = XML::LibXML->new();
 
     # TEST
@@ -67,7 +69,7 @@ my $out_exp;
 }
 
 {
-    my $stylesheet = XML::LibXSLT::Quick->new( location => 'example/1.xsl' );
+    my $stylesheet = XML::LibXSLT::Quick->new( {location => 'example/1.xsl',} );
     my $parser     = XML::LibXML->new();
 
     # TEST
@@ -87,7 +89,7 @@ my $out_exp;
 }
 
 {
-    my $stylesheet = XML::LibXSLT::Quick->new( location => 'example/1.xsl' );
+    my $stylesheet = XML::LibXSLT::Quick->new( {location => 'example/1.xsl',} );
     my $parser     = XML::LibXML->new();
 
     # TEST

@@ -10,7 +10,7 @@ use XML::LibXSLT ();
 sub new
 {
     my $class = shift;
-    my $args  = +{@_};
+    my $args  = shift;
 
     my $xslt = ( $args->{xslt_parser} // XML::LibXSLT->new() );
 
@@ -80,7 +80,7 @@ work-in-progress
 
 =head1 METHODS
 
-=head2 XML::LibXSLT::Quick->new(location=>"./xslt/my.xslt");
+=head2 XML::LibXSLT::Quick->new({ location=>"./xslt/my.xslt", });
 
 TBD.
 
