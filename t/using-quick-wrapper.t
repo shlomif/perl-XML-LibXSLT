@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use autodie;
 
-use Test::More tests => 15;
+use Test::More tests => 18;
 
 use XML::LibXML         ();
 use XML::LibXSLT        ();
@@ -107,4 +107,62 @@ my $expected_output;
 
     # TEST
     is( $out_str, $expected_output, 'transform_into_chars' );
+}
+
+sub _raw_slurp
+{
+    my $filename = shift;
+
+    open my $in, '<:raw', $filename
+        or die "Cannot open '$filename' for slurping - $!";
+
+    local $/;
+    my $contents = <$in>;
+
+    close($in);
+
+    return $contents;
+}
+
+sub _utf8_slurp
+{
+    my $filename = shift;
+
+    open my $in, '<:encoding(utf8)', $filename
+        or die "Cannot open '$filename' for slurping - $!";
+
+    local $/;
+    my $contents = <$in>;
+
+    close($in);
+
+    return $contents;
+}
+
+{
+    my $stylesheet =
+        XML::LibXSLT::Quick->new( { location => 'example/1.xsl', } );
+    my $parser = XML::LibXML->new();
+
+    # TEST
+    ok( $parser, 'parser was initialized' );
+    my $source = $parser->parse_file('example/1.xml');
+
+    # TEST
+    ok( $source, '$source' );
+    my $out_fn = 'foo.xml';
+    $stylesheet->generic_transform(
+        +{
+            type => 'file',
+            path => $out_fn,
+
+        },
+        $source,
+    );
+
+    my $out_str = _utf8_slurp($out_fn);
+
+    # TEST
+    is( $out_str, $expected_output, 'transform_into_chars' );
+    unlink($out_fn);
 }

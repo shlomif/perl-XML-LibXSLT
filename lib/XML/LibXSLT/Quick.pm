@@ -27,6 +27,32 @@ sub new
     return $obj;
 }
 
+sub _write_utf8_file
+{
+    my ( $out_path, $contents ) = @_;
+
+    open my $out_fh, '>:encoding(utf8)', $out_path;
+
+    print {$out_fh} $contents;
+
+    close($out_fh);
+
+    return;
+}
+
+sub _write_raw_file
+{
+    my ( $out_path, $contents ) = @_;
+
+    open my $out_fh, '>:raw', $out_path;
+
+    print {$out_fh} $contents;
+
+    close($out_fh);
+
+    return;
+}
+
 sub generic_transform
 {
     my $self = shift;
@@ -37,7 +63,8 @@ sub generic_transform
     my $ret;
     my $results = $stylesheet->transform( $source, );
     $ret = $stylesheet->output_as_chars( $results, );
-    if ( ref($dest) eq "SCALAR" )
+    my $destref = ref($dest);
+    if ( $destref eq "SCALAR" )
     {
         if ( ref($$dest) eq "" )
         {
@@ -48,6 +75,19 @@ sub generic_transform
             Carp::confess(
                 "\$dest as a reference to a non-string scalar is not supported!"
             );
+        }
+    }
+    elsif ( $destref eq "HASH" )
+    {
+        my $type = $dest->{type};
+        if ( $type eq "file" )
+        {
+            my $path = $dest->{path};
+            _write_utf8_file( $path, $ret );
+        }
+        else
+        {
+            Carp::confess("unknown dest type");
         }
     }
     else
