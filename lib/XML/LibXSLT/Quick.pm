@@ -16,6 +16,7 @@ sub new
     my $args  = shift;
 
     my $xslt = ( $args->{xslt_parser} // XML::LibXSLT->new() );
+    my $xml  = ( $args->{xml_parser}  // XML::LibXML->new() );
 
     my $style_doc = XML::LibXML->load_xml(
         location => $args->{location},
@@ -23,6 +24,7 @@ sub new
     );
     my $stylesheet = $xslt->parse_stylesheet($style_doc);
     my $obj        = bless( +{}, $class );
+    $obj->{_xml_parser} = $xml;
     $obj->{_stylesheet} = $stylesheet;
     return $obj;
 }
@@ -58,9 +60,14 @@ sub generic_transform
     my $self = shift;
 
     my ( $dest, $source, ) = @_;
+    my $parser     = $self->{_xml_parser};
     my $stylesheet = $self->{_stylesheet};
 
     my $ret;
+    if ( ref($source) eq '' )
+    {
+        $source = $parser->parse_string($source);
+    }
     my $results = $stylesheet->transform( $source, );
     $ret = $stylesheet->output_as_chars( $results, );
     my $destref = ref($dest);

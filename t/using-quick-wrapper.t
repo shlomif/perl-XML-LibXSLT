@@ -3,18 +3,49 @@ use strict;
 use warnings;
 use autodie;
 
-use Test::More tests => 8;
+use Test::More tests => 11;
 
 use XML::LibXML         ();
 use XML::LibXSLT        ();
 use XML::LibXSLT::Quick ();
+
+sub _raw_slurp
+{
+    my $filename = shift;
+
+    open my $in, '<:raw', $filename
+        or die "Cannot open '$filename' for slurping - $!";
+
+    local $/;
+    my $contents = <$in>;
+
+    close($in);
+
+    return $contents;
+}
+
+sub _utf8_slurp
+{
+    my $filename = shift;
+
+    open my $in, '<:encoding(utf8)', $filename
+        or die "Cannot open '$filename' for slurping - $!";
+
+    local $/;
+    my $contents = <$in>;
+
+    close($in);
+
+    return $contents;
+}
 
 my $parser = XML::LibXML->new();
 
 # TEST
 ok( $parser, 'parser was initialized' );
 
-my $xml1_dom = $parser->parse_file('example/1.xml');
+my $xml1_dom  = $parser->parse_file('example/1.xml');
+my $xml1_text = _utf8_slurp('example/1.xml');
 
 # TEST
 ok( $xml1_dom, '$xml1_dom' );
@@ -56,75 +87,94 @@ my $expected_output;
     is( $out2, $expected_output, 'transform_into_chars' );
 }
 
+foreach my $rec (
+    +{
+        name   => 'DOM object',
+        source => $xml1_dom,
+    },
+    +{
+        name   => 'text markup',
+        source => $xml1_text,
+    },
+    )
 {
-    my $stylesheet =
-        XML::LibXSLT::Quick->new( { location => 'example/1.xsl', } );
-    my $out_str = '';
-    open my $fh, '>', \$out_str;
-    $stylesheet->generic_transform( $fh, $xml1_dom, );
+    # TEST:FILTER(MULT(2))
+    my $name   = $rec->{name};
+    my $source = $rec->{source};
+    {
+        my $stylesheet =
+            XML::LibXSLT::Quick->new( { location => 'example/1.xsl', } );
+        my $out_str = '';
+        open my $fh, '>', \$out_str;
+        $stylesheet->generic_transform( $fh, $source, );
 
-    $fh->flush();
+        $fh->flush();
 
-    # TEST
-    is( $out_str, $expected_output, 'transform_into_chars' );
+        # TEST
+        is( $out_str, $expected_output, 'transform_into_chars' );
+    }
+
+    {
+        my $stylesheet =
+            XML::LibXSLT::Quick->new( { location => 'example/1.xsl', } );
+        my $out_str = '';
+        $stylesheet->generic_transform( ( \$out_str ), $source, );
+
+        # TEST
+        is( $out_str, $expected_output, 'transform_into_chars' );
+    }
+
+    {
+        my $stylesheet =
+            XML::LibXSLT::Quick->new( { location => 'example/1.xsl', } );
+        my $out_fn = 'foo.xml';
+        $stylesheet->generic_transform(
+            +{
+                type => 'file',
+                path => $out_fn,
+
+            },
+            $source,
+        );
+
+        my $out_str = _utf8_slurp($out_fn);
+
+        # TEST
+        is( $out_str, $expected_output, 'transform_into_chars' );
+        unlink($out_fn);
+    }
+
+    # TEST:ENDFILTER()
+
 }
+__END__
 
-{
-    my $stylesheet =
-        XML::LibXSLT::Quick->new( { location => 'example/1.xsl', } );
-    my $out_str = '';
-    $stylesheet->generic_transform( ( \$out_str ), $xml1_dom, );
+=head1 COPYRIGHT & LICENSE
 
-    # TEST
-    is( $out_str, $expected_output, 'transform_into_chars' );
-}
+Copyright 2022 by Shlomi Fish
 
-sub _raw_slurp
-{
-    my $filename = shift;
+This program is distributed under the MIT / Expat License:
+L<http://www.opensource.org/licenses/mit-license.php>
 
-    open my $in, '<:raw', $filename
-        or die "Cannot open '$filename' for slurping - $!";
+Permission is hereby granted, free of charge, to any person
+obtaining a copy of this software and associated documentation
+files (the "Software"), to deal in the Software without
+restriction, including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following
+conditions:
 
-    local $/;
-    my $contents = <$in>;
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
 
-    close($in);
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
 
-    return $contents;
-}
-
-sub _utf8_slurp
-{
-    my $filename = shift;
-
-    open my $in, '<:encoding(utf8)', $filename
-        or die "Cannot open '$filename' for slurping - $!";
-
-    local $/;
-    my $contents = <$in>;
-
-    close($in);
-
-    return $contents;
-}
-
-{
-    my $stylesheet =
-        XML::LibXSLT::Quick->new( { location => 'example/1.xsl', } );
-    my $out_fn = 'foo.xml';
-    $stylesheet->generic_transform(
-        +{
-            type => 'file',
-            path => $out_fn,
-
-        },
-        $xml1_dom,
-    );
-
-    my $out_str = _utf8_slurp($out_fn);
-
-    # TEST
-    is( $out_str, $expected_output, 'transform_into_chars' );
-    unlink($out_fn);
-}
+=cut
