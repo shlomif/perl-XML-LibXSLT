@@ -3,19 +3,20 @@ use strict;
 use warnings;
 use autodie;
 
-use Test::More tests => 18;
+use Test::More tests => 13;
 
 use XML::LibXML         ();
 use XML::LibXSLT        ();
 use XML::LibXSLT::Quick ();
 
+my $parser = XML::LibXML->new();
+
+# TEST
+ok( $parser, 'parser was initialized' );
+
 {
     my $stylesheet =
         XML::LibXSLT::Quick->new( { location => 'example/1.xsl', } );
-    my $parser = XML::LibXML->new();
-
-    # TEST
-    ok( $parser, 'parser was initialized' );
     my $source = $parser->parse_file('example/1.xml');
 
     # TEST
@@ -36,10 +37,6 @@ my $expected_output;
             location    => 'example/1.xsl',
         }
     );
-    my $parser = XML::LibXML->new();
-
-    # TEST
-    ok( $parser, 'parser was initialized' );
     my $source = $parser->parse_file('example/1.xml');
 
     # TEST
@@ -56,10 +53,6 @@ my $expected_output;
 {
     my $stylesheet =
         XML::LibXSLT::Quick->new( { location => 'example/1.xsl', } );
-    my $parser = XML::LibXML->new();
-
-    # TEST
-    ok( $parser, 'parser was initialized' );
     my $source = $parser->parse_file('example/1.xml');
 
     # TEST
@@ -73,10 +66,6 @@ my $expected_output;
 {
     my $stylesheet =
         XML::LibXSLT::Quick->new( { location => 'example/1.xsl', } );
-    my $parser = XML::LibXML->new();
-
-    # TEST
-    ok( $parser, 'parser was initialized' );
     my $source = $parser->parse_file('example/1.xml');
 
     # TEST
@@ -94,10 +83,6 @@ my $expected_output;
 {
     my $stylesheet =
         XML::LibXSLT::Quick->new( { location => 'example/1.xsl', } );
-    my $parser = XML::LibXML->new();
-
-    # TEST
-    ok( $parser, 'parser was initialized' );
     my $source = $parser->parse_file('example/1.xml');
 
     # TEST
@@ -142,10 +127,6 @@ sub _utf8_slurp
 {
     my $stylesheet =
         XML::LibXSLT::Quick->new( { location => 'example/1.xsl', } );
-    my $parser = XML::LibXML->new();
-
-    # TEST
-    ok( $parser, 'parser was initialized' );
     my $source = $parser->parse_file('example/1.xml');
 
     # TEST
