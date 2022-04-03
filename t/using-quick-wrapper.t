@@ -10,8 +10,9 @@ use XML::LibXSLT        ();
 use XML::LibXSLT::Quick ();
 
 {
-    my $stylesheet = XML::LibXSLT::Quick->new( {location => 'example/1.xsl',} );
-    my $parser     = XML::LibXML->new();
+    my $stylesheet =
+        XML::LibXSLT::Quick->new( { location => 'example/1.xsl', } );
+    my $parser = XML::LibXML->new();
 
     # TEST
     ok( $parser, 'parser was initialized' );
@@ -26,14 +27,14 @@ use XML::LibXSLT::Quick ();
     ok( $out1, 'output' );
 }
 
-my $out_exp;
+my $expected_output;
 {
     my $xslt_parser = XML::LibXSLT->new();
     my $stylesheet  = XML::LibXSLT::Quick->new(
         {
-        xslt_parser => $xslt_parser,
-        location    => 'example/1.xsl',
-    }
+            xslt_parser => $xslt_parser,
+            location    => 'example/1.xsl',
+        }
     );
     my $parser = XML::LibXML->new();
 
@@ -46,15 +47,16 @@ my $out_exp;
     my $results = $stylesheet->transform($source);
     my $out1    = $stylesheet->output_as_chars($results);
 
-    $out_exp = $out1;
+    $expected_output = $out1;
 
     # TEST
     ok( $out1, 'output' );
 }
 
 {
-    my $stylesheet = XML::LibXSLT::Quick->new( {location => 'example/1.xsl',} );
-    my $parser     = XML::LibXML->new();
+    my $stylesheet =
+        XML::LibXSLT::Quick->new( { location => 'example/1.xsl', } );
+    my $parser = XML::LibXML->new();
 
     # TEST
     ok( $parser, 'parser was initialized' );
@@ -65,12 +67,13 @@ my $out_exp;
     my $out2 = $stylesheet->transform_into_chars($source);
 
     # TEST
-    is( $out2, $out_exp, 'transform_into_chars' );
+    is( $out2, $expected_output, 'transform_into_chars' );
 }
 
 {
-    my $stylesheet = XML::LibXSLT::Quick->new( {location => 'example/1.xsl',} );
-    my $parser     = XML::LibXML->new();
+    my $stylesheet =
+        XML::LibXSLT::Quick->new( { location => 'example/1.xsl', } );
+    my $parser = XML::LibXML->new();
 
     # TEST
     ok( $parser, 'parser was initialized' );
@@ -85,12 +88,13 @@ my $out_exp;
     $fh->flush();
 
     # TEST
-    is( $out_str, $out_exp, 'transform_into_chars' );
+    is( $out_str, $expected_output, 'transform_into_chars' );
 }
 
 {
-    my $stylesheet = XML::LibXSLT::Quick->new( {location => 'example/1.xsl',} );
-    my $parser     = XML::LibXML->new();
+    my $stylesheet =
+        XML::LibXSLT::Quick->new( { location => 'example/1.xsl', } );
+    my $parser = XML::LibXML->new();
 
     # TEST
     ok( $parser, 'parser was initialized' );
@@ -102,5 +106,5 @@ my $out_exp;
     $stylesheet->generic_transform( ( \$out_str ), $source, );
 
     # TEST
-    is( $out_str, $out_exp, 'transform_into_chars' );
+    is( $out_str, $expected_output, 'transform_into_chars' );
 }
