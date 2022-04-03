@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use autodie;
 
-use Test::More tests => 13;
+use Test::More tests => 8;
 
 use XML::LibXML         ();
 use XML::LibXSLT        ();
@@ -14,14 +14,15 @@ my $parser = XML::LibXML->new();
 # TEST
 ok( $parser, 'parser was initialized' );
 
+my $xml1_dom = $parser->parse_file('example/1.xml');
+
+# TEST
+ok( $xml1_dom, '$xml1_dom' );
+
 {
     my $stylesheet =
         XML::LibXSLT::Quick->new( { location => 'example/1.xsl', } );
-    my $source = $parser->parse_file('example/1.xml');
-
-    # TEST
-    ok( $source, '$source' );
-    my $results = $stylesheet->transform($source);
+    my $results = $stylesheet->transform($xml1_dom);
     my $out1    = $stylesheet->output_as_chars($results);
 
     # TEST
@@ -37,11 +38,7 @@ my $expected_output;
             location    => 'example/1.xsl',
         }
     );
-    my $source = $parser->parse_file('example/1.xml');
-
-    # TEST
-    ok( $source, '$source' );
-    my $results = $stylesheet->transform($source);
+    my $results = $stylesheet->transform($xml1_dom);
     my $out1    = $stylesheet->output_as_chars($results);
 
     $expected_output = $out1;
@@ -53,11 +50,7 @@ my $expected_output;
 {
     my $stylesheet =
         XML::LibXSLT::Quick->new( { location => 'example/1.xsl', } );
-    my $source = $parser->parse_file('example/1.xml');
-
-    # TEST
-    ok( $source, '$source' );
-    my $out2 = $stylesheet->transform_into_chars($source);
+    my $out2 = $stylesheet->transform_into_chars($xml1_dom);
 
     # TEST
     is( $out2, $expected_output, 'transform_into_chars' );
@@ -66,13 +59,9 @@ my $expected_output;
 {
     my $stylesheet =
         XML::LibXSLT::Quick->new( { location => 'example/1.xsl', } );
-    my $source = $parser->parse_file('example/1.xml');
-
-    # TEST
-    ok( $source, '$source' );
     my $out_str = '';
     open my $fh, '>', \$out_str;
-    $stylesheet->generic_transform( $fh, $source, );
+    $stylesheet->generic_transform( $fh, $xml1_dom, );
 
     $fh->flush();
 
@@ -83,12 +72,8 @@ my $expected_output;
 {
     my $stylesheet =
         XML::LibXSLT::Quick->new( { location => 'example/1.xsl', } );
-    my $source = $parser->parse_file('example/1.xml');
-
-    # TEST
-    ok( $source, '$source' );
     my $out_str = '';
-    $stylesheet->generic_transform( ( \$out_str ), $source, );
+    $stylesheet->generic_transform( ( \$out_str ), $xml1_dom, );
 
     # TEST
     is( $out_str, $expected_output, 'transform_into_chars' );
@@ -127,10 +112,6 @@ sub _utf8_slurp
 {
     my $stylesheet =
         XML::LibXSLT::Quick->new( { location => 'example/1.xsl', } );
-    my $source = $parser->parse_file('example/1.xml');
-
-    # TEST
-    ok( $source, '$source' );
     my $out_fn = 'foo.xml';
     $stylesheet->generic_transform(
         +{
@@ -138,7 +119,7 @@ sub _utf8_slurp
             path => $out_fn,
 
         },
-        $source,
+        $xml1_dom,
     );
 
     my $out_str = _utf8_slurp($out_fn);
