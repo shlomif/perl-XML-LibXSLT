@@ -111,7 +111,8 @@ foreach my $rec (
         $fh->flush();
 
         # TEST
-        is( $out_str, $expected_output, 'transform_into_chars' );
+        is( $out_str, $expected_output,
+            "generic_transform() : ${name} -> filehandle" );
     }
 
     {
@@ -121,7 +122,8 @@ foreach my $rec (
         $stylesheet->generic_transform( ( \$out_str ), $source, );
 
         # TEST
-        is( $out_str, $expected_output, 'transform_into_chars' );
+        is( $out_str, $expected_output,
+            "generic_transform() : ${name} -> string ref" );
     }
 
     {
@@ -140,7 +142,8 @@ foreach my $rec (
         my $out_str = _utf8_slurp($out_fn);
 
         # TEST
-        is( $out_str, $expected_output, 'transform_into_chars' );
+        is( $out_str, $expected_output,
+            "generic_transform() : ${name} -> file path name" );
         unlink($out_fn);
     }
 
