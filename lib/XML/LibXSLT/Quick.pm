@@ -92,6 +92,10 @@ sub generic_transform
             my $path = $dest->{path};
             _write_utf8_file( $path, $ret );
         }
+        elsif ( $type eq "return" )
+        {
+            return $ret;
+        }
         else
         {
             Carp::confess("unknown dest type");
