@@ -68,14 +68,16 @@ sub generic_transform
     {
         $source = $parser->parse_string($source);
     }
-    my $results = $stylesheet->transform( $source, );
-    $ret = $stylesheet->output_as_chars( $results, );
+    my $results  = $stylesheet->transform( $source, );
+    my $calc_ret = sub {
+        return ( $ret //= $stylesheet->output_as_chars( $results, ) );
+    };
     my $destref = ref($dest);
     if ( $destref eq "SCALAR" )
     {
         if ( ref($$dest) eq "" )
         {
-            $$dest .= $ret;
+            $$dest .= scalar( $calc_ret->() );
         }
         else
         {
@@ -97,11 +99,11 @@ sub generic_transform
         elsif ( $type eq "file" )
         {
             my $path = $dest->{path};
-            _write_utf8_file( $path, $ret );
+            _write_utf8_file( $path, scalar( $calc_ret->() ) );
         }
         elsif ( $type eq "return" )
         {
-            return $ret;
+            return scalar( $calc_ret->() );
         }
         else
         {
@@ -110,9 +112,9 @@ sub generic_transform
     }
     else
     {
-        $dest->print($ret);
+        $dest->print( scalar( $calc_ret->() ) );
     }
-    return $ret;
+    return scalar( $calc_ret->() );
 }
 
 sub output_as_chars
