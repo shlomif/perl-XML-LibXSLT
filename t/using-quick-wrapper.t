@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use autodie;
 
-use Test::More tests => 13;
+use Test::More tests => 15;
 
 use XML::LibXML         ();
 use XML::LibXSLT        ();
@@ -154,6 +154,22 @@ foreach my $rec (
             },
             $source,
         );
+
+        # TEST
+        is( $out_str, $expected_output,
+            "generic_transform() : ${name} -> return" );
+    }
+
+    {
+        my $stylesheet =
+            XML::LibXSLT::Quick->new( { location => 'example/1.xsl', } );
+        my $out_dom = $stylesheet->generic_transform(
+            +{
+                type => 'dom',
+            },
+            $source,
+        );
+        my $out_str = $stylesheet->output_as_chars($out_dom);
 
         # TEST
         is( $out_str, $expected_output,

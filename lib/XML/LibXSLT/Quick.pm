@@ -87,7 +87,14 @@ sub generic_transform
     elsif ( $destref eq "HASH" )
     {
         my $type = $dest->{type};
-        if ( $type eq "file" )
+        if (0)
+        {
+        }
+        elsif ( $type eq "dom" )
+        {
+            return $results;
+        }
+        elsif ( $type eq "file" )
         {
             my $path = $dest->{path};
             _write_utf8_file( $path, $ret );
