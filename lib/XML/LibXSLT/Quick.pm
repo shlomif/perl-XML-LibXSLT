@@ -10,6 +10,18 @@ use Carp ();
 use XML::LibXML  ();
 use XML::LibXSLT ();
 
+sub stylesheet
+{
+    my $self = shift;
+
+    if (@_)
+    {
+        $self->{stylesheet} = shift;
+    }
+
+    return $self->{stylesheet};
+}
+
 sub new
 {
     my $class = shift;
@@ -25,7 +37,7 @@ sub new
     my $stylesheet = $xslt->parse_stylesheet($style_doc);
     my $obj        = bless( +{}, $class );
     $obj->{_xml_parser} = $xml;
-    $obj->{_stylesheet} = $stylesheet;
+    $obj->{stylesheet}  = $stylesheet;
     return $obj;
 }
 
@@ -61,7 +73,7 @@ sub generic_transform
 
     my ( $dest, $source, ) = @_;
     my $parser     = $self->{_xml_parser};
-    my $stylesheet = $self->{_stylesheet};
+    my $stylesheet = $self->stylesheet();
 
     my $ret;
     if ( ref($source) eq '' )
@@ -121,21 +133,21 @@ sub output_as_chars
 {
     my $self = shift;
 
-    return $self->{_stylesheet}->output_as_chars(@_);
+    return $self->stylesheet()->output_as_chars(@_);
 }
 
 sub transform
 {
     my $self = shift;
 
-    return $self->{_stylesheet}->transform(@_);
+    return $self->stylesheet()->transform(@_);
 }
 
 sub transform_into_chars
 {
     my $self = shift;
 
-    return $self->{_stylesheet}->transform_into_chars(@_);
+    return $self->stylesheet()->transform_into_chars(@_);
 }
 
 1;
