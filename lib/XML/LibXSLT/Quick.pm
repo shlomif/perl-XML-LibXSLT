@@ -22,22 +22,34 @@ sub stylesheet
     return $self->{stylesheet};
 }
 
+sub xml_parser
+{
+    my $self = shift;
+
+    if (@_)
+    {
+        $self->{xml_parser} = shift;
+    }
+
+    return $self->{xml_parser};
+}
+
 sub new
 {
     my $class = shift;
     my $args  = shift;
 
-    my $xslt = ( $args->{xslt_parser} // XML::LibXSLT->new() );
-    my $xml  = ( $args->{xml_parser}  // XML::LibXML->new() );
+    my $xslt       = ( $args->{xslt_parser} // XML::LibXSLT->new() );
+    my $xml_parser = ( $args->{xml_parser}  // XML::LibXML->new() );
 
-    my $style_doc = XML::LibXML->load_xml(
+    my $style_doc = $xml_parser->load_xml(
         location => $args->{location},
         no_cdata => ( $args->{no_cdata} // 0 ),
     );
     my $stylesheet = $xslt->parse_stylesheet($style_doc);
     my $obj        = bless( +{}, $class );
-    $obj->{_xml_parser} = $xml;
-    $obj->{stylesheet}  = $stylesheet;
+    $obj->{xml_parser} = $xml_parser;
+    $obj->{stylesheet} = $stylesheet;
     return $obj;
 }
 
@@ -72,13 +84,13 @@ sub generic_transform
     my $self = shift;
 
     my ( $dest, $source, ) = @_;
-    my $parser     = $self->{_xml_parser};
+    my $xml_parser = $self->xml_parser();
     my $stylesheet = $self->stylesheet();
 
     my $ret;
     if ( ref($source) eq '' )
     {
-        $source = $parser->parse_string($source);
+        $source = $xml_parser->parse_string($source);
     }
     my $results  = $stylesheet->transform( $source, );
     my $calc_ret = sub {
