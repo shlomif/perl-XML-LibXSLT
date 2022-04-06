@@ -168,6 +168,22 @@ work-in-progress
 
 TBD.
 
+=head2 $obj->stylesheet()
+
+The result of parse_stylesheet().
+
+=head2 $obj->generic_transform($dest, $source)
+
+TBD.
+
+=head2 $obj->output_as_chars($dom)
+
+=head2 $obj->transform(...)
+
+=head2 $obj->transform_into_chars(...)
+
+Delegating from $obj->stylesheet() . See L<XML::LibXSLT> .
+
 =head1 SEE ALSO
 
 L<XML::LibXSLT::Easy> by Yuval Kogman - requires some MooseX modules.
