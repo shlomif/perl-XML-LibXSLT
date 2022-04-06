@@ -184,6 +184,10 @@ TBD.
 
 The result of parse_stylesheet().
 
+=head2 $obj->xml_parser()
+
+The L<XML::LibXML> instance.
+
 =head2 $obj->generic_transform($dest, $source)
 
 TBD.
