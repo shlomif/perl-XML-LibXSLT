@@ -202,7 +202,7 @@ XML::LibXSLT::Quick - a quicker interface to XML::LibXSLT
             type => 'file',
             path => $out_fn,
         },
-        $source,
+        $xml1_text,
     );
 
 =head1 DESCRIPTION
