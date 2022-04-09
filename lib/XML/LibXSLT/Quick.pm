@@ -10,6 +10,10 @@ use Carp ();
 use XML::LibXML  ();
 use XML::LibXSLT ();
 
+use vars qw( $VERSION );
+
+$VERSION = '2.000000';
+
 sub stylesheet
 {
     my $self = shift;

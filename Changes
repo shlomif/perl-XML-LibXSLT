@@ -1,5 +1,9 @@
 Revision history for Perl extension XML::LibXSLT.
 
+2.000000    2022-04-09
+    - Add lib/XML/LibXSLT/Quick.pm .
+    - Cleanups.
+
 1.99    2020-01-16
     - Remove checks for libxslt versions
         - https://rt.cpan.org/Ticket/Display.html?id=131155
