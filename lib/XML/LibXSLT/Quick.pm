@@ -94,7 +94,18 @@ sub generic_transform
     }
     elsif ( ref($source) eq 'HASH' )
     {
-        $source = $xml_parser->parse_file( $source->{path} );
+        my $type = $source->{type};
+        if (0)
+        {
+        }
+        elsif ( $type eq "file" )
+        {
+            $source = $xml_parser->parse_file( $source->{path} );
+        }
+        else
+        {
+            Carp::confess("unknown source type");
+        }
     }
     my $results  = $stylesheet->transform( $source, );
     my $calc_ret = sub {
