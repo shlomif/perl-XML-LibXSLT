@@ -92,6 +92,10 @@ sub generic_transform
     {
         $source = $xml_parser->parse_string($source);
     }
+    elsif ( ref($source) eq 'HASH' )
+    {
+        $source = $xml_parser->parse_file( $source->{path} );
+    }
     my $results  = $stylesheet->transform( $source, );
     my $calc_ret = sub {
         return ( $ret //= $stylesheet->output_as_chars( $results, ) );
@@ -172,7 +176,23 @@ XML::LibXSLT::Quick - a quicker interface to XML::LibXSLT
 
 =head1 SYNOPSIS
 
-work-in-progress
+    use XML::LibXSLT::Quick ();
+
+    my $stylesheet =
+        XML::LibXSLT::Quick->new( { location => 'example/1.xsl', } );
+    my $xml1_text = _utf8_slurp('example/1.xml');
+    my $out_fn = 'foo.xml';
+    $stylesheet->generic_transform(
+        +{
+            type => 'file',
+            path => $out_fn,
+        },
+        $source,
+    );
+
+=head1 DESCRIPTION
+
+This is a module that wraps L<XML::LibXSLT> with an easier to use interface.
 
 =head1 METHODS
 
@@ -190,7 +210,9 @@ The L<XML::LibXML> instance.
 
 =head2 $obj->generic_transform($dest, $source)
 
-TBD.
+To be discussed.
+
+See C<t/using-quick-wrapper.t> .
 
 =head2 $obj->output_as_chars($dom)
 

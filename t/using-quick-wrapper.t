@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use autodie;
 
-use Test::More tests => 15;
+use Test::More tests => 20;
 
 use XML::LibXML         ();
 use XML::LibXSLT        ();
@@ -42,8 +42,9 @@ my $parser = XML::LibXML->new();
 # TEST
 ok( $parser, 'parser was initialized' );
 
-my $xml1_dom  = $parser->parse_file('example/1.xml');
-my $xml1_text = _utf8_slurp('example/1.xml');
+my $fn        = 'example/1.xml';
+my $xml1_dom  = $parser->parse_file( $fn, );
+my $xml1_text = _utf8_slurp($fn);
 
 # TEST
 ok( $xml1_dom, '$xml1_dom' );
@@ -94,9 +95,16 @@ foreach my $rec (
         name   => 'text markup',
         source => $xml1_text,
     },
+    +{
+        name   => 'from file',
+        source => +{
+            type => 'file',
+            path => $fn,
+        }
+    },
     )
 {
-    # TEST:FILTER(MULT(2))
+    # TEST:FILTER(MULT(3))
     my $name   = $rec->{name};
     my $source = $rec->{source};
     {
