@@ -111,9 +111,9 @@ sub generic_transform
             Carp::confess("unknown source type");
         }
     }
-    my $results  = $stylesheet->transform( $source, );
-    my $calc_ret = sub {
-        return ( $ret //= $stylesheet->output_as_chars( $results, ) );
+    my $dom_results = $stylesheet->transform( $source, );
+    my $calc_ret    = sub {
+        return ( $ret //= $stylesheet->output_as_chars( $dom_results, ) );
     };
     my $destref = ref($dest);
     if ( $destref eq "SCALAR" )
@@ -137,7 +137,7 @@ sub generic_transform
         }
         elsif ( $type eq "dom" )
         {
-            return $results;
+            return $dom_results;
         }
         elsif ( $type eq "file" )
         {
