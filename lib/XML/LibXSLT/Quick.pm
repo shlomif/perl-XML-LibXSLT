@@ -12,7 +12,7 @@ use XML::LibXSLT ();
 
 use vars qw( $VERSION );
 
-$VERSION = '2.000000';
+$VERSION = '2.001000';
 
 sub stylesheet
 {
@@ -92,12 +92,17 @@ sub generic_transform
     my $stylesheet = $self->stylesheet();
 
     my $ret;
+    my $params = {};
     if ( ref($source) eq '' )
     {
         $source = $xml_parser->parse_string($source);
     }
     elsif ( ref($source) eq 'HASH' )
     {
+        if ( my $p = $source->{'params'} )
+        {
+            $params = $p;
+        }
         my $type = $source->{type};
         if (0)
         {
@@ -111,7 +116,7 @@ sub generic_transform
             Carp::confess("unknown source type");
         }
     }
-    my $dom_results = $stylesheet->transform( $source, );
+    my $dom_results = $stylesheet->transform( $source, %$params, );
     my $calc_ret    = sub {
         return ( $ret //= $stylesheet->output_as_chars( $dom_results, ) );
     };
