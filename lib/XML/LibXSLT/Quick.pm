@@ -194,7 +194,7 @@ __END__
 
 =head1 NAME
 
-XML::LibXSLT::Quick - a quicker interface to XML::LibXSLT
+XML::LibXSLT::Quick - an easier to use (= "quicker") interface to XML::LibXSLT
 
 =head1 SYNOPSIS
 
@@ -215,6 +215,10 @@ XML::LibXSLT::Quick - a quicker interface to XML::LibXSLT
 =head1 DESCRIPTION
 
 This is a module that wraps L<XML::LibXSLT> with an easier to use interface.
+
+It can be used to process XML documents using
+L<XSLT (Extensible Stylesheet Language Transformations)|https://en.wikipedia.org/wiki/XSLT>
+stylesheets.
 
 =head1 METHODS
 
