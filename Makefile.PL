@@ -8,7 +8,7 @@ use ExtUtils::MakeMaker;
 use Config;
 
 
-$|=0;
+STDOUT->autoflush(1);
 
 my %config;
 
