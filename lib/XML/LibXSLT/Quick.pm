@@ -257,7 +257,11 @@ L<XML::LibXSLT> - used as the backend of this module.
 =head1 COPYRIGHT & LICENSE
 
 B<NOTE!!! :> this licence applies to this file alone. The blanket licence
-for the distribution is "same as Perl 5". For more information, consult:
+for the distribution is "same as Perl 5".
+
+(I am not a lawyer (= "IANAL") / etc. )
+
+For more information, consult:
 
 =over 4
 
