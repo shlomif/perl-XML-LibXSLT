@@ -351,7 +351,7 @@ sub try_link0 {
     }
     chdir(".testlink");
     open($cfile, ">Conftest.xs") || die "Cannot write to file Conftest.xs: $!";
-print $cfile <<EOT;
+print $cfile <<"EOT";
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -364,7 +364,7 @@ extern "C" {
 
 EOT
     print $cfile $src;
-    print $cfile <<EOT;
+    print $cfile <<"EOT";
 
 MODULE = Conftest          PACKAGE = Conftest
 
@@ -395,7 +395,7 @@ WriteMakefile(NAME => "Conftest", VERSION_FROM => "Conftest.pm", %config);
 EOT
     close($cfile);
     open($cfile, ">test.pl") || die "Cannot write to file test.pl: $!";
-    print $cfile <<EOT;
+    print $cfile <<"EOT";
 use Test; BEGIN { plan tests => 1; } END { ok(\$loaded) }
 use Conftest; \$loaded++;
 EOT
