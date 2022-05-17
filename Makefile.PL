@@ -12,8 +12,8 @@ $|=0;
 
 my %config;
 
-while($_ = shift) {
-    my ($key, $val) = split(/=/, $_, 2);
+while (my $arg = shift(@ARGV)) {
+    my ($key, $val) = split(/=/, $arg, 2);
     $config{$key} = $val;
 }
 
@@ -262,8 +262,8 @@ BEGIN {
 sub rm_f {
     my @files = @_;
     my @realfiles;
-    foreach (@files) {
-        push @realfiles, glob($_);
+    foreach my $pat (@files) {
+        push @realfiles, glob($pat);
     }
     if (@realfiles) {
         chmod(0777, @realfiles);
@@ -274,8 +274,8 @@ sub rm_f {
 sub rm_fr {
     my @files = @_;
     my @realfiles;
-    foreach (@files) {
-        push @realfiles, glob($_);
+    foreach my $pat (@files) {
+        push @realfiles, glob($pat);
     }
     foreach my $file (@realfiles) {
         if (-d $file) {
@@ -400,7 +400,7 @@ use Test; BEGIN { plan tests => 1; } END { ok(\$loaded) }
 use Conftest; \$loaded++;
 EOT
     close($cfile);
-    xsystem($^X,'Makefile.PL',map "$_=$config{$_}", keys %config);
+    xsystem($^X, 'Makefile.PL', map { "$_=$config{$_}" } keys %config);
     xsystem($Config{make},
 	    ($config{MAKEAPERL} ? qw(-f Makefile.aperl FIRST_MAKEFILE=Makefile.aperl) : ()),
 	    'test'); #,"OTHERLDFLAGS=".$opt);
