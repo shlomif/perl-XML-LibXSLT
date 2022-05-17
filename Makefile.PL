@@ -1,10 +1,3 @@
-# -------------------------------------------------------------------------- #
-# $Id$
-# -------------------------------------------------------------------------- #
-# Makefile.PL for XML::LibXML.
-# This file is required to generate a localized Makefile
-# -------------------------------------------------------------------------- #
-
 use strict;
 use warnings;
 
@@ -275,10 +268,9 @@ WriteMakefile(
 #  - these should really be in MakeMaker... But &shrug;
 ###################################################################
 
-use Config;
-use Cwd;
+use Cwd qw/ cwd /;
 use Symbol;
-use File::Spec;
+use File::Spec ();
 
 
 BEGIN {
