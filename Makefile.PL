@@ -105,7 +105,7 @@ EOF
             $config{LIBS} = '-L/usr/local/lib -L/usr/lib -lxslt -lxml2 -lz -lm';
             $config{INC} = '-I/usr/local/include -I/usr/include';
 
-            print <<OPT;
+            print <<"OPT";
 options:
   LIBS='$config{LIBS}'
   INC='$config{INC}'
@@ -120,15 +120,15 @@ OPT
 if ($config{LIBS} !~ /\-l(lib)?xslt\b/) {
     # in this case we are not able to run xml2-config. therefore we need to
     # expand the libz as well.
-  if ($::is_Win32) {
-    if( $ENV{ACTIVEPERL_MINGW} ) {
-      $config{LIBS} .= ' -llibxslt.lib -llibxml2.lib';
+    if ($::is_Win32) {
+        if( $ENV{ACTIVEPERL_MINGW} ) {
+            $config{LIBS} .= ' -llibxslt.lib -llibxml2.lib';
+        } else {
+            $config{LIBS} .= ' -llibxslt -llibxml2';
+        }
     } else {
-      $config{LIBS} .= ' -llibxslt -llibxml2';
+        $config{LIBS} .= ' -lxml2 -lz';
     }
-  } else {
-    $config{LIBS} .= ' -lxml2 -lz';
-  }
 }
 
 if ($config{LIBS} !~ /\-lz(lib)?\b/ and !($::is_Win32 && $config{LIBS} !~ /\-lzlib\b/)) {
@@ -140,15 +140,15 @@ if ($config{LIBS} !~ /\-lz(lib)?\b/ and !($::is_Win32 && $config{LIBS} !~ /\-lzl
         warn "zlib was not configured\n";
         warn "set zlib\n" if $::is_Win32;
     }
-  if ($::is_Win32) {
-    if( $ENV{ACTIVEPERL_MINGW} ) {
-      $config{LIBS} .= '';
+    if ($::is_Win32) {
+        if( $ENV{ACTIVEPERL_MINGW} ) {
+            $config{LIBS} .= '';
+        } else {
+            $config{LIBS} .= ' -lzlib';
+        }
     } else {
-      $config{LIBS} .= ' -lzlib';
+        $config{LIBS} .= ' -lz';
     }
-  } else {
-    $config{LIBS} .= ' -lz';
-  }
 }
 
 if ($config{LIBS} !~ /\-lm\b/) {
@@ -157,7 +157,7 @@ if ($config{LIBS} !~ /\-lm\b/) {
 }
 
 if (!have_library($::is_Win32 ? "libxslt" : "xslt")) {
-    print STDERR <<DEATH;
+    print STDERR <<"DEATH";
 libxslt not found
 Try setting LIBS and INC values on the command line
 Or get libxslt and libxml2 from
@@ -198,8 +198,8 @@ if (have_library($::is_Win32 ? "libexslt" : "exslt")) {
 }
 
 if ($DEBUG) {
-  print "LIBS: $config{LIBS}\n";
-  print "INC: $config{INC}\n";
+    print "LIBS: $config{LIBS}\n";
+    print "INC: $config{INC}\n";
 }
 
 my $ldflags = delete $config{LDFLAGS};
@@ -289,7 +289,7 @@ sub rm_fr {
 }
 
 sub xsystem {
-  my (@command)=@_;
+    my (@command)=@_;
     if ($DEBUG) {
         print "@command\n";
         if (system(@command) != 0) {
@@ -410,8 +410,10 @@ while($_ = shift @ARGV) {
 WriteMakefile(NAME => "Conftest", VERSION_FROM => "Conftest.pm", %config);
 EOT
     _write_utf8_file("test.pl", <<"EOT");
-use Test; BEGIN { plan tests => 1; } END { ok(\$loaded) }
-use Conftest; \$loaded++;
+use Test::More tests => 1;
+use Conftest;
+++\$::loaded;
+ok(\$::loaded, "loaded") ;
 EOT
     xsystem($^X, 'Makefile.PL', map { "$_=$config{$_}" } keys %config);
     xsystem($Config{make},
@@ -432,8 +434,14 @@ sub try_link {
 
 sub have_library {
     my ($lib, $func) = (@_, "blank");
-    printf("checking for %s() in -l%s... ", $func, $lib) if $func ne "blank";
-    printf("looking for -l%s... ", $lib) if $func eq "blank";
+    if ($func eq "blank")
+    {
+        printf("looking for -l%s... ", $lib);
+    }
+    else
+    {
+        printf("checking for %s() in -l%s... ", $func, $lib);
+    }
 
     my $result;
     if ($func) {
@@ -490,4 +498,3 @@ distruntest: distdir
 
 MAKE_FRAG
 }
-
