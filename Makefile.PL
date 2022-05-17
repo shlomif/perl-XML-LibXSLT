@@ -6,7 +6,19 @@ use vars qw/$DEVNULL $is_Win32/;
 
 use ExtUtils::MakeMaker;
 use Config;
+use Cwd qw/ cwd /;
+use File::Spec ();
 
+BEGIN {
+    $::is_Win32 = ($^O =~ /Win32/);
+    if ($::is_Win32) {
+        $DEVNULL = 'DEVNULL';
+    }
+    else {
+        $DEVNULL = eval { File::Spec->devnull };
+        if ($@) { $DEVNULL = '/dev/null' }
+    }
+};
 
 STDOUT->autoflush(1);
 
@@ -242,21 +254,6 @@ WriteMakefile(
 # Functions
 #  - these should really be in MakeMaker... But &shrug;
 ###################################################################
-
-use Cwd qw/ cwd /;
-use File::Spec ();
-
-
-BEGIN {
-    $::is_Win32 = ($^O =~ /Win32/);
-    if ($::is_Win32) {
-        $DEVNULL = 'DEVNULL';
-    }
-    else {
-        $DEVNULL = eval { File::Spec->devnull };
-        if ($@) { $DEVNULL = '/dev/null' }
-    }
-}
 
 sub rm_f {
     my @files = @_;
