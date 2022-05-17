@@ -244,7 +244,6 @@ WriteMakefile(
 ###################################################################
 
 use Cwd qw/ cwd /;
-use Symbol;
 use File::Spec ();
 
 
@@ -370,7 +369,6 @@ sub _write_raw_file
 
 sub try_link0 {
     my ($src, $opt) = @_;
-    my $cfile = gensym();
     # local $config{LIBS};
     # $config{LIBS} .= $opt;
     unless (mkdir(".testlink", 0777)) {
