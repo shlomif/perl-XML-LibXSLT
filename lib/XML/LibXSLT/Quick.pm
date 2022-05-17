@@ -246,6 +246,10 @@ C<\$my_string_var>
 
 C<<< {type => 'dom', } >>> - the DOM will be returned.
 
+C<<< {type => 'path', path => $filepath, } >>> - the output string will be written to $filepath .
+
+C<<< {type => 'return', } >>> - the output string will be returned.
+
 =head2 $obj->output_as_chars($dom)
 
 =head2 $obj->transform(...)
