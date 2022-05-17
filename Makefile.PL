@@ -1,14 +1,8 @@
 use strict;
 use warnings;
+use 5.014;
 
 use vars qw/$DEVNULL $is_Win32/;
-
-BEGIN {
-  if ($] < 5.008_001) {
-    warn "\nSorry, at least Perl 5.8.1 is required for this module!\n\n";
-    exit;
-  }
-}
 
 use ExtUtils::MakeMaker;
 use Config;
@@ -25,7 +19,7 @@ while($_ = shift) {
 
 my $DEBUG = delete $config{DEBUG};
 
-if ( $] < 5.008 or $config{NO_THREADS} ) {
+if ( $config{NO_THREADS} ) {
   warn "disabling XML::LibXML support for Perl threads\n";
   $config{DEFINE} .= " -DNO_XML_LIBXML_THREADS";
 }
@@ -206,28 +200,9 @@ if ($ldflags) {
 # To handle this we are gonna rename module's DLL to LibXSLT.xs.dll.
 if ($::is_Win32)
 {
-    if ($] eq '5.010000')
-    {
-        print STDERR <<'BUG';
-******************************** !!!WARNING!!! ********************************
-According to the version string you are running a win32 perl 5.10.0 that is
-known to be suffering from dynaloader bug that prevents using non-default
-module's DLL name. Therefore we have to use LibXSLT.dll that will clash with the
-standard name of xslt library DLL. Please consider renaming your xslt library
-to e.g. libxslt_win32.dll and then make the appropriate changes to this module's
-build process to look for that instead of standard libxslt.dll. If you do not
-make the proposed changes you will got during the tests many error popups with
-slightly confusing message about "xsltApplyOneTemplate" function.
-This bug is not present in perl 5.8.* and will be fixed in 5.10.1.
-*******************************************************************************
-BUG
-    }
-    else
-    {
-        # Fix for RT #94516 :
-        # https://rt.cpan.org/Ticket/Display.html?id=94516
-        $config{DLEXT} = 'xs.'.$Config{dlext};
-    }
+    # Fix for RT #94516 :
+    # https://rt.cpan.org/Ticket/Display.html?id=94516
+    $config{DLEXT} = 'xs.'.$Config{dlext};
 }
 
 WriteMakefile(
@@ -245,7 +220,7 @@ WriteMakefile(
     },
     'OBJECT'     => '$(O_FILES)',
     (($ExtUtils::MakeMaker::VERSION >= 6.48)
-        ? (MIN_PERL_VERSION => '5.008001',)
+        ? (MIN_PERL_VERSION => '5.014',)
         : ()
     ),
     'META_MERGE' => {
