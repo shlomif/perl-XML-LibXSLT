@@ -12,7 +12,7 @@ use XML::LibXSLT ();
 
 use vars qw( $VERSION );
 
-$VERSION = '2.001000';
+$VERSION = '2.002000';
 
 sub stylesheet
 {
