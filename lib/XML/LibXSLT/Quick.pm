@@ -111,6 +111,10 @@ sub generic_transform
         {
             $source = $xml_parser->parse_file( $source->{path} );
         }
+        elsif ( $type eq "string" )
+        {
+            $source = $xml_parser->parse_string( $source->{string} );
+        }
         else
         {
             Carp::confess("unknown source type");
@@ -249,6 +253,14 @@ C<<< {type => 'dom', } >>> - the DOM will be returned.
 C<<< {type => 'path', path => $filepath, } >>> - the output string will be written to $filepath .
 
 C<<< {type => 'return', } >>> - the output string will be returned.
+
+$source can be:
+
+A string.
+
+C<<< {type => 'file', path => $filepath, params => +{}, } >>> - the file will be parsed.
+
+C<<< {type => 'string', string => $my_xml_string, params => +{}, } >>> - the string will be parsed.
 
 =head2 $obj->output_as_chars($dom)
 

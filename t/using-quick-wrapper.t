@@ -3,7 +3,7 @@ use strict;
 use warnings;
 use autodie;
 
-use Test::More tests => 23;
+use Test::More tests => 29;
 
 use XML::LibXML         ();
 use XML::LibXSLT        ();
@@ -122,10 +122,17 @@ foreach my $rec (
             path => $fn,
         }
     },
+    +{
+        name   => 'params from str',
+        source => +{
+            type   => 'string',
+            string => $xml1_text,
+        }
+    },
     )
 {
-    # TEST
-    # TEST:FILTER(MULT(3))
+    # TEST*2
+    # TEST:FILTER(MULT(4))
     my $name   = $rec->{name};
     my $source = $rec->{source};
     {
@@ -174,7 +181,7 @@ foreach my $rec (
                 "generic_transform() : ${name} -> file path name" );
             unlink($out_fn);
         }
-        if ( $name eq 'from file' )
+        if ( ( $name eq 'from file' ) or ( $name eq 'params from str' ) )
         {
             $out_fn = 'pppp0.xml';
             $stylesheet->generic_transform(
