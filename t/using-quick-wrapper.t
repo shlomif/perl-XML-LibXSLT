@@ -234,6 +234,8 @@ foreach my $rec (
 }
 __END__
 
+=encoding utf8
+
 =head1 COPYRIGHT & LICENSE
 
 Copyright 2022 by Shlomi Fish
