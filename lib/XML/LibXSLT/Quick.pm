@@ -240,6 +240,12 @@ To be discussed.
 
 See C<t/using-quick-wrapper.t> .
 
+$dest can be:
+
+C<\$my_string_var>
+
+C<<< {type => 'dom', } >>> - the DOM will be returned.
+
 =head2 $obj->output_as_chars($dom)
 
 =head2 $obj->transform(...)
