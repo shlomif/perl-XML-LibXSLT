@@ -340,6 +340,34 @@ sub backtick {
     return $results;
 }
 
+sub _write_utf8_file
+{
+    my ($out_path, $contents) = @_;
+
+    open my $out_fh, '>:encoding(utf8)', $out_path
+        or die "Cannot open '$out_path' for writing - $!";
+
+    print {$out_fh} $contents;
+
+    close($out_fh);
+
+    return;
+}
+
+sub _write_raw_file
+{
+    my ($out_path, $contents) = @_;
+
+    open my $out_fh, '>:raw', $out_path
+        or die "Cannot open '$out_path' for writing - $!";
+
+    print {$out_fh} $contents;
+
+    close($out_fh);
+
+    return;
+}
+
 sub try_link0 {
     my ($src, $opt) = @_;
     my $cfile = gensym();
@@ -350,8 +378,7 @@ sub try_link0 {
         mkdir(".testlink", 0777) || die "Cannot create .testlink dir: $!";
     }
     chdir(".testlink");
-    open($cfile, ">Conftest.xs") || die "Cannot write to file Conftest.xs: $!";
-print $cfile <<"EOT";
+    _write_utf8_file("Conftest.xs", <<"EOT");
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -361,19 +388,15 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-
-EOT
-    print $cfile $src;
-    print $cfile <<"EOT";
+$src
 
 MODULE = Conftest          PACKAGE = Conftest
 
 PROTOTYPES: DISABLE
 
 EOT
-    close($cfile);
-    open($cfile, ">Conftest.pm") || die "Cannot write to file Conftest.pm: $!";
-    print $cfile <<'EOT';
+
+    _write_utf8_file("Conftest.pm", <<'EOT');
 package Conftest;
 $VERSION = 1.0;
 require DynaLoader;
@@ -381,9 +404,7 @@ require DynaLoader;
 bootstrap Conftest $VERSION;
 1;
 EOT
-    close($cfile);
-    open($cfile, ">Makefile.PL") || die "Cannot write to file Makefile.PL: $!";
-    print $cfile <<'EOT';
+_write_utf8_file("Makefile.PL", <<'EOT');
 use ExtUtils::MakeMaker;
 my %config;
 while($_ = shift @ARGV) {
@@ -393,13 +414,10 @@ while($_ = shift @ARGV) {
 }
 WriteMakefile(NAME => "Conftest", VERSION_FROM => "Conftest.pm", %config);
 EOT
-    close($cfile);
-    open($cfile, ">test.pl") || die "Cannot write to file test.pl: $!";
-    print $cfile <<"EOT";
+    _write_utf8_file("test.pl", <<"EOT");
 use Test; BEGIN { plan tests => 1; } END { ok(\$loaded) }
 use Conftest; \$loaded++;
 EOT
-    close($cfile);
     xsystem($^X, 'Makefile.PL', map { "$_=$config{$_}" } keys %config);
     xsystem($Config{make},
 	    ($config{MAKEAPERL} ? qw(-f Makefile.aperl FIRST_MAKEFILE=Makefile.aperl) : ()),
