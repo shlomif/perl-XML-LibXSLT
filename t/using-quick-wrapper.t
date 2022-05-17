@@ -238,6 +238,25 @@ __END__
 
 =head1 COPYRIGHT & LICENSE
 
+B<NOTE!!! :> this licence applies to this file alone. The blanket licence
+for the distribution is "same as Perl 5".
+
+(I am not a lawyer (= "IANAL") / etc. )
+
+For more information, consult:
+
+=over 4
+
+=item * L<https://www.shlomifish.org/philosophy/computers/open-source/foss-licences-wars/rev2/#which-licence-same-as-perl>
+
+=item * L<https://github.com/shlomif/perl-XML-LibXSLT/issues/5>
+
+=item * L<https://en.wikiquote.org/w/index.php?title=Rick_Cook&oldid=3060266>
+
+“Programming today is a race between software engineers striving to build bigger and better idiot-proof programs, and the Universe trying to produce bigger and better idiots. So far, the Universe is winning.”
+
+=back
+
 Copyright 2022 by Shlomi Fish
 
 This program is distributed under the MIT / Expat License:
