@@ -463,10 +463,11 @@ SRC
             }
         }
         else {
-
+	    # Use a fake prototype in the style of autoconf.
             $result = try_link(<<"SRC", $libs);
-blank() { return 0; }
-int t() { ${func}(); return 0; }
+char blank(void) { return 0; }
+char ${func}(void);
+int t(void) { ${func}(); return 0; }
 SRC
         }
     }
