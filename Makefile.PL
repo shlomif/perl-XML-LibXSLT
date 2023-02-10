@@ -442,7 +442,7 @@ SRC
             }
         }
         else {
-	    # Use a fake prototype in the style of autoconf.
+            # Use a fake prototype in the style of autoconf.
             $result = try_link(<<"SRC", $libs);
 char blank(void) { return 0; }
 char ${func}(void);
