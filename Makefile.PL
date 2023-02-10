@@ -8,6 +8,7 @@ use ExtUtils::MakeMaker;
 use Config;
 use Cwd qw/ cwd /;
 use File::Spec ();
+use File::Path 2.06 qw( make_path remove_tree );
 
 BEGIN {
     $::is_Win32 = ($^O =~ /Win32/);
@@ -267,27 +268,6 @@ sub rm_f {
     }
 }
 
-sub rm_fr {
-    my @files = @_;
-    my @realfiles;
-    foreach my $pat (@files) {
-        push @realfiles, glob($pat);
-    }
-    foreach my $file (@realfiles) {
-        if (-d $file) {
-            # warn("$file is a directory\n");
-            rm_fr("$file/*");
-            rm_fr("$file/.exists");
-            rmdir($file) || die "Couldn't remove $file: $!";
-        }
-        else {
-            # warn("removing $file\n");
-            chmod(0777, $file);
-            unlink($file);
-        }
-    }
-}
-
 sub xsystem {
     my (@command)=@_;
     if ($DEBUG) {
@@ -369,7 +349,7 @@ sub try_link0 {
     # local $config{LIBS};
     # $config{LIBS} .= $opt;
     unless (mkdir(".testlink", 0777)) {
-        rm_fr(".testlink");
+        remove_tree(".testlink");
         mkdir(".testlink", 0777) || die "Cannot create .testlink dir: $!";
     }
     chdir(".testlink");
@@ -428,7 +408,7 @@ sub try_link {
     };
     warn $@ if $DEBUG && $@;
     chdir($start_dir);
-    rm_fr(".testlink");
+    remove_tree(".testlink");
     return $result;
 }
 
