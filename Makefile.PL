@@ -2,7 +2,7 @@ use strict;
 use warnings;
 use 5.014;
 
-use vars qw/$DEVNULL $is_Win32/;
+use vars qw/ $DEVNULL $is_Win32 /;
 
 use ExtUtils::MakeMaker;
 use Config;
@@ -32,11 +32,10 @@ while (my $arg = shift(@ARGV)) {
 
 my $DEBUG = delete $config{DEBUG};
 
-if ( $config{NO_THREADS} ) {
-  warn "disabling XML::LibXML support for Perl threads\n";
-  $config{DEFINE} .= " -DNO_XML_LIBXML_THREADS";
+if ( delete $config{NO_THREADS} ) {
+    warn "disabling XML::LibXML support for Perl threads\n";
+    $config{DEFINE} .= " -DNO_XML_LIBXML_THREADS";
 }
-delete $config{NO_THREADS};
 
 # We use it several times later. See:
 # https://rt.cpan.org/Public/Bug/Display.html?id=116461
