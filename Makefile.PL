@@ -88,8 +88,8 @@ See: https://bugzilla.gnome.org/show_bug.cgi?id=684564 .
 EOF
             }
 
-            $config{LIBS} ||= backtick("$xsltcfg --libs");
-            $config{INC} ||= backtick("$xsltcfg --cflags");
+            ($config{LIBS} ||= '' ) .= backtick("$xsltcfg --libs");
+            ($config{INC} ||= '') .= backtick("$xsltcfg --cflags");
             print "ok\n";
         };
         my $Err = $@;
@@ -102,8 +102,8 @@ EOF
             warn "*** ", $@ if $DEBUG;
             warn "using fallback values for LIBS and INC\n";
             # backtick fails if gnome-config didn't exist...
-            $config{LIBS} = '-L/usr/local/lib -L/usr/lib -lxslt -lxml2 -lz -lm';
-            $config{INC} = '-I/usr/local/include -I/usr/include';
+            ($config{LIBS} ||= '' ) .= ' -L/usr/local/lib -L/usr/lib -lxslt -lxml2 -lz -lm';
+            ($config{INC} ||= '') .= ' -I/usr/local/include -I/usr/include';
 
             print <<"OPT";
 options:
