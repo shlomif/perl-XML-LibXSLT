@@ -256,18 +256,6 @@ WriteMakefile(
 #  - these should really be in MakeMaker... But &shrug;
 ###################################################################
 
-sub rm_f {
-    my @files = @_;
-    my @realfiles;
-    foreach my $pat (@files) {
-        push @realfiles, glob($pat);
-    }
-    if (@realfiles) {
-        chmod(0777, @realfiles);
-        unlink(@realfiles);
-    }
-}
-
 sub xsystem {
     my (@command)=@_;
     if ($DEBUG) {
