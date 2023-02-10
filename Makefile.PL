@@ -227,11 +227,23 @@ WriteMakefile(
     'PREREQ_PM' =>
     {
         'Encode' => 0,
+        'File::Path' => "2.06",
         'XML::LibXML' => "1.70",
         'strict' => 0,
         'warnings' => 0,
     },
     'OBJECT'     => '$(O_FILES)',
+    (($ExtUtils::MakeMaker::VERSION >= 6.52)
+        ? (
+            'CONFIGURE_REQUIRES' =>
+            {
+                'File::Path' => "2.06",
+                'strict' => 0,
+                'warnings' => 0,
+            },
+        )
+        : ()
+    ),
     (($ExtUtils::MakeMaker::VERSION >= 6.48)
         ? (MIN_PERL_VERSION => '5.014',)
         : ()
