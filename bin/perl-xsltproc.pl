@@ -34,7 +34,10 @@ sub run
             ( defined( my $key = shift(@argv) ) ) or confess();
             ( defined( my $val = shift(@argv) ) ) or confess();
             $stringparam{$key} = $val;
-
+        }
+        elsif ( $arg eq "--nonet" )
+        {
+            warn "TODO: implement 'nonet'";
         }
     }
     GetOptions( "output|o=s" => \$output_fn, )
