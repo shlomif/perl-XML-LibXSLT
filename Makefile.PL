@@ -431,14 +431,14 @@ sub have_library {
             $result = try_link(<<"SRC", $libs);
 #include <windows.h>
 #include <winsock.h>
-blank() { return 0; }
+int blank() { return 0; }
 int t() { ${func}(); return 0; }
 SRC
             unless ($result) {
                 $result = try_link(<<"SRC", $libs);
 #include <windows.h>
 #include <winsock.h>
-blank() { return 0; }
+int blank() { return 0; }
 int t() { void ((*p)()); p = (void ((*)()))${func}; return 0; }
 SRC
             }
